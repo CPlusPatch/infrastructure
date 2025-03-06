@@ -1,33 +1,36 @@
 # Additional records will be CNAMEs to main servers
-resource "cloudflare_dns_record" "chell_infra_ipv4" {
+resource "cloudflare_dns_record" "infra_ipv4" {
+  # Local.servers is an array of objects
+  # So it must be transformed before it can be used as a for_each
+  for_each = tomap({ for s in local.servers : s.server.name => s })
+
   zone_id = var.cpluspatch-com-zone_id
-  comment = "Main IPv4 record for the ${local.chell.server.name} server"
-  name    = "chell.infra.cpluspatch.com"
+  comment = "Main IPv4 record for the ${each.value.server.name} server"
+  name    = "${each.value.server.name}.infra.cpluspatch.com"
   type    = "A"
-  content = local.chell.ipv4.ip_address
+  content = each.value.ipv4.ip_address
   ttl     = 1
 }
 
-resource "cloudflare_dns_record" "chell_infra_ipv6" {
+resource "cloudflare_dns_record" "infra_ipv6" {
+  for_each = tomap({ for s in local.servers : s.server.name => s })
+
   zone_id = var.cpluspatch-com-zone_id
-  comment = "Main IPv6 record for the ${local.chell.server.name} server"
-  name    = "chell.infra.cpluspatch.com"
+  comment = "Main IPv6 record for the ${each.value.server.name} server"
+  name    = "${each.value.server.name}.infra.cpluspatch.com"
   type    = "AAAA"
-  content = local.chell.ipv6.ip_address
+  content = each.value.ipv6.ip_address
   ttl     = 1
 }
 
-# Create CNAME records for each server
-# In the above example, we should have:
-# CNAME matrix.cpluspatch.dev -> chell.infra.cpluspatch.com
-# CNAME uptime.cpluspatch.com -> chell.infra.cpluspatch.com
-# etc
+# Create CNAME records for each server's configured domains
 resource "cloudflare_dns_record" "server_cnames" {
-  for_each = toset(local.chell.domains)
+  for_each = local.domains
 
   zone_id = var.cpluspatch-com-zone_id
+  comment = "CNAME record for ${each.key}"
   name    = each.key
   type    = "CNAME"
-  content = "chell.infra.cpluspatch.com"
+  content = "${each.value.name}.infra.cpluspatch.com"
   ttl     = 1
 }

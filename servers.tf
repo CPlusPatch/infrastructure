@@ -37,13 +37,15 @@ resource "hcloud_primary_ip" "fsn1_ipv6_1" {
 }
 
 locals {
-  chell = {
+  servers = [{
     server = hcloud_server.chell
     ipv4   = hcloud_primary_ip.fsn1_ipv4_1
     ipv6   = hcloud_primary_ip.fsn1_ipv6_1
-    domains = [
-      "uptime.cpluspatch.com",
-      "stats.cpluspatch.com",
-    ]
+  }]
+
+  # DNS configuration to be applied to Cloudflare
+  domains = {
+    "uptime.cpluspatch.com" = hcloud_server.chell
+    "stats.cpluspatch.com"  = hcloud_server.chell
   }
 }
