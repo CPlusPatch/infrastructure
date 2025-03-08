@@ -22,12 +22,12 @@
     )
   );
 in {
-  imports = [../../partitions/single-zfs.nix ../../features/packages.nix ../../features/ssh.nix];
+  imports = [../../features/packages.nix ../../features/ssh.nix];
 
   disko.devices.disk.main.device = "/dev/sda";
 
   networking = {
-    hostName = "test1";
+    hostName = "test4";
     # Generate with:
     # head -c4 /dev/urandom | od -A none -t x4
     hostId = "76b7fe3c";
