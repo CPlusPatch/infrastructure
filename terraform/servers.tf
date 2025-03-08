@@ -10,9 +10,7 @@ resource "hcloud_server" "test1" {
 
   public_net {
     ipv4_enabled = true
-    ipv4         = hcloud_primary_ip.fsn1_ipv4_1.id
     ipv6_enabled = true
-    ipv6         = hcloud_primary_ip.fsn1_ipv6_1.id
   }
 
   lifecycle {
@@ -20,27 +18,9 @@ resource "hcloud_server" "test1" {
   }
 }
 
-resource "hcloud_primary_ip" "fsn1_ipv4_1" {
-  name          = "fsn1_ipv4_1"
-  type          = "ipv4"
-  assignee_type = "server"
-  datacenter    = "fsn1-dc14"
-  auto_delete   = false
-}
-
-resource "hcloud_primary_ip" "fsn1_ipv6_1" {
-  name          = "fsn1_ipv6_1"
-  type          = "ipv6"
-  assignee_type = "server"
-  datacenter    = "fsn1-dc14"
-  auto_delete   = false
-}
-
 locals {
   servers = [{
     server = hcloud_server.test1
-    ipv4   = hcloud_primary_ip.fsn1_ipv4_1
-    ipv6   = hcloud_primary_ip.fsn1_ipv6_1
   }]
 
   # DNS configuration to be applied to Cloudflare
@@ -48,4 +28,13 @@ locals {
     "test01.cpluspatch.com" = hcloud_server.test1
     "test02.cpluspatch.com" = hcloud_server.test1
   }
+}
+
+# Call nixos-install module for each server
+module "nixos_install" {
+  source = "./nixos-install"
+
+  for_each    = { for s in local.servers : s.server.name => s }
+  ssh_user    = "root"
+  target_host = "${each.key}.infra.cpluspatch.com"
 }

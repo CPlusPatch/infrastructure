@@ -8,7 +8,7 @@ resource "cloudflare_dns_record" "infra_ipv4" {
   comment = "Main IPv4 record for the ${each.value.server.name} server"
   name    = "${each.value.server.name}.infra.cpluspatch.com"
   type    = "A"
-  content = each.value.ipv4.ip_address
+  content = each.value.server.ipv4_address
   ttl     = 1
 }
 
@@ -19,7 +19,7 @@ resource "cloudflare_dns_record" "infra_ipv6" {
   comment = "Main IPv6 record for the ${each.value.server.name} server"
   name    = "${each.value.server.name}.infra.cpluspatch.com"
   type    = "AAAA"
-  content = each.value.ipv6.ip_address
+  content = each.value.server.ipv6_address
   ttl     = 1
 }
 
