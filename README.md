@@ -11,7 +11,21 @@
   <strong><code>infra</code></strong>
 </h2>
 
-My infra's [`OpenTofu`](https://opentofu.org) configuration files.
+My infra's [`OpenTofu`](https://opentofu.org) and [`NixOS`](https://nixos.org) configuration files.
+
+# Deployment
+
+## OpenTofu
+
+```bash
+tofu -chdir=terraform apply
+```
+
+## NixOS
+
+```bash
+colmena apply
+```
 
 # License
 
