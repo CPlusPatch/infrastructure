@@ -3,7 +3,11 @@
 # disko.devices.disk.main.device = "/dev/sdX";
 #
 # when applying this configuration
-{
+{inputs, ...}: {
+  imports = [
+    inputs.disko.nixosModules.disko
+  ];
+
   services.zfs.autoScrub.enable = true;
   services.zfs.trim.enable = true;
 
@@ -18,7 +22,6 @@
             ESP = {
               size = "1G";
               type = "EF00";
-              name = "ESP";
               content = {
                 type = "filesystem";
                 format = "vfat";
@@ -39,7 +42,7 @@
       };
     };
 
-    zfs = {
+    zpool = {
       zroot = {
         type = "zpool";
         name = "zroot";

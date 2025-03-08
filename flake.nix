@@ -9,13 +9,17 @@
       url = "github:nix-community/disko";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    home-manager = {
+      url = "github:nix-community/home-manager";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = {
     nixpkgs,
     lix-module,
     ...
-  }: {
+  } @ inputs: {
     colmena = {
       meta = {
         nixpkgs = import nixpkgs {
@@ -23,6 +27,12 @@
           config = {
             allowUnfree = true;
           };
+        };
+
+        specialArgs = {
+          # Fixes some weird recursion errors
+          # Passes inputs to all modules
+          inherit inputs;
         };
       };
 

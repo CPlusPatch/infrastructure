@@ -6,15 +6,16 @@
   imports = [../../home-manager];
 
   nix = {
-    package = pkgs.nixVersions.stable;
     settings = {
       auto-optimise-store = true;
       experimental-features = ["flakes" "nix-command"];
     };
+
+    allowedUsers = ["@wheel"];
   };
 
   boot = {
-    kernelPackages = pkgs.linuxPackages_latest;
+    kernelPackages = lib.mkDefault pkgs.linuxPackages_latest;
 
     loader = {
       systemd-boot = {
@@ -70,7 +71,10 @@
     fstrim.enable = true;
     earlyoom = {
       enable = true;
-      ignore = ["dockerd"];
+      extraArgs = [
+        # Don't autokill the most important processes
+        "--avoid '(^|/)(init|dockerd|ssh)$'"
+      ];
       freeMemThreshold = 5; # 5% free memory
     };
   };
