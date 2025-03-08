@@ -61,7 +61,7 @@
 
         # Set the ashift value to 12 for 4K sector drives
         # since we use this on SSDs and NVMe drives
-        options.ashift = 12;
+        options.ashift = "12";
 
         datasets = {
           "local" = {
@@ -73,7 +73,7 @@
             type = "zfs_fs";
             options = {
               mountpoint = "/home";
-              "com.sun:auto-snapshot" = true;
+              "com.sun:auto-snapshot" = "true";
             };
           };
 
@@ -82,7 +82,7 @@
             options = {
               mountpoint = "/nix";
               # Disable auto snapshots for the Nix store
-              "com.sun:auto-snapshot" = false;
+              "com.sun:auto-snapshot" = "false";
             };
           };
 
@@ -90,7 +90,7 @@
             type = "zfs_fs";
             options = {
               mountpoint = "/";
-              "com.sun:auto-snapshot" = false;
+              "com.sun:auto-snapshot" = "false";
             };
             postCreateHook = ''
               # List all snapshots of the dataset, filter out the one we're looking for

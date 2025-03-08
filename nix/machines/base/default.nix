@@ -14,6 +14,10 @@
     allowedUsers = ["@wheel"];
   };
 
+  nixpkgs.config = {
+    allowUnfree = true;
+  };
+
   boot = {
     kernelPackages = lib.mkDefault pkgs.linuxPackages_latest;
 

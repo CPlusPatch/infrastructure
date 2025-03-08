@@ -18,54 +18,25 @@
   outputs = {
     nixpkgs,
     lix-module,
+    disko,
     ...
   } @ inputs: {
-    colmena = {
-      meta = {
-        nixpkgs = import nixpkgs {
-          system = "x86_64-linux";
-          config = {
-            allowUnfree = true;
-          };
-        };
-
-        specialArgs = {
-          # Fixes some weird recursion errors
-          # Passes inputs to all modules
-          inherit inputs;
-        };
-      };
-
-      # Also see the non-Flakes hive.nix example above.
-      defaults = {pkgs, ...}: {
-        imports = [
+    nixosConfigurations = {
+      test4 = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        modules = [
           lix-module.nixosModules.default
+          disko.nixosModules.disko
           ./nix/machines/base
-        ];
-      };
-
-      test4 = {
-        deployment = {
-          targetHost = "test4.infra.cpluspatch.com";
-        };
-
-        imports = [
-          ./hardware-configuration.nix
-          ../../partitions/single-zfs.nix
+          ./nix/partitions/single-zfs.nix
           ./nix/machines/test4
         ];
 
-        # Used by nixos-anywhere to generate the deployment
-        # configuration, and then never used again.
-        base = nixpkgs.lib.nixosSystem {
-          system = "x86_64-linux";
-          modules = [
-            inputs.disko.nixosModules.default
-            # No hardware-configuration.nix here, it is generated
-            # by nixos-anywhere
-            ../../partitions/single-zfs.nix
-            ./nix/machines/test4
-          ];
+        # This is needed otherwise you get recursion errors
+        # because the nixosConfigurations attribute set is
+        # being used in the nixosSystem function
+        specialArgs = {
+          inherit inputs;
         };
       };
     };

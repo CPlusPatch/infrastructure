@@ -55,11 +55,12 @@ module "nixos_install" {
 
   for_each                   = { for s in local.servers : s.server.name => s }
   target_host                = "${each.key}.infra.cpluspatch.com"
-  nixos_system_attr          = "${path.module}/..#colmena.${each.key}.base.config.system.build.toplevel"
-  nixos_partitioner_attr     = "${path.module}/..#colmena.${each.key}.base.config.system.build.diskoScript"
+  nixos_system_attr          = "..#nixosConfigurations.${each.key}.config.system.build.toplevel"
+  nixos_partitioner_attr     = "..#nixosConfigurations.${each.key}.config.system.build.diskoScript"
   nixos_generate_config_path = "${path.module}/../nix/machines/${each.key}"
   instance_id                = each.value.server.id
   extra_files_script         = "${path.module}/decrypt-age-keys.sh"
+  debug_logging              = true
   extra_environment = {
     SOPS_FILE = var.sops_file
   }
