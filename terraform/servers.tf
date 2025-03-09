@@ -1,11 +1,11 @@
-resource "hcloud_server" "test1" {
-  name                     = "test4"
+resource "hcloud_server" "test3" {
+  name                     = "test3"
   image                    = "ubuntu-24.04"
-  server_type              = "cx22"
+  server_type              = "cx32"
   location                 = "fsn1"
   ssh_keys                 = [hcloud_ssh_key.jesse.id]
-  delete_protection        = true
-  rebuild_protection       = true
+  delete_protection        = false
+  rebuild_protection       = false
   shutdown_before_deletion = true
 
   public_net {
@@ -20,13 +20,13 @@ resource "hcloud_server" "test1" {
 
 locals {
   servers = [{
-    server = hcloud_server.test1
+    server = hcloud_server.test3
   }]
 
   # DNS configuration to be applied to Cloudflare
   domains = {
-    #"test01.cpluspatch.com" = hcloud_server.test1
-    #"test02.cpluspatch.com" = hcloud_server.test1
+    #"test01.cpluspatch.com" = hcloud_server.test3
+    #"test02.cpluspatch.com" = hcloud_server.test3
   }
 }
 
@@ -54,14 +54,10 @@ module "nixos_install" {
   source = "github.com/numtide/nixos-anywhere//terraform/all-in-one"
 
   for_each                   = { for s in local.servers : s.server.name => s }
-  target_host                = "${each.key}.infra.cpluspatch.com"
+  target_host                = each.value.server.ipv4_address
   nixos_system_attr          = "..#nixosConfigurations.${each.key}.config.system.build.toplevel"
-  nixos_partitioner_attr     = "..#nixosConfigurations.${each.key}.config.system.build.diskoScript"
-  nixos_generate_config_path = "${path.module}/../nix/machines/${each.key}"
+  nixos_partitioner_attr     = "..#nixosConfigurations.${each.key}.config.system.build.diskoScriptNoDeps"
+  nixos_generate_config_path = "${path.module}/../nix/machines/${each.key}/hardware-configuration.nix"
   instance_id                = each.value.server.id
-  extra_files_script         = "${path.module}/decrypt-age-keys.sh"
   debug_logging              = true
-  extra_environment = {
-    SOPS_FILE = var.sops_file
-  }
 }

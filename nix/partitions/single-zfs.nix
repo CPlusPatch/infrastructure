@@ -19,14 +19,30 @@
           type = "gpt";
 
           partitions = {
-            ESP = {
+            # need to do this because of GRUB for some reason?
+            boot = {
+              name = "boot";
+              size = "1M";
+              type = "EF02";
+            };
+
+            esp = {
+              name = "ESP";
               size = "1G";
               type = "EF00";
               content = {
                 type = "filesystem";
                 format = "vfat";
-                mountpoint = "/efi";
-                mountOptions = ["umask=0077"];
+                mountpoint = "/boot";
+              };
+            };
+
+            swap = {
+              size = "4G";
+              label = "swap";
+              content = {
+                type = "swap";
+                discardPolicy = "both";
               };
             };
 
@@ -49,7 +65,6 @@
 
         rootFsOptions = {
           compression = "zstd";
-          mountpoint = "none";
           # By default ZFS doesn't enable support for storing
           # ACL data in the filesystem. Billions must enable it.
           acltype = "posixacl";
@@ -63,53 +78,55 @@
         # since we use this on SSDs and NVMe drives
         options.ashift = "12";
 
+        # Using legacy mountpoints everywhere because
+        # otherwise there are conflicts where systemd and zfs
+        # try to mount the same dataset
         datasets = {
-          "local" = {
-            type = "zfs_fs";
-            options.mountpoint = "none";
-          };
-
-          "local/home" = {
+          "home" = {
             type = "zfs_fs";
             options = {
-              mountpoint = "/home";
+              mountpoint = "legacy";
               "com.sun:auto-snapshot" = "true";
             };
+            mountpoint = "/home";
           };
 
-          "local/nix" = {
+          "nix" = {
             type = "zfs_fs";
             options = {
-              mountpoint = "/nix";
+              mountpoint = "legacy";
               # Disable auto snapshots for the Nix store
               "com.sun:auto-snapshot" = "false";
             };
+            mountpoint = "/nix";
           };
 
-          "local/root" = {
+          "root" = {
             type = "zfs_fs";
             options = {
-              mountpoint = "/";
+              mountpoint = "legacy";
               "com.sun:auto-snapshot" = "false";
             };
+            mountpoint = "/";
             postCreateHook = ''
               # List all snapshots of the dataset, filter out the one we're looking for
               # and check if it exists. If it doesn't, create it.
-              if zfs list -t snapshot -H -o name | grep -E '^zroot/local/root@blank$' > /dev/null; then
+              if zfs list -t snapshot -H -o name | grep -E '^zroot/root@blank$' > /dev/null; then
                 echo "Snapshot already exists"
               else
-                zfs snapshot zroot/local/root@blank
+                zfs snapshot zroot/root@blank
               fi
             '';
           };
 
           # Reserve ~10% of the pool to avoid ZFS performance issues
-          "local/reserved" = {
+          "reserved" = {
             type = "zfs_fs";
             options = {
-              mountpoint = "/reserved";
+              mountpoint = "legacy";
               refreservation = "5G";
             };
+            mountpoint = "/reserved";
           };
         };
       };

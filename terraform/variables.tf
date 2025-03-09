@@ -25,5 +25,5 @@ variable "nixos_vars_file" {
 variable "sops_file" {
   type        = string
   description = "Path to the SOPS file that will be included in the NixOS installation"
-  default     = "secrets.enc.json"
+  default     = ".sops.yaml"
 }

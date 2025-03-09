@@ -22,34 +22,16 @@
     )
   );
 in {
-  imports = [../../features/packages.nix ../../features/ssh.nix];
+  imports = [./hardware-configuration.nix ../../features/packages.nix ../../features/ssh.nix];
 
   disko.devices.disk.main.device = "/dev/sda";
 
   networking = {
-    hostName = "test4";
+    hostName = "test3";
     # Generate with:
     # head -c4 /dev/urandom | od -A none -t x4
     hostId = "76b7fe3c";
   };
 
   boot.kernelPackages = latestKernelPackage;
-
-  fileSystems = {
-    # EFI is already defined somewhere else by idk what
-    "/home" = {
-      device = "zroot/local/home";
-      fsType = "zfs";
-    };
-
-    "/nix" = {
-      device = "zroot/local/nix";
-      fsType = "zfs";
-    };
-
-    "/" = {
-      device = "zroot/local/root";
-      fsType = "zfs";
-    };
-  };
 }

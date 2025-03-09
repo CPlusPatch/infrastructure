@@ -2,8 +2,6 @@
   environment.systemPackages = with pkgs; [
     p7zip
     age
-    asciinema
-    ffmpeg-full
     file
     gnutar
     gping
@@ -16,15 +14,12 @@
     magic-wormhole-rs
     nvd
     pciutils # For lspci
-    resources
-    restic
     unrar
     unzip
     usbutils # For lsusb
-    vhs
-    warp
     wget
     btop
+    curl
     eza
     which
   ];

@@ -1,4 +1,9 @@
+# Download SSH public key from https://github.com/CPlusPatch.keys
+data "http" "cpluspatch_keys" {
+  url = "https://github.com/CPlusPatch.keys"
+}
+
 resource "hcloud_ssh_key" "jesse" {
   name       = "jesse"
-  public_key = file("/home/jessew/.ssh/id_ed25519.pub")
+  public_key = data.http.cpluspatch_keys.response_body
 }

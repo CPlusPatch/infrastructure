@@ -1,6 +1,7 @@
 {
   pkgs,
   lib,
+  config,
   ...
 }: {
   imports = [../../home-manager];
@@ -9,9 +10,8 @@
     settings = {
       auto-optimise-store = true;
       experimental-features = ["flakes" "nix-command"];
+      allowed-users = ["@wheel"];
     };
-
-    allowedUsers = ["@wheel"];
   };
 
   nixpkgs.config = {
@@ -22,9 +22,13 @@
     kernelPackages = lib.mkDefault pkgs.linuxPackages_latest;
 
     loader = {
-      systemd-boot = {
+      # Don't enable EFI, Hetzner still uses legacy boot
+      # I think I could get it to work but wehhh
+      grub = {
         enable = true;
-        configurationLimit = 5;
+        zfsSupport = true;
+        # No need to set devices, disko will do it for us
+        # since we have an EF02 partition
       };
       efi.canTouchEfiVariables = true;
     };
@@ -75,10 +79,6 @@
     fstrim.enable = true;
     earlyoom = {
       enable = true;
-      extraArgs = [
-        # Don't autokill the most important processes
-        "--avoid '(^|/)(init|dockerd|ssh)$'"
-      ];
       freeMemThreshold = 5; # 5% free memory
     };
   };
@@ -89,12 +89,8 @@
 
   environment = {
     pathsToLink = ["/share/zsh"];
-
-    systemPackages = with pkgs; [
-      wget
-      curl
-      btop
-    ];
+    # Makes ghostty and kitty work
+    enableAllTerminfo = true;
   };
 
   programs.zsh.enable = true;
@@ -103,7 +99,9 @@
     root = {
       # Prevent root login
       hashedPassword = "!";
+      openssh.authorizedKeys.keys = config.users.users.jessew.openssh.authorizedKeys.keys;
     };
+
     jessew = {
       isNormalUser = true;
       extraGroups = ["networkmanager" "wheel"];
@@ -117,7 +115,6 @@
   };
 
   virtualisation = {
-    libvirtd.enable = true;
     docker.enable = true;
   };
 

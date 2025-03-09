@@ -1,0 +1,9 @@
+# Uses YAML anchors which allows reuse of multiple keys
+# without having to repeat ourselves.
+keys:
+  - &admin_jesse age10g05a9d60sanccdlemye55tpnsw4yuezkps0ve4xte6hy37kvgtsr9l55p
+creation_rules:
+  - path_regex: secrets/[^/]+\.(yaml|json|env|ini)$
+    key_groups:
+      - age:
+          - *admin_jesse

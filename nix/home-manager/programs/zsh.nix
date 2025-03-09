@@ -6,6 +6,7 @@
     syntaxHighlighting.enable = true;
     initExtra = ''
       export PATH="$HOME/.local/bin:$PATH"
+      source ~/.p10k.zsh
     '';
 
     shellAliases = {
@@ -29,4 +30,6 @@
       ];
     };
   };
+
+  home.file.".p10k.zsh".text = builtins.readFile ./p10k.zsh;
 }
