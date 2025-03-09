@@ -27,7 +27,7 @@
     ...
   } @ inputs: {
     nixosConfigurations = {
-      test3 = nixpkgs.lib.nixosSystem {
+      faithplate = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
         modules = [
           lix-module.nixosModules.default
@@ -35,7 +35,7 @@
           sops-nix.nixosModules.sops
           ./nix/machines/base
           ./nix/partitions/single-zfs.nix
-          ./nix/machines/test3
+          ./nix/machines/faithplate
         ];
 
         # This is needed otherwise you get recursion errors

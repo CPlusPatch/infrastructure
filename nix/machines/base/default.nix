@@ -114,8 +114,14 @@
     };
   };
 
-  virtualisation = {
-    docker.enable = true;
+  virtualisation.docker = {
+    enable = true;
+    autoPrune.enable = true;
+    # Enable IPv6 :)
+    daemon.settings = {
+      fixed-cidr-v6 = "fd00::/80";
+      ipv6 = true;
+    };
   };
 
   # Ban all the things!

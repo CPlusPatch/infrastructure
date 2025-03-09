@@ -1,5 +1,5 @@
-resource "hcloud_server" "test3" {
-  name                     = "test3"
+resource "hcloud_server" "faithplate" {
+  name                     = "faithplate"
   image                    = "ubuntu-24.04"
   server_type              = "cx32"
   location                 = "fsn1"
@@ -20,13 +20,13 @@ resource "hcloud_server" "test3" {
 
 locals {
   servers = [{
-    server = hcloud_server.test3
+    server = hcloud_server.faithplate
   }]
 
   # DNS configuration to be applied to Cloudflare
   domains = {
-    #"test01.cpluspatch.com" = hcloud_server.test3
-    #"test02.cpluspatch.com" = hcloud_server.test3
+    #"test01.cpluspatch.com" = hcloud_server.faithplate
+    #"test02.cpluspatch.com" = hcloud_server.faithplate
   }
 }
 
