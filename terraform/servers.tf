@@ -60,4 +60,10 @@ module "nixos_install" {
   nixos_generate_config_path = "${path.module}/../nix/machines/${each.key}/hardware-configuration.nix"
   instance_id                = each.value.server.id
   debug_logging              = true
+
+  # Extract the age key from the SOPS file
+  extra_files_script = "${path.module}/decrypt-age-keys.sh"
+  extra_environment = {
+    SOPS_FILE = var.sops_file
+  }
 }

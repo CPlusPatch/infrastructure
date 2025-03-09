@@ -24,6 +24,6 @@ variable "nixos_vars_file" {
 
 variable "sops_file" {
   type        = string
-  description = "Path to the SOPS file that will be included in the NixOS installation"
-  default     = ".sops.yaml"
+  description = "Path to the SOPS secrets file containing the age key, relative to the module root"
+  default     = "../secrets/age.yaml"
 }

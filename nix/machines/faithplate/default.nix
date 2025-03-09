@@ -10,7 +10,7 @@
   zfsCompatibleKernelPackages = zfsKernel.getZfsCompatibleKernelPackages;
   latestKernelPackage = zfsKernel.getLatestZfsKernelPackage zfsCompatibleKernelPackages;
 in {
-  imports = [./hardware-configuration.nix ../../features/packages.nix ../../features/ssh.nix ../../docker/traefik.nix];
+  imports = [./hardware-configuration.nix ../../features/packages.nix ../../features/ssh.nix ../../services/traefik.nix ../../services/postgresql.nix ../../features/zerotier.nix];
 
   disko.devices.disk.main.device = "/dev/sda";
 
