@@ -193,15 +193,16 @@
           repo${toString repo.repo_index}-s3-endpoint=${repo.s3_endpoint}
           repo${toString repo.repo_index}-s3-key=${repo.s3_access_key}
           repo${toString repo.repo_index}-s3-key-secret=${repo.s3_secret_key}
-          repo${toString repo.repo_index}-s3-uri-style=path
-        '';
+          repo${toString repo.repo_index}-s3-uri-style=path'';
         repos_config = lib.strings.concatMapStringsSep "\n" mkRepoConfig config.modules.pgbackrest.repositories;
+        # Set spool-path to be inside postgresql data dir, because /var/spool causes permission issues
       in ''
         [global]
         ${repos_config}
         process-max=4
         log-level-console=warn
         log-level-file=debug
+        spool-path=/var/lib/postgresql/${config.services.postgresql.package.psqlSchema}/spool
 
         [main]
         pg1-path=/var/lib/postgresql/${config.services.postgresql.package.psqlSchema}
