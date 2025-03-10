@@ -42,7 +42,7 @@
         };
       };
 
-      certificateResolvers = {
+      certificatesResolvers = {
         letsencrypt.acme = {
           email = "acme@cpluspatch.com";
           storage = "${config.services.traefik.dataDir}/acme.json";

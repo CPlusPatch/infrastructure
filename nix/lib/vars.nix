@@ -1,5 +1,4 @@
 {config}: let
-  currentDir = builtins.substring 0 (builtins.length ./. - 1) ./.;
   nixosVars = builtins.fromJSON (builtins.readFile ../../terraform/nixos-vars.json);
-  currentVars = nixosVars.${currentDir};
+  currentVars = nixosVars.${config.networking.hostName};
 in {currentVars = currentVars;}

@@ -33,17 +33,19 @@
       # Array of { name, user } objects
       databases = lib.mkOption {
         type = lib.types.listOf (lib.types.submodule {
-          name = lib.mkOption {
-            type = lib.types.str;
-            description = "Name of the database";
-          };
-          user = lib.mkOption {
-            type = lib.types.str;
-            description = "User to create for the database";
-          };
-          password = lib.mkOption {
-            type = lib.types.str;
-            description = "Password for the user";
+          options = {
+            name = lib.mkOption {
+              type = lib.types.str;
+              description = "Name of the database";
+            };
+            user = lib.mkOption {
+              type = lib.types.str;
+              description = "User to create for the database";
+            };
+            password = lib.mkOption {
+              type = lib.types.str;
+              description = "Password for the user";
+            };
           };
         });
         default = [];

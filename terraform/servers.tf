@@ -25,8 +25,7 @@ locals {
 
   # DNS configuration to be applied to Cloudflare
   domains = {
-    #"test01.cpluspatch.com" = hcloud_server.faithplate
-    #"test02.cpluspatch.com" = hcloud_server.faithplate
+    "id.cpluspatch.com" = hcloud_server.faithplate
   }
 }
 
