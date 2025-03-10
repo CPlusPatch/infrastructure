@@ -23,17 +23,16 @@ in {
     ../../features/ssh.nix
     ../../features/zerotier.nix
 
-    ../../services/traefik.nix
-    ../../services/keycloak.nix
+    ../../services/postgresql.nix
   ];
 
   disko.devices.disk.main.device = "/dev/sda";
 
   networking = {
-    hostName = "faithplate";
+    hostName = "freeman";
     # Generate with:
     # head -c4 /dev/urandom | od -A none -t x4
-    hostId = "76b7fe3c";
+    hostId = "24d142e4";
   };
 
   systemd.network = {
@@ -51,4 +50,7 @@ in {
   };
 
   boot.kernelPackages = latestKernelPackage;
+  # Close all ports that aren't from the intranet, except SSH :)
+  networking.firewall.allowedTCPPorts = lib.mkForce [22];
+  networking.firewall.allowedUDPPorts = lib.mkForce [];
 }

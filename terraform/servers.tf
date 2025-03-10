@@ -18,10 +18,35 @@ resource "hcloud_server" "faithplate" {
   }
 }
 
+resource "hcloud_server" "freeman" {
+  name                     = "freeman"
+  image                    = "ubuntu-24.04"
+  server_type              = "cx22"
+  location                 = "fsn1"
+  ssh_keys                 = [hcloud_ssh_key.jesse.id]
+  delete_protection        = false
+  rebuild_protection       = false
+  shutdown_before_deletion = true
+
+  public_net {
+    ipv4_enabled = true
+    ipv6_enabled = true
+  }
+
+  lifecycle {
+    ignore_changes = [ssh_keys]
+  }
+}
+
 locals {
-  servers = [{
-    server = hcloud_server.faithplate
-  }]
+  servers = [
+    {
+      server = hcloud_server.faithplate
+    },
+    {
+      server = hcloud_server.freeman
+    }
+  ]
 
   # DNS configuration to be applied to Cloudflare
   domains = {
@@ -52,7 +77,10 @@ resource "local_file" "nixos_vars" {
 module "nixos_install" {
   source = "github.com/numtide/nixos-anywhere//terraform/all-in-one"
 
-  for_each                   = { for s in local.servers : s.server.name => s }
+  for_each = { for s in local.servers : s.server.name => s }
+  # Warning: IPv6 will not work until the first rebuild
+  # (which will configure the network interfaces), which
+  # means an IPv4 address has to be used here
   target_host                = each.value.server.ipv4_address
   nixos_system_attr          = "..#nixosConfigurations.${each.key}.config.system.build.toplevel"
   nixos_partitioner_attr     = "..#nixosConfigurations.${each.key}.config.system.build.diskoScriptNoDeps"
