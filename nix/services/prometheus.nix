@@ -31,6 +31,24 @@
           {targets = ["localhost:${toString config.services.prometheus.exporters.node.port}"];}
         ];
       }
+      {
+        job_name = "sonarr";
+        static_configs = [
+          {targets = ["10.147.19.130:${toString config.services.prometheus.exporters.exportarr-sonarr.port}"];}
+        ];
+      }
+      {
+        job_name = "radarr";
+        static_configs = [
+          {targets = ["10.147.19.130:${toString config.services.prometheus.exporters.exportarr-radarr.port}"];}
+        ];
+      }
+      {
+        job_name = "prowlarr";
+        static_configs = [
+          {targets = ["10.147.19.130:${toString config.services.prometheus.exporters.exportarr-prowlarr.port}"];}
+        ];
+      }
       # TODO: Add synapse, docker and jellyfin
     ];
 

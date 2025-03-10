@@ -25,6 +25,7 @@ in {
 
     ../../services/traefik.nix
     ../../services/keycloak.nix
+    ../../services/servarr.nix
   ];
 
   disko.devices.disk.main.device = "/dev/sda";

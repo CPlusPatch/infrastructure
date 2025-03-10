@@ -17,6 +17,18 @@
         sopsFile = ../../secrets/s3/backups.yaml;
         key = "key_secret";
       };
+      "radarr/key" = {
+        sopsFile = ../../secrets/radarr.yaml;
+        key = "api_key";
+      };
+      "prowlarr/key" = {
+        sopsFile = ../../secrets/prowlarr.yaml;
+        key = "api_key";
+      };
+      "sonarr/key" = {
+        sopsFile = ../../secrets/sonarr.yaml;
+        key = "api_key";
+      };
     };
 
     age.keyFile = "/var/lib/secrets/age";
