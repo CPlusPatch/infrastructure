@@ -69,7 +69,8 @@
 
           dashboard-auth.basicAuth = {
             users = [
-              "admin:$2y$05$l.ojxGmD3VtdH7pcPYsg3Oa4bSv.Iz7dokj9M6FatVx..LeD2JjDy"
+              # Password can be found in secrets/traefik.yaml
+              "admin:$2y$05$dBZpkEKXOM6l.e.g/4xkKeG/nz2bG1/TwZAsCWoH/b1BfGqho8DWW"
             ];
           };
 

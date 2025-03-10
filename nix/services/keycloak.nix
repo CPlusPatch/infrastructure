@@ -5,18 +5,13 @@
 }: {
   imports = [./keycloak-themes];
 
-  # Keycloak requires that we pass the db password via a file, so we create this
-  sops.templates."keycloak-password" = {
-    content = "${config.sops.placeholder."postgresql/keycloak"}";
-  };
-
   services.keycloak = {
     enable = true;
 
     database = {
       type = "postgresql";
       username = "keycloak";
-      passwordFile = config.sops.templates."keycloak-password".path;
+      passwordFile = config.sops.secrets."postgresql/keycloak".path;
       name = "keycloak";
       # Address of freeman through the VPN
       host = "10.147.19.243";

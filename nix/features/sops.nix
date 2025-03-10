@@ -29,8 +29,13 @@
         sopsFile = ../../secrets/sonarr.yaml;
         key = "api_key";
       };
+      traefik = {
+        sopsFile = ../../secrets/traefik.yaml;
+        key = "hash";
+      };
     };
 
+    # Set by the Terraform deployment
     age.keyFile = "/var/lib/secrets/age";
   };
 }

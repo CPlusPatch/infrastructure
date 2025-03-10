@@ -26,6 +26,7 @@ in {
     ../../services/traefik.nix
     ../../services/keycloak.nix
     ../../services/servarr.nix
+    ../../services/uptime-kuma.nix
   ];
 
   disko.devices.disk.main.device = "/dev/sda";
