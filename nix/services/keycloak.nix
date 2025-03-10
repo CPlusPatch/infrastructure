@@ -1,4 +1,10 @@
-{config, ...}: {
+{
+  config,
+  pkgs,
+  ...
+}: {
+  imports = [./keycloak-themes];
+
   modules.postgresql.databases = [
     {
       name = "keycloak";
@@ -23,12 +29,16 @@
       createLocally = false;
     };
 
+    themes = with pkgs; {
+      keywind = custom_keycloak_themes.keywind;
+    };
+
     settings = {
       hostname = "https://id.cpluspatch.com";
       http-host = "localhost";
       http-port = 6000;
-      https-port = 6001;
       http-enabled = true;
+      proxy-headers = "xforwarded";
     };
   };
 
