@@ -24,6 +24,7 @@ in {
     ../../features/zerotier.nix
 
     ../../services/postgresql.nix
+    ../../services/prometheus.nix
   ];
 
   disko.devices.disk.main.device = "/dev/sda";
