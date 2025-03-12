@@ -96,19 +96,6 @@
             };
           };
 
-          # this was funnier in my head
-          synapse.plugin = {
-            "plugin-rewritebody" = {
-              lastModified = "true";
-              rewrites = [
-                {
-                  regex = "\"name\":\"Synapse\"";
-                  replacement = "\"name\":\"i touch myself to toilets at Lowe's\"";
-                }
-              ];
-            };
-          };
-
           nextcloud-redirectregex.redirectRegex = {
             permanent = true;
             regex = "https://(.*)/.well-known/(?:card|cal)dav";

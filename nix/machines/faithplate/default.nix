@@ -27,6 +27,8 @@ in {
     ../../services/keycloak.nix
     ../../services/servarr.nix
     ../../services/uptime-kuma.nix
+    # Blocked by https://github.com/NixOS/nixpkgs/pull/389015
+    #../../services/synapse.nix
   ];
 
   disko.devices.disk.main.device = "/dev/sda";

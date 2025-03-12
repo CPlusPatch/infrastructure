@@ -9,6 +9,10 @@
         sopsFile = ../../secrets/postgresql/root.yaml;
         key = "password";
       };
+      "postgresql/synapse" = {
+        sopsFile = ../../secrets/postgresql/synapse.yaml;
+        key = "password";
+      };
       "s3/backups/keyid" = {
         sopsFile = ../../secrets/s3/backups.yaml;
         key = "key_id";
@@ -32,6 +36,30 @@
       traefik = {
         sopsFile = ../../secrets/traefik.yaml;
         key = "hash";
+      };
+      "synapse/registration-shared-secret" = {
+        sopsFile = ../../secrets/synapse.yaml;
+        key = "registration_shared_secret";
+      };
+      "synapse/signing-key" = {
+        sopsFile = ../../secrets/synapse.yaml;
+        key = "signing_key";
+      };
+      "synapse/form-secret" = {
+        sopsFile = ../../secrets/synapse.yaml;
+        key = "form_secret";
+      };
+      "synapse/macaroon-secret-key" = {
+        sopsFile = ../../secrets/synapse.yaml;
+        key = "macaroon_secret_key";
+      };
+      "synapse/ssap-secret" = {
+        sopsFile = ../../secrets/synapse.yaml;
+        key = "ssap_secret";
+      };
+      "synapse/oidc-client-secret" = {
+        sopsFile = ../../secrets/synapse.yaml;
+        key = "oidc_client_secret";
       };
     };
 
