@@ -55,6 +55,20 @@ locals {
     "radarr.lgs.cpluspatch.com"   = hcloud_server.faithplate
     "sonarr.lgs.cpluspatch.com"   = hcloud_server.faithplate
     "status.cpluspatch.com"       = hcloud_server.faithplate
+    "matrix.cpluspatch.com"       = hcloud_server.faithplate
+    "cpluspatch.dev"              = hcloud_server.faithplate
+  }
+
+  domain_zone_mappings = {
+    "cpluspatch.com" = var.cpluspatch-com-zone_id
+    "cpluspatch.dev" = var.cpluspatch-dev-zone_id
+  }
+
+  final_domains = {
+    for d, s in local.domains : d => {
+      name = s.name
+      zone = [for z, id in local.domain_zone_mappings : id if endswith(d, z)][0]
+    }
   }
 }
 

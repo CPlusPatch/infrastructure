@@ -25,9 +25,9 @@ resource "cloudflare_dns_record" "infra_ipv6" {
 
 # Create CNAME records for each server's configured domains
 resource "cloudflare_dns_record" "server_cnames" {
-  for_each = local.domains
+  for_each = local.final_domains
 
-  zone_id = var.cpluspatch-com-zone_id
+  zone_id = each.value.zone
   comment = "CNAME record for ${each.key}"
   name    = each.key
   type    = "CNAME"
