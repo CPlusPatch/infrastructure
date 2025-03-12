@@ -118,10 +118,8 @@
     sops.templates."init-db.sql" = {
       content = ''
         ${lib.concatMapStringsSep "\n" (db: ''
-            CREATE DATABASE ${db.name};
             CREATE USER ${db.user} WITH PASSWORD '${db.password}';
-            GRANT ALL PRIVILEGES ON DATABASE ${db.name} TO ${db.user};
-            ALTER DATABASE ${db.name} OWNER TO ${db.user};
+            CREATE DATABASE ${db.name} WITH OWNER ${db.user} TEMPLATE template0 LC_COLLATE 'C' LC_CTYPE 'C';
           '')
           config.modules.postgresql.databases}
         CREATE USER ${config.modules.postgresql.root.user} WITH SUPERUSER PASSWORD '${config.modules.postgresql.root.password}';

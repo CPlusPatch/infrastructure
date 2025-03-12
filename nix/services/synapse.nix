@@ -1,15 +1,47 @@
 {config, ...}: {
-  sops.templates."synapse/extra-config.yaml".content = ''
-      database:
-        args:
-          password: "${config.sops.placeholder."postgresql/synapse"}"
+  nixpkgs.overlays = [
+    (import ../overlays/synapse-126.nix)
+  ];
 
+  # Make secrets accessible to Synapse
+  sops.secrets = {
+    "synapse/registration-shared-secret" = {
+      owner = "matrix-synapse";
+    };
+    "synapse/signing-key" = {
+      owner = "matrix-synapse";
+    };
+    "synapse/form-secret" = {
+      owner = "matrix-synapse";
+    };
+    "synapse/macaroon-secret-key" = {
+      owner = "matrix-synapse";
+    };
+    "synapse/ssap-secret" = {
+      owner = "matrix-synapse";
+    };
+    "synapse/oidc-client-secret" = {
+      owner = "matrix-synapse";
+    };
+  };
+
+  sops.templates."synapse/extra-config.yaml" = {
+    content = ''
       modules:
-    - module: shared_secret_authenticator.SharedSecretAuthProvider
-      config:
+        - module: shared_secret_authenticator.SharedSecretAuthProvider
+          config:
             shared_secret: ${config.sops.placeholder."synapse/ssap-secret"}"
             m_login_password_support_enabled: false
-  '';
+    '';
+    owner = "matrix-synapse";
+  };
+
+  sops.templates."synapse/pgpass" = {
+    content = ''
+      ${config.services.matrix-synapse.settings.database.args.host}:*:${config.services.matrix-synapse.settings.database.args.database}:${config.services.matrix-synapse.settings.database.args.user}:${config.sops.placeholder."postgresql/synapse"}
+    '';
+    owner = "matrix-synapse";
+  };
 
   services.matrix-synapse = {
     enable = true;
@@ -29,6 +61,7 @@
         user = "synapse";
         database = "synapse";
         host = "10.147.19.243";
+        passfile = config.sops.templates."synapse/pgpass".path;
       };
 
       enable_metrics = true;
@@ -80,6 +113,7 @@
               ];
             }
           ];
+          tls = false;
           port = 9000;
           type = "metrics";
         }
