@@ -1,7 +1,14 @@
 {config, ...}: {
-  nixpkgs.overlays = [
-    (import ../overlays/synapse-126.nix)
-  ];
+  nixpkgs = {
+    overlays = [
+      (import ../overlays/synapse-126.nix)
+    ];
+
+    config.permittedInsecurePackages = [
+      # Why does mautrix-signal use this? :(
+      "olm-3.2.16"
+    ];
+  };
 
   # Make secrets accessible to Synapse
   sops.secrets = {
@@ -22,6 +29,15 @@
     };
     "synapse/oidc-client-secret" = {
       owner = "matrix-synapse";
+    };
+    "synapse/as-token" = {
+      owner = "mautrix-signal";
+    };
+    "synapse/hs-token" = {
+      owner = "mautrix-signal";
+    };
+    "synapse/pickle-key" = {
+      owner = "mautrix-signal";
     };
   };
 
@@ -105,6 +121,7 @@
         {
           bind_addresses = [
             "127.0.0.1"
+            "10.147.19.130"
           ];
           resources = [
             {
@@ -136,6 +153,90 @@
           };
         }
       ];
+    };
+  };
+
+  sops.templates."mautrix-signal/environment.env" = {
+    content = ''
+      MAUTRIX_SIGNAL_BRIDGE_LOGIN_SHARED_SECRET=${config.sops.placeholder."synapse/ssap-secret"}
+      MAUTRIX_SIGNAL_BRIDGE_HS_TOKEN=${config.sops.placeholder."synapse/hs-token"}
+      MAUTRIX_SIGNAL_BRIDGE_AS_TOKEN=${config.sops.placeholder."synapse/as-token"}
+      MAUTRIX_SIGNAL_BRIDGE_PICKLE_KEY=${config.sops.placeholder."synapse/pickle-key"}
+      MAUTRIX_SIGNAL_BRIDGE_POSTGRES_PASSWORD=${config.sops.placeholder."postgresql/mautrix-signal"}
+    '';
+    owner = "mautrix-signal";
+  };
+
+  services.mautrix-signal = {
+    enable = true;
+    environmentFile = config.sops.templates."mautrix-signal/environment.env".path;
+
+    settings = {
+      appservice = rec {
+        bot = {
+          displayname = "Signal Bridge Bot";
+          username = "signalbot";
+        };
+        hostname = "[::]";
+        hs_token = "$MAUTRIX_SIGNAL_BRIDGE_HS_TOKEN";
+        as_token = "$MAUTRIX_SIGNAL_BRIDGE_AS_TOKEN";
+        id = "signal";
+        port = 29328;
+        address = "http://localhost:${builtins.toString port}";
+        username_template = "signal_{{.}}";
+      };
+      bridge = {
+        command_prefix = "!signal";
+        permissions = {
+          "*" = "relay";
+          config.services.matrix-synapse.settings.server_name = "relay";
+          "@jesse:${config.services.matrix-synapse.settings.server_name}" = "admin";
+        };
+        relay = {
+          enabled = false;
+        };
+      };
+      database = {
+        type = "postgres";
+        uri = "postgres://mautrixsignal:$MAUTRIX_SIGNAL_BRIDGE_POSTGRES_PASSWORD@10.147.19.243/mautrixsignal?sslmode=disable";
+      };
+      direct_media = {
+        enabled = false;
+      };
+      double_puppet = {
+        secrets = {};
+        servers = {};
+      };
+      encryption = {
+        allow = true;
+        default = true;
+        pickle_key = "$MAUTRIX_SIGNAL_BRIDGE_PICKLE_KEY";
+      };
+      homeserver = {
+        address = "http://localhost:${builtins.toString (builtins.head config.services.matrix-synapse.settings.listeners).port}";
+        domain = config.services.matrix-synapse.settings.server_name;
+        async_media = true;
+      };
+      logging = {
+        min_level = "info";
+        writers = [
+          {
+            format = "pretty-colored";
+            time_format = " ";
+            type = "stdout";
+          }
+        ];
+      };
+      network = {
+        displayname_template = "{{or .ProfileName .PhoneNumber \"Unknown user\"}}";
+        use_contact_avatars = true;
+      };
+      provisioning = {
+        shared_secret = "$MAUTRIX_SIGNAL_BRIDGE_LOGIN_SHARED_SECRET";
+      };
+      public_media = {
+        enabled = false;
+      };
     };
   };
 

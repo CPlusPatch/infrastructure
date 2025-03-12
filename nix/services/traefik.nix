@@ -96,6 +96,13 @@
             };
           };
 
+          # Redirect cpluspatch.dev to cpluspatch.com
+          newsite-redirect.redirectRegex = {
+            permanent = true;
+            regex = "(.)*";
+            replacement = "https://cpluspatch.com";
+          };
+
           nextcloud-redirectregex.redirectRegex = {
             permanent = true;
             regex = "https://(.*)/.well-known/(?:card|cal)dav";
@@ -103,12 +110,28 @@
           };
         };
 
-        # Set a router for ${hostname}.infra.cpluspatch.com to the Traefik dashboard
         routers = {
+          # Set a router for ${hostname}.infra.cpluspatch.com to the Traefik dashboard
           traefik = {
             rule = "Host(`${config.networking.hostName}.infra.cpluspatch.com`)";
             service = "api@internal";
             middlewares = ["dashboard-auth"];
+          };
+
+          newsite = {
+            rule = "Host(`cpluspatch.dev`) && !((PathPrefix(`/_matrix`) || PathPrefix(`/_synapse`) || PathPrefix(`/.well-known/matrix`)))";
+            service = "stub";
+            middlewares = ["newsite-redirect"];
+          };
+        };
+
+        services = {
+          stub = {
+            loadBalancer = {
+              servers = [
+                {url = "https://cpluspatch.com";}
+              ];
+            };
           };
         };
       };

@@ -49,6 +49,12 @@
           {targets = ["10.147.19.130:${toString config.services.prometheus.exporters.exportarr-prowlarr.port}"];}
         ];
       }
+      {
+        job_name = "synapse";
+        static_configs = [
+          {targets = ["10.147.19.130:9000"];}
+        ];
+      }
       # TODO: Add synapse, docker and jellyfin
     ];
 

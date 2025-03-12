@@ -13,6 +13,10 @@
         sopsFile = ../../secrets/postgresql/synapse.yaml;
         key = "password";
       };
+      "postgresql/mautrix-signal" = {
+        sopsFile = ../../secrets/postgresql/mautrix-signal.yaml;
+        key = "password";
+      };
       "s3/backups/keyid" = {
         sopsFile = ../../secrets/s3/backups.yaml;
         key = "key_id";
@@ -60,6 +64,18 @@
       "synapse/oidc-client-secret" = {
         sopsFile = ../../secrets/synapse.yaml;
         key = "oidc_client_secret";
+      };
+      "synapse/as-token" = {
+        sopsFile = ../../secrets/synapse.yaml;
+        key = "as_token";
+      };
+      "synapse/hs-token" = {
+        sopsFile = ../../secrets/synapse.yaml;
+        key = "hs_token";
+      };
+      "synapse/pickle-key" = {
+        sopsFile = ../../secrets/synapse.yaml;
+        key = "pickle_key";
       };
     };
 
