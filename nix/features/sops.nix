@@ -17,6 +17,10 @@
         sopsFile = ../../secrets/postgresql/mautrix-signal.yaml;
         key = "password";
       };
+      "postgresql/vaultwarden" = {
+        sopsFile = ../../secrets/postgresql/vaultwarden.yaml;
+        key = "password";
+      };
       "s3/backups/keyid" = {
         sopsFile = ../../secrets/s3/backups.yaml;
         key = "key_id";
