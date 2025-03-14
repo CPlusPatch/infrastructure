@@ -21,6 +21,10 @@
         sopsFile = ../../secrets/postgresql/vaultwarden.yaml;
         key = "password";
       };
+      "postgresql/plausible" = {
+        sopsFile = ../../secrets/postgresql/plausible.yaml;
+        key = "password";
+      };
       "s3/backups/keyid" = {
         sopsFile = ../../secrets/s3/backups.yaml;
         key = "key_id";
@@ -80,6 +84,10 @@
       "synapse/pickle-key" = {
         sopsFile = ../../secrets/synapse.yaml;
         key = "pickle_key";
+      };
+      "plausible/secret-key-base" = {
+        sopsFile = ../../secrets/plausible.yaml;
+        key = "secret_key_base";
       };
     };
 

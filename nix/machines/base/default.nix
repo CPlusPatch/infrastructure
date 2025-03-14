@@ -48,7 +48,7 @@
     };
   };
 
-  time.timeZone = lib.mkDefault "Europe/Paris";
+  time.timeZone = "Europe/Paris";
 
   # I want everything as the French format except the actual language,
   # because I'm French but I hate the French language.

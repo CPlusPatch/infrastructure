@@ -23,6 +23,7 @@ in {
     ../../features/ssh.nix
     ../../features/zerotier.nix
 
+    ../../services/clickhouse.nix
     ../../services/postgresql.nix
     ../../services/prometheus.nix
   ];

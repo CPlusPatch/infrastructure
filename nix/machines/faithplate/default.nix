@@ -29,6 +29,7 @@ in {
     ../../services/uptime-kuma.nix
     ../../services/synapse.nix
     ../../services/vaultwarden.nix
+    ../../services/plausible.nix
   ];
 
   disko.devices.disk.main.device = "/dev/sda";
