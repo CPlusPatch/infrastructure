@@ -17,6 +17,10 @@
       url = "github:Mic92/sops-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    simple-nixos-mailserver = {
+      url = "gitlab:simple-nixos-mailserver/nixos-mailserver/master";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = {
@@ -24,6 +28,7 @@
     lix-module,
     disko,
     sops-nix,
+    simple-nixos-mailserver,
     ...
   } @ inputs: {
     nixosConfigurations = {
@@ -33,6 +38,7 @@
           lix-module.nixosModules.default
           disko.nixosModules.disko
           sops-nix.nixosModules.sops
+          simple-nixos-mailserver.nixosModule
           ./nix/machines/base
           ./nix/partitions/single-zfs.nix
           ./nix/machines/faithplate

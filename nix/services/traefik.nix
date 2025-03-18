@@ -1,4 +1,8 @@
-{config, ...}: {
+{
+  config,
+  pkgs,
+  ...
+}: {
   services.traefik = {
     enable = true;
     # Required for Docker backend
@@ -135,6 +139,32 @@
           };
         };
       };
+    };
+  };
+
+  environment.systemPackages = [pkgs.traefik-certs-dumper];
+
+  # Dump Traefik certificates to /var/lib/traefik-certs using traefik-certs-dumper
+  systemd.services.traefik-certs-dumper = {
+    description = "Traefik certificates dumper";
+
+    path = [pkgs.traefik-certs-dumper pkgs.getent];
+    script = ''
+      ${pkgs.traefik-certs-dumper}/bin/traefik-certs-dumper file --version v3 --domain-subdir=true --source /var/lib/traefik/acme.json --dest /var/lib/traefik-certs
+    '';
+
+    serviceConfig = {
+      Type = "oneshot";
+    };
+  };
+
+  systemd.timers.traefik-certs-dumper = {
+    description = "Timer for Traefik certificates dumper";
+    wantedBy = ["timers.target"];
+
+    timerConfig = {
+      OnCalendar = "hourly";
+      Persistent = true;
     };
   };
 }
