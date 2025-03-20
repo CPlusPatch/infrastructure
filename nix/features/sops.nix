@@ -89,6 +89,10 @@
         sopsFile = ../../secrets/plausible.yaml;
         key = "secret_key_base";
       };
+      "fs-01b/password" = {
+        sopsFile = ../../secrets/fs-01b.yaml;
+        key = "password";
+      };
     };
 
     # Set by the Terraform deployment

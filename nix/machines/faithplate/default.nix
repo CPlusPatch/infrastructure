@@ -22,6 +22,7 @@ in {
     ../../features/packages.nix
     ../../features/ssh.nix
     ../../features/zerotier.nix
+    ../../features/fs-01b.nix
 
     ../../services/traefik.nix
     ../../services/keycloak.nix
