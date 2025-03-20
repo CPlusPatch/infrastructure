@@ -32,6 +32,7 @@ in {
     ../../services/vaultwarden.nix
     ../../services/plausible.nix
     ../../services/mail.nix
+    ../../services/transmission.nix
   ];
 
   disko.devices.disk.main.device = "/dev/sda";

@@ -54,6 +54,7 @@ locals {
     "prowlarr.lgs.cpluspatch.com" = hcloud_server.faithplate
     "radarr.lgs.cpluspatch.com"   = hcloud_server.faithplate
     "sonarr.lgs.cpluspatch.com"   = hcloud_server.faithplate
+    "dl.lgs.cpluspatch.com"       = hcloud_server.faithplate
     "status.cpluspatch.com"       = hcloud_server.faithplate
     "matrix.cpluspatch.dev"       = hcloud_server.faithplate
     "cpluspatch.dev"              = hcloud_server.faithplate

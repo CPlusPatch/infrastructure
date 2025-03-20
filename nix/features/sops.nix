@@ -93,6 +93,10 @@
         sopsFile = ../../secrets/fs-01b.yaml;
         key = "password";
       };
+      "transmission/password" = {
+        sopsFile = ../../secrets/transmission.yaml;
+        key = "password";
+      };
     };
 
     # Set by the Terraform deployment
