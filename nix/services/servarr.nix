@@ -1,4 +1,8 @@
 {config, ...}: {
+  nixpkgs.overlays = [
+    (import ../overlays/flaresolverr-unstable.nix)
+  ];
+
   services.radarr = {
     enable = true;
   };
@@ -69,5 +73,16 @@
         {url = "http://localhost:8989";}
       ];
     };
+  };
+
+  services.flaresolverr = {
+    enable = true;
+    port = 8191;
+  };
+
+  systemd.services.flaresolverr.serviceConfig = {
+    Environment = [
+      "LOG_LEVEL=debug"
+    ];
   };
 }
