@@ -34,6 +34,7 @@ in {
     ../../services/mail.nix
     ../../services/transmission.nix
     ../../services/grafana.nix
+    ../../services/jellyfin.nix
   ];
 
   disko.devices.disk.main.device = "/dev/sda";
