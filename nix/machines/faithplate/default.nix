@@ -33,6 +33,7 @@ in {
     ../../services/plausible.nix
     ../../services/mail.nix
     ../../services/transmission.nix
+    ../../services/grafana.nix
   ];
 
   disko.devices.disk.main.device = "/dev/sda";

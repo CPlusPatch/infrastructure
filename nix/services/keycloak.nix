@@ -46,4 +46,20 @@
       ];
     };
   };
+
+  # HACK: Redirect https://id.cpluspatch.com/realms/master/protocol/openid-connect/userinfo/emails to https://id.cpluspatch.com/realms/master/protocol/openid-connect/userinfo
+  # Fixes Grafana being stupid and dumb and looking for the email attribute in the userinfo endpoint
+  services.traefik.dynamicConfigOptions.http.routers.keycloak-redirect = {
+    entryPoints = ["websecure"];
+    rule = "Host(`id.cpluspatch.com`) && PathPrefix(`/realms/master/protocol/openid-connect/userinfo/emails`)";
+    service = "keycloak";
+    middlewares = ["keycloak-redirect"];
+  };
+
+  services.traefik.dynamicConfigOptions.http.middlewares.keycloak-redirect = {
+    redirectRegex = {
+      regex = "^https://id.cpluspatch.com/realms/master/protocol/openid-connect/userinfo/emails$";
+      replacement = "/realms/master/protocol/openid-connect/userinfo";
+    };
+  };
 }
