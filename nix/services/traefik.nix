@@ -62,6 +62,11 @@
         addServicesLabels = true;
         buckets = [0.1 0.3 1.2 5.0];
       };
+
+      experimental.plugins.plugin-rewritebody = {
+        version = "v0.3.1";
+        moduleName = "github.com/traefik/plugin-rewritebody";
+      };
     };
 
     dynamicConfigOptions = {

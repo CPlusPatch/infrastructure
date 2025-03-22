@@ -1,14 +1,8 @@
 {config, ...}: {
-  nixpkgs = {
-    overlays = [
-      (import ../overlays/synapse-126.nix)
-    ];
-
-    config.permittedInsecurePackages = [
-      # Why does mautrix-signal use this? :(
-      "olm-3.2.16"
-    ];
-  };
+  nixpkgs.config.permittedInsecurePackages = [
+    # Why does mautrix-signal use this? :(
+    "olm-3.2.16"
+  ];
 
   # Make secrets accessible to Synapse
   sops.secrets = {
