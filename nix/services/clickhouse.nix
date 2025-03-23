@@ -1,4 +1,6 @@
-{
+{...}: let
+  ips = import ../lib/zerotier-ips.nix;
+in {
   services.clickhouse = {
     enable = true;
   };
@@ -7,7 +9,7 @@
     "clickhouse-server/config.d/listen.xml" = {
       text = ''
         <clickhouse>
-          <listen_host>10.147.19.243</listen_host>
+          <listen_host>${ips.zerotier-ips.freeman}</listen_host>
         </clickhouse>
       '';
     };

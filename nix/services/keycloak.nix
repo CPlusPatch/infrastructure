@@ -2,7 +2,9 @@
   config,
   pkgs,
   ...
-}: {
+}: let
+  ips = import ../lib/zerotier-ips.nix;
+in {
   imports = [./keycloak-themes];
 
   services.keycloak = {
@@ -14,7 +16,7 @@
       passwordFile = config.sops.secrets."postgresql/keycloak".path;
       name = "keycloak";
       # Address of freeman through the VPN
-      host = "10.147.19.243";
+      host = ips.zerotier-ips.freeman;
       useSSL = false;
       createLocally = false;
     };

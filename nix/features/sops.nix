@@ -29,12 +29,20 @@
         sopsFile = ../../secrets/postgresql/grafana.yaml;
         key = "password";
       };
+      "postgresql/nextcloud" = {
+        sopsFile = ../../secrets/postgresql/nextcloud.yaml;
+        key = "password";
+      };
       "s3/backups/keyid" = {
         sopsFile = ../../secrets/s3/backups.yaml;
         key = "key_id";
       };
       "s3/backups/secret" = {
         sopsFile = ../../secrets/s3/backups.yaml;
+        key = "key_secret";
+      };
+      "s3/nextcloud/secret" = {
+        sopsFile = ../../secrets/s3/nextcloud.yaml;
         key = "key_secret";
       };
       "radarr/key" = {
@@ -108,6 +116,18 @@
       "grafana/client-secret" = {
         sopsFile = ../../secrets/grafana.yaml;
         key = "client_secret";
+      };
+      "nextcloud/secret" = {
+        sopsFile = ../../secrets/nextcloud.yaml;
+        key = "secret";
+      };
+      "nextcloud/oidc-client-secret" = {
+        sopsFile = ../../secrets/nextcloud.yaml;
+        key = "oidc_client_secret";
+      };
+      "nextcloud/exporter-password" = {
+        sopsFile = ../../secrets/nextcloud.yaml;
+        key = "exporter_password";
       };
     };
 

@@ -1,4 +1,6 @@
-{config, ...}: {
+{config, ...}: let
+  ips = import ../lib/zerotier-ips.nix;
+in {
   services.prometheus = {
     enable = true;
 
@@ -10,7 +12,7 @@
       {
         job_name = "traefik";
         static_configs = [
-          {targets = ["10.147.19.130:8899"];}
+          {targets = ["${ips.zerotier-ips.faithplate}:8899"];}
         ];
       }
       {
@@ -34,25 +36,31 @@
       {
         job_name = "sonarr";
         static_configs = [
-          {targets = ["10.147.19.130:${toString config.services.prometheus.exporters.exportarr-sonarr.port}"];}
+          {targets = ["${ips.zerotier-ips.faithplate}:${toString config.services.prometheus.exporters.exportarr-sonarr.port}"];}
         ];
       }
       {
         job_name = "radarr";
         static_configs = [
-          {targets = ["10.147.19.130:${toString config.services.prometheus.exporters.exportarr-radarr.port}"];}
+          {targets = ["${ips.zerotier-ips.faithplate}:${toString config.services.prometheus.exporters.exportarr-radarr.port}"];}
         ];
       }
       {
         job_name = "prowlarr";
         static_configs = [
-          {targets = ["10.147.19.130:${toString config.services.prometheus.exporters.exportarr-prowlarr.port}"];}
+          {targets = ["${ips.zerotier-ips.faithplate}:${toString config.services.prometheus.exporters.exportarr-prowlarr.port}"];}
         ];
       }
       {
         job_name = "synapse";
         static_configs = [
-          {targets = ["10.147.19.130:9000"];}
+          {targets = ["${ips.zerotier-ips.faithplate}:9000"];}
+        ];
+      }
+      {
+        job_name = "nextcloud";
+        static_configs = [
+          {targets = ["${ips.zerotier-ips.faithplate}:${toString config.services.prometheus.exporters.nextcloud.port}"];}
         ];
       }
       # TODO: Add synapse, docker and jellyfin

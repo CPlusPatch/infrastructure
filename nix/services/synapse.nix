@@ -1,4 +1,6 @@
-{config, ...}: {
+{config, ...}: let
+  ips = import ../lib/zerotier-ips.nix;
+in {
   nixpkgs.config.permittedInsecurePackages = [
     # Why does mautrix-signal use this? :(
     "olm-3.2.16"
@@ -70,7 +72,7 @@
       database.args = {
         user = "synapse";
         database = "synapse";
-        host = "10.147.19.243";
+        host = ips.zerotier-ips.freeman;
         passfile = config.sops.templates."synapse/pgpass".path;
       };
 
@@ -192,7 +194,7 @@
       };
       database = {
         type = "postgres";
-        uri = "postgres://mautrixsignal:$MAUTRIX_SIGNAL_BRIDGE_POSTGRES_PASSWORD@10.147.19.243/mautrixsignal?sslmode=disable";
+        uri = "postgres://mautrixsignal:$MAUTRIX_SIGNAL_BRIDGE_POSTGRES_PASSWORD@${ips.zerotier-ips.freeman}/mautrixsignal?sslmode=disable";
       };
       direct_media = {
         enabled = false;
