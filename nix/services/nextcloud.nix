@@ -86,30 +86,15 @@ in {
         "192.168.0.0/16"
         "172.16.0.0/12"
       ];
+      # Non-file loggers aren't supported for whatever reason
+      log_type = "file";
 
       maintenance_window_start = 1;
-
-      oidc_login_client_id = "nextcloud";
-      oidc_login_client_secret = config.sops.secrets."nextcloud/oidc-client-secret".path;
-      oidc_login_provider_url = "https://id.cpluspatch.com/realms/master";
-      oidc_login_end_session_redirect = true;
-      oidc_login_logout_url = "https://cloud.cpluspatch.com/apps/oidc_login/oidc'";
-      oidc_login_auto_redirect = true;
-      oidc_login_redir_fallback = true;
-      oidc_login_attributes = {
-        id = "preferred_username";
-        mail = "email";
-      };
-      oidc_login_code_challenge_method = "S256";
-      oidc_login_disable_registration = false;
     };
   };
 
-  # Nextcloud uses nginx for some godforsaken reason
-  services.nginx = {
-    # Change ports to 8080 and 8443, because 80/443 are already used by traefik
-    defaultHTTPListenPort = 8080;
-    defaultSSLListenPort = 8443;
+  mailserver.loginAccounts."cloud@cpluspatch.com" = {
+    hashedPassword = "$2b$05$WzQ2/O96Awk9kFomIdXLw.680ut/0Q1Dn.TAzHU8w0j/R6/1tdLje";
   };
 
   services.prometheus.exporters.nextcloud = {

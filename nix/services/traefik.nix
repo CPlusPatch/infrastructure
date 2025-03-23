@@ -3,6 +3,12 @@
   pkgs,
   ...
 }: {
+  services.nginx = {
+    # Change ports to 8080 and 8443, because 80/443 are already used by traefik
+    defaultHTTPListenPort = 8080;
+    defaultSSLListenPort = 8443;
+  };
+
   services.traefik = {
     enable = true;
     # Required for Docker backend

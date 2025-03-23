@@ -11,6 +11,7 @@
 
     loginAccounts = {
       "jesse.wierzbinski@cpluspatch.com" = {
+        # nix-shell -p mkpasswd --run 'mkpasswd -sm bcrypt'
         hashedPassword = "$2b$05$eugDzraTpV833FCaoJrZt.RJdeFrotOn7sSHkozw5vo8H6Hwp9z7K";
         aliases = ["postmaster@cpluspatch.com" "contact@cpluspatch.com" "@cpluspatch.com"];
       };
