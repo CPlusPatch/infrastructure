@@ -33,6 +33,14 @@
         sopsFile = ../../secrets/postgresql/nextcloud.yaml;
         key = "password";
       };
+      "postgresql/sharkey" = {
+        sopsFile = ../../secrets/postgresql/sharkey.yaml;
+        key = "password";
+      };
+      "redis/sharkey" = {
+        sopsFile = ../../secrets/redis/sharkey.yaml;
+        key = "password";
+      };
       "s3/backups/keyid" = {
         sopsFile = ../../secrets/s3/backups.yaml;
         key = "key_id";

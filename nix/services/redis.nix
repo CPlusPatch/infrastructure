@@ -1,0 +1,14 @@
+{config, ...}: let
+  ips = import ../lib/zerotier-ips.nix;
+in {
+  services.redis = {
+    vmOverCommit = true;
+
+    servers.sharkey = {
+      enable = true;
+      port = 6380;
+      bind = ips.zerotier-ips.freeman;
+      requirePassFile = config.sops.secrets."redis/sharkey".path;
+    };
+  };
+}
