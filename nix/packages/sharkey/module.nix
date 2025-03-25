@@ -177,6 +177,7 @@ in {
         ++ lib.optionals createRedis ["redis-sharkey.service"]
         ++ lib.optionals createMeili ["meilisearch.service"];
       wantedBy = ["multi-user.target"];
+      requires = ["network-online.target"];
 
       preStart = ''
         SHARKEY_DB_PASSWORD="$(cat ${lib.escapeShellArg cfg.database.passwordFile})" \

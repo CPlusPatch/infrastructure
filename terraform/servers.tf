@@ -66,6 +66,7 @@ locals {
     "stream.cpluspatch.com"       = hcloud_server.faithplate
     "cloud.cpluspatch.com"        = hcloud_server.faithplate
     "mk.cpluspatch.com"           = hcloud_server.faithplate
+	"photos.cpluspatch.com"       = hcloud_server.faithplate
   }
 
   domain_zone_mappings = {

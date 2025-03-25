@@ -37,8 +37,16 @@
         sopsFile = ../../secrets/postgresql/sharkey.yaml;
         key = "password";
       };
+      "postgresql/immich" = {
+        sopsFile = ../../secrets/postgresql/immich.yaml;
+        key = "password";
+      };
       "redis/sharkey" = {
         sopsFile = ../../secrets/redis/sharkey.yaml;
+        key = "password";
+      };
+      "redis/immich" = {
+        sopsFile = ../../secrets/redis/immich.yaml;
         key = "password";
       };
       "s3/backups/keyid" = {
@@ -136,6 +144,10 @@
       "nextcloud/exporter-password" = {
         sopsFile = ../../secrets/nextcloud.yaml;
         key = "exporter_password";
+      };
+      "immich/oidc-client-secret" = {
+        sopsFile = ../../secrets/immich.yaml;
+        key = "oidc_client_secret";
       };
     };
 
