@@ -81,7 +81,7 @@
   };
 
   # yo dawg, I heard you like RAM, so I put some RAM in your RAM so you can RAM while you RAM
-  zramSwap = {enable = true;};
+  zramSwap = {enable = false;};
 
   hardware = {
     enableRedistributableFirmware = true;
