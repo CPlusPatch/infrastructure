@@ -49,6 +49,7 @@ in {
         user_oidc
         music
         twofactor_webauthn
+        spreed
         ;
     };
 
