@@ -171,12 +171,29 @@
         "type": "indirect"
       }
     },
+    "nixpkgs-synapse127": {
+      "locked": {
+        "lastModified": 1743032476,
+        "narHash": "sha256-1Gmq+jWzxbN9go4QweNJEEeyCMUSMfkylhgbTdg0cyY=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "02588b5ff18d8c1b572d406a52fe86e62fd6a1d9",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "02588b5ff18d8c1b572d406a52fe86e62fd6a1d9",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
         "disko": "disko",
         "home-manager": "home-manager",
         "lix-module": "lix-module",
         "nixpkgs": "nixpkgs",
+        "nixpkgs-synapse127": "nixpkgs-synapse127",
         "simple-nixos-mailserver": "simple-nixos-mailserver",
         "sops-nix": "sops-nix"
       }
