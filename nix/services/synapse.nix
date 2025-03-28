@@ -1,6 +1,7 @@
 {
   config,
   inputs,
+  lib,
   ...
 }: let
   ips = import ../lib/zerotier-ips.nix;
@@ -161,6 +162,10 @@ in {
       ];
     };
   };
+
+  # Allows the prometheus performance metrics to be collected
+  # nixpkgs defaults it to "invisible", which doesn't let prometheus scrape it
+  systemd.services.matrix-synapse.serviceConfig.ProcSubset = lib.mkForce "all";
 
   sops.templates."mautrix-signal/environment.env" = {
     content = ''
