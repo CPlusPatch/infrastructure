@@ -8,6 +8,7 @@
       store_path = "./store";
       wife_id = "@nex:nexy7574.co.uk";
       response_cooldown = 10;
+      health_check_uri = "https://status.cpluspatch.com/api/push/vHNWvZsz1k?status=up&msg=OK&ping=";
     };
   };
 }

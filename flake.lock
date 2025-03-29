@@ -11,11 +11,11 @@
         "uv2nix": "uv2nix"
       },
       "locked": {
-        "lastModified": 1743266052,
-        "narHash": "sha256-z8yGiJGjo4coxPvequpSuvnR1fNo7iMPfUkf32HkSt0=",
+        "lastModified": 1743270765,
+        "narHash": "sha256-c+QQN7QDDnXWI/17M6KTDgyuSo0GmzXZvED9cUBg/kY=",
         "owner": "CPlusPatch",
         "repo": "jesses-vengeance",
-        "rev": "91e052e9b6490b9104ffe3ba8f1e7fddfe0ccc43",
+        "rev": "b4a6339897ab3a8c1dca39d1310aa55980a946e6",
         "type": "github"
       },
       "original": {
