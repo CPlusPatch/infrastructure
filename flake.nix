@@ -22,6 +22,10 @@
       url = "gitlab:simple-nixos-mailserver/nixos-mailserver/master";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    bitchbot = {
+      url = "github:CPlusPatch/jesses-vengeance";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = {
@@ -30,16 +34,18 @@
     disko,
     sops-nix,
     simple-nixos-mailserver,
+    bitchbot,
     ...
   } @ inputs: {
     nixosConfigurations = {
-      faithplate = nixpkgs.lib.nixosSystem {
+      faithplate = nixpkgs.lib.nixosSystem rec {
         system = "x86_64-linux";
         modules = [
           lix-module.nixosModules.lixFromNixpkgs
           disko.nixosModules.disko
           sops-nix.nixosModules.sops
           simple-nixos-mailserver.nixosModule
+          bitchbot.nixosModules.${system}.bitchbot
           ./nix/machines/base
           ./nix/partitions/single-zfs.nix
           ./nix/machines/faithplate

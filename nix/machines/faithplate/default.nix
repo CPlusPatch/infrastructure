@@ -38,6 +38,7 @@ in {
     ../../services/nextcloud.nix
     ../../services/sharkey.nix
     ../../services/immich.nix
+    ../../services/bitchbot.nix
   ];
 
   disko.devices.disk.main.device = "/dev/sda";
