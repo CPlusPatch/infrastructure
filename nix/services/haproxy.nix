@@ -39,6 +39,9 @@
           tune.ssl.cachesize 50000
           tune.ssl.lifetime 300
 
+        http-errors errors
+          errorfile 503 ${../../html/503.http}
+          errorfile 502 ${../../html/502.http}
         defaults
           log     global
           mode    http
@@ -71,6 +74,8 @@
           http-request redirect scheme https unless { ssl_fc } || is_acme
           use_backend acme if is_acme
 
+          errorfiles errors
+
         frontend https
           mode http
           bind :::443 v4v6 ssl ${lib.concatStringsSep " " (lib.mapAttrsToList (name: value: "crt ${value.directory}/full.pem") config.security.acme.certs)}
@@ -80,6 +85,8 @@
           http-response set-header Permissions-Policy "interest-cohort=()"
           # Offload compression to HAProxy, stripping the Accept-Encoding header
           compression offload
+
+          errorfiles errors
 
           # Redirect cpluspatch.dev to cpluspatch.com
           #acl is_old_site hdr(host) -i cpluspatch.dev
