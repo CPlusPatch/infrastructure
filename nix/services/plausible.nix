@@ -43,16 +43,15 @@ in {
     };
   };
 
-  services.traefik.dynamicConfigOptions.http.routers.plausible = {
-    rule = "Host(`logs.cpluspatch.com`)";
-    service = "plausible";
-  };
+  modules.haproxy.acls.plausible = ''
+    acl is_plausible hdr(host) -i logs.cpluspatch.com
+    use_backend plausible if is_plausible
+  '';
 
-  services.traefik.dynamicConfigOptions.http.services.plausible = {
-    loadBalancer = {
-      servers = [
-        {url = "http://localhost:${toString config.services.plausible.server.port}";}
-      ];
-    };
-  };
+  modules.haproxy.backends.plausible = ''
+    backend plausible
+      server plausible 127.0.0.1:${toString config.services.plausible.server.port}
+  '';
+
+  security.acme.certs."logs.cpluspatch.com" = {};
 }

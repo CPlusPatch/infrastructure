@@ -62,16 +62,15 @@ in {
     };
   };
 
-  services.traefik.dynamicConfigOptions.http.routers.grafana = {
-    rule = "Host(`stats.cpluspatch.com`)";
-    service = "grafana";
-  };
+  modules.haproxy.acls.grafana = ''
+    acl is_grafana hdr(host) -i stats.cpluspatch.com
+    use_backend grafana if is_grafana
+  '';
 
-  services.traefik.dynamicConfigOptions.http.services.grafana = {
-    loadBalancer = {
-      servers = [
-        {url = "http://localhost:${toString config.services.grafana.settings.server.http_port}";}
-      ];
-    };
-  };
+  modules.haproxy.backends.grafana = ''
+    backend grafana
+      server grafana 127.0.0.1:${toString config.services.grafana.settings.server.http_port}
+  '';
+
+  security.acme.certs."stats.cpluspatch.com" = {};
 }

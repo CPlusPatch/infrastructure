@@ -106,16 +106,17 @@ in {
     username = "admin";
   };
 
-  services.traefik.dynamicConfigOptions.http.routers.nextcloud = {
-    rule = "Host(`cloud.cpluspatch.com`)";
-    service = "nextcloud";
-  };
+  modules.haproxy.acls.nextcloud = ''
+    acl is_nextcloud hdr(host) -i cloud.cpluspatch.com
+    acl is_dav_url_discovery path /.well-known/caldav /.well-known/carddav
+    use_backend nextcloud if is_nextcloud
+    http-request redirect location /remote.php/dav/ code 301 if is_nextcloud is_dav_url_discovery
+  '';
 
-  services.traefik.dynamicConfigOptions.http.services.nextcloud = {
-    loadBalancer = {
-      servers = [
-        {url = "http://localhost:8080";}
-      ];
-    };
-  };
+  modules.haproxy.backends.nextcloud = ''
+    backend nextcloud
+      server nextcloud 127.0.0.1:${toString config.services.nginx.defaultHTTPListenPort}
+  '';
+
+  security.acme.certs."cloud.cpluspatch.com" = {};
 }

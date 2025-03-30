@@ -6,8 +6,8 @@
 
     # Use Let's Encrypt certificates
     certificateScheme = "manual";
-    certificateFile = "/var/lib/traefik-certs/${config.networking.hostName}.infra.cpluspatch.com/certificate.crt";
-    keyFile = "/var/lib/traefik-certs/${config.networking.hostName}.infra.cpluspatch.com/privatekey.key";
+    certificateFile = "/var/lib/acme/${config.networking.hostName}.infra.cpluspatch.com/cert.pem";
+    keyFile = "/var/lib/acme/${config.networking.hostName}.infra.cpluspatch.com/key.pem";
 
     loginAccounts = {
       "jesse.wierzbinski@cpluspatch.com" = {
@@ -60,20 +60,16 @@
     '';
   };
 
-  # Add Traefik configuration for rspamd WebUI
-  services.traefik.dynamicConfigOptions.http = {
-    routers.rspamd = {
-      rule = "Host(`rspamd.cpluspatch.com`)";
-      service = "rspamd";
-      middlewares = ["dashboard-auth@file" "compress@file"];
-    };
+  modules.haproxy.acls.rspamd = ''
+    acl is_rspamd hdr(host) -i rspamd.cpluspatch.com
+    http-request auth if is_rspamd !{ http_auth(credentials) }
+    use_backend rspamd if is_rspamd
+  '';
 
-    services.rspamd.loadBalancer = {
-      servers = [
-        {
-          url = "http://unix:/run/rspamd/worker-controller.sock";
-        }
-      ];
-    };
-  };
+  modules.haproxy.backends.rspamd = ''
+    backend rspamd
+      server rspamd unix@/run/rspamd/worker-controller.sock
+  '';
+
+  security.acme.certs."rspamd.cpluspatch.com" = {};
 }

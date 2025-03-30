@@ -14,18 +14,17 @@
     apiKeyFile = config.sops.secrets."radarr/key".path;
   };
 
-  services.traefik.dynamicConfigOptions.http.routers.radarr = {
-    rule = "Host(`radarr.lgs.cpluspatch.com`)";
-    service = "radarr";
-  };
+  modules.haproxy.acls.radarr = ''
+    acl is_radarr hdr(host) -i radarr.lgs.cpluspatch.com
+    use_backend radarr if is_radarr
+  '';
 
-  services.traefik.dynamicConfigOptions.http.services.radarr = {
-    loadBalancer = {
-      servers = [
-        {url = "http://localhost:7878";}
-      ];
-    };
-  };
+  modules.haproxy.backends.radarr = ''
+    backend radarr
+      server radarr 127.0.0.1:7878
+  '';
+
+  security.acme.certs."radarr.lgs.cpluspatch.com" = {};
 
   services.prowlarr = {
     enable = true;
@@ -38,18 +37,17 @@
     apiKeyFile = config.sops.secrets."prowlarr/key".path;
   };
 
-  services.traefik.dynamicConfigOptions.http.routers.prowlarr = {
-    rule = "Host(`prowlarr.lgs.cpluspatch.com`)";
-    service = "prowlarr";
-  };
+  modules.haproxy.acls.prowlarr = ''
+    acl is_prowlarr hdr(host) -i prowlarr.lgs.cpluspatch.com
+    use_backend prowlarr if is_prowlarr
+  '';
 
-  services.traefik.dynamicConfigOptions.http.services.prowlarr = {
-    loadBalancer = {
-      servers = [
-        {url = "http://localhost:9696";}
-      ];
-    };
-  };
+  modules.haproxy.backends.prowlarr = ''
+    backend prowlarr
+      server prowlarr 127.0.0.1:9696
+  '';
+
+  security.acme.certs."prowlarr.lgs.cpluspatch.com" = {};
 
   services.sonarr = {
     enable = true;
@@ -62,18 +60,17 @@
     apiKeyFile = config.sops.secrets."sonarr/key".path;
   };
 
-  services.traefik.dynamicConfigOptions.http.routers.sonarr = {
-    rule = "Host(`sonarr.lgs.cpluspatch.com`)";
-    service = "sonarr";
-  };
+  modules.haproxy.acls.sonarr = ''
+    acl is_sonarr hdr(host) -i sonarr.lgs.cpluspatch.com
+    use_backend sonarr if is_sonarr
+  '';
 
-  services.traefik.dynamicConfigOptions.http.services.sonarr = {
-    loadBalancer = {
-      servers = [
-        {url = "http://localhost:8989";}
-      ];
-    };
-  };
+  modules.haproxy.backends.sonarr = ''
+    backend sonarr
+      server sonarr 127.0.0.1:8989
+  '';
+
+  security.acme.certs."sonarr.lgs.cpluspatch.com" = {};
 
   services.flaresolverr = {
     enable = true;

@@ -37,16 +37,15 @@ in {
     };
   };
 
-  services.traefik.dynamicConfigOptions.http.routers.sharkey = {
-    rule = "Host(`mk.cpluspatch.com`)";
-    service = "sharkey";
-  };
+  modules.haproxy.acls.sharkey = ''
+    acl is_sharkey hdr(host) -i mk.cpluspatch.com
+    use_backend sharkey if is_sharkey
+  '';
 
-  services.traefik.dynamicConfigOptions.http.services.sharkey = {
-    loadBalancer = {
-      servers = [
-        {url = "http://localhost:${toString config.services.sharkey.settings.port}";}
-      ];
-    };
-  };
+  modules.haproxy.backends.sharkey = ''
+    backend sharkey
+      server sharkey 127.0.0.1:${toString config.services.sharkey.settings.port}
+  '';
+
+  security.acme.certs."mk.cpluspatch.com" = {};
 }

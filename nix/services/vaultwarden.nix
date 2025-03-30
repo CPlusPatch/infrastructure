@@ -13,23 +13,22 @@ in {
     dbBackend = "postgresql";
     environmentFile = config.sops.templates."vaultwarden.env".path;
     config = {
-      ROCKET_ADDRESS = "::1";
+      ROCKET_ADDRESS = "127.0.0.1";
       ROCKET_PORT = 8222;
       DOMAIN = "https://vault.cpluspatch.com";
       SIGNUPS_ALLOWED = false;
     };
   };
 
-  services.traefik.dynamicConfigOptions.http.routers.vaultwarden = {
-    rule = "Host(`vault.cpluspatch.com`)";
-    service = "vaultwarden";
-  };
+  modules.haproxy.acls.vaultwarden = ''
+    acl is_vaultwarden hdr(host) -i vault.cpluspatch.com
+    use_backend vaultwarden if is_vaultwarden
+  '';
 
-  services.traefik.dynamicConfigOptions.http.services.vaultwarden = {
-    loadBalancer = {
-      servers = [
-        {url = "http://localhost:${toString config.services.vaultwarden.config.ROCKET_PORT}";}
-      ];
-    };
-  };
+  modules.haproxy.backends.vaultwarden = ''
+    backend vaultwarden
+      server vaultwarden 127.0.0.1:${toString config.services.vaultwarden.config.ROCKET_PORT}
+  '';
+
+  security.acme.certs."vault.cpluspatch.com" = {};
 }

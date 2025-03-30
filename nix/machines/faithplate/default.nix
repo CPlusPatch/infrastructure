@@ -24,7 +24,7 @@ in {
     ../../features/zerotier.nix
     ../../features/fs-01b.nix
 
-    ../../services/traefik.nix
+    ../../services/haproxy.nix
     ../../services/keycloak.nix
     ../../services/servarr.nix
     ../../services/uptime-kuma.nix

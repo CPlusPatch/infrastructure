@@ -96,7 +96,7 @@ in {
       presence.enabled = false;
       public_baseurl = "https://matrix.cpluspatch.dev";
       server_name = "cpluspatch.dev";
-      serve_server_wellknown = true;
+      serve_server_wellknown = false;
 
       signing_key_path = config.sops.secrets."synapse/signing-key".path;
       registration_shared_secret_path = config.sops.secrets."synapse/registration-shared-secret".path;
@@ -251,31 +251,34 @@ in {
     };
   };
 
-  services.traefik.dynamicConfigOptions.http.routers.synapse = {
-    rule = "(Host(`cpluspatch.dev`) || Host(`matrix.cpluspatch.dev`)) && (PathPrefix(`/_matrix`) || PathPrefix(`/_synapse`) || PathPrefix(`/.well-known/matrix`))";
-    service = "synapse";
-  };
+  modules.haproxy.acls.synapse = ''
+    acl is_synapse_domain hdr(host) -i matrix.cpluspatch.dev
+    use_backend synapse if is_synapse_domain
+    use_backend matrix-well-known-client if { hdr(host) -i cpluspatch.dev } { path_beg /.well-known/matrix/client }
+    use_backend matrix-well-known-server if { hdr(host) -i cpluspatch.dev } { path_beg /.well-known/matrix/server }
+  '';
 
-  services.traefik.dynamicConfigOptions.http = {
-    services.synapse = {
-      loadBalancer = {
-        servers = [
-          {url = "http://localhost:${builtins.toString (builtins.head config.services.matrix-synapse.settings.listeners).port}";}
-        ];
-      };
-    };
+  modules.haproxy.backends.synapse = ''
+    backend synapse
+      server synapse 127.0.0.1:${toString (builtins.head config.services.matrix-synapse.settings.listeners).port}
+  '';
 
-    # this was funnier in my head
-    middlewares.synapse.plugin = {
-      "plugin-rewritebody" = {
-        lastModified = "true";
-        rewrites = [
-          {
-            regex = "\"name\":\"Synapse\"";
-            replacement = "\"name\":\"i touch myself to toilets at Lowe's\"";
-          }
-        ];
-      };
-    };
-  };
+  modules.haproxy.backends.matrix-well-known-client = ''
+    backend matrix-well-known-client
+      http-after-response set-header Access-Control-Allow-Origin "*"
+      http-after-response set-header Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+      http-after-response set-header Access-Control-Allow-Headers "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+      http-request return status 200 content-type application/json string '{"m.homeserver":{"base_url":"https://matrix.cpluspatch.dev"}}'
+  '';
+
+  modules.haproxy.backends.matrix-well-known-server = ''
+    backend matrix-well-known-server
+      http-after-response set-header Access-Control-Allow-Origin "*"
+      http-after-response set-header Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+      http-after-response set-header Access-Control-Allow-Headers "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+      http-request return status 200 content-type application/json string '{"m.server":"matrix.cpluspatch.dev:443"}'
+  '';
+
+  security.acme.certs."matrix.cpluspatch.dev" = {};
+  security.acme.certs."cpluspatch.dev" = {};
 }

@@ -10,7 +10,7 @@ in {
 
     scrapeConfigs = [
       {
-        job_name = "traefik";
+        job_name = "haproxy";
         static_configs = [
           {targets = ["${ips.zerotier-ips.faithplate}:8899"];}
         ];

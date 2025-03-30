@@ -73,10 +73,6 @@
         sopsFile = ../../secrets/sonarr.yaml;
         key = "api_key";
       };
-      traefik = {
-        sopsFile = ../../secrets/traefik.yaml;
-        key = "hash";
-      };
       "synapse/registration-shared-secret" = {
         sopsFile = ../../secrets/synapse.yaml;
         key = "registration_shared_secret";

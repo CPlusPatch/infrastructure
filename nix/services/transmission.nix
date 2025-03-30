@@ -27,18 +27,16 @@
     };
   };
 
-  services.traefik.dynamicConfigOptions.http.routers.transmission = {
-    entryPoints = ["websecure"];
-    rule = "Host(`dl.lgs.cpluspatch.com`)";
-    service = "transmission";
-    middlewares = ["compress@file"];
-  };
+  modules.haproxy.acls.transmission = ''
+    acl is_transmission hdr(host) -i dl.lgs.cpluspatch.com
+    use_backend transmission if is_transmission
+    http-request auth if is_transmission !{ http_auth(credentials) }
+  '';
 
-  services.traefik.dynamicConfigOptions.http.services.transmission = {
-    loadBalancer = {
-      servers = [
-        {url = "http://localhost:${toString config.services.transmission.settings.rpc-port}";}
-      ];
-    };
-  };
+  modules.haproxy.backends.transmission = ''
+    backend transmission
+      server transmission 127.0.0.1:${toString config.services.transmission.settings.rpc-port}
+  '';
+
+  security.acme.certs."dl.lgs.cpluspatch.com" = {};
 }

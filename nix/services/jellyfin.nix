@@ -3,16 +3,15 @@
     enable = true;
   };
 
-  services.traefik.dynamicConfigOptions.http.routers.jellyfin = {
-    rule = "Host(`stream.cpluspatch.com`)";
-    service = "jellyfin";
-  };
+  modules.haproxy.acls.jellyfin = ''
+    acl is_jellyfin hdr(host) -i stream.cpluspatch.com
+    use_backend jellyfin if is_jellyfin
+  '';
 
-  services.traefik.dynamicConfigOptions.http.services.jellyfin = {
-    loadBalancer = {
-      servers = [
-        {url = "http://localhost:8096";}
-      ];
-    };
-  };
+  modules.haproxy.backends.jellyfin = ''
+    backend jellyfin
+      server jellyfin 127.0.0.1:8096
+  '';
+
+  security.acme.certs."stream.cpluspatch.com" = {};
 }

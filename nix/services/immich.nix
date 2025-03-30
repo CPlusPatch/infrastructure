@@ -288,16 +288,15 @@ in {
     CapabilityBoundingSet = lib.mkForce "CAP_FOWNER";
   };
 
-  services.traefik.dynamicConfigOptions.http.routers.immich = {
-    rule = "Host(`photos.cpluspatch.com`)";
-    service = "immich";
-  };
+  modules.haproxy.acls.immich = ''
+    acl is_immich hdr(host) -i photos.cpluspatch.com
+    use_backend immich if is_immich
+  '';
 
-  services.traefik.dynamicConfigOptions.http.services.immich = {
-    loadBalancer = {
-      servers = [
-        {url = "http://localhost:${toString config.services.immich.port}";}
-      ];
-    };
-  };
+  modules.haproxy.backends.immich = ''
+    backend immich
+      server immich localhost:${toString config.services.immich.port}
+  '';
+
+  security.acme.certs."photos.cpluspatch.com" = {};
 }
