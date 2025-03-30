@@ -23,6 +23,9 @@ Content-Type: text/html
 				display: flex;
 				align-items: center;
 				justify-content: center;
+				background-position: center;
+				background-size: cover;
+				background-repeat: no-repeat;
 			}
 
 			main {

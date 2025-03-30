@@ -252,7 +252,7 @@ in {
   };
 
   modules.haproxy.acls.synapse = ''
-    acl is_synapse_domain hdr(host) -i matrix.cpluspatch.dev
+    acl is_synapse_domain hdr_reg(host) -i \bmatrix\.cpluspatch\.dev\b
     use_backend synapse if is_synapse_domain
     use_backend matrix-well-known-client if { hdr(host) -i cpluspatch.dev } { path_beg /.well-known/matrix/client }
     use_backend matrix-well-known-server if { hdr(host) -i cpluspatch.dev } { path_beg /.well-known/matrix/server }

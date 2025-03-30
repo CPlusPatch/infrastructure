@@ -20,7 +20,7 @@
     webHome = pkgs.flood-for-transmission;
 
     settings = {
-      rpc-bind-address = "localhost";
+      rpc-bind-address = "127.0.0.1";
       download-dir = "/mnt/fs-01b/torrents/downloads";
       rpc-authentication-required = true;
       rpc-username = "admin";
@@ -30,7 +30,6 @@
   modules.haproxy.acls.transmission = ''
     acl is_transmission hdr(host) -i dl.lgs.cpluspatch.com
     use_backend transmission if is_transmission
-    http-request auth if is_transmission !{ http_auth(credentials) }
   '';
 
   modules.haproxy.backends.transmission = ''

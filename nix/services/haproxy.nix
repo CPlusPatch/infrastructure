@@ -21,18 +21,22 @@
       defaultSSLListenPort = 8443;
     };
 
+    environment.etc."tls.certlist" = {
+      text = "${lib.concatStringsSep "\n" (lib.mapAttrsToList (name: value: "${value.directory}/full.pem") config.security.acme.certs)}\n";
+    };
+
     services.haproxy = {
       enable = true;
       config = ''
         global
           log /dev/log local0
           log /dev/log local1 notice
-          stats socket /run/haproxy/admin.sock mode 660 level admin expose-fd listeners
           stats timeout 30s
           daemon
 
           # Don't use SSLv3 or TLSv1.0/1.1
-          ssl-default-bind-ciphers EECDH+AESGCM:EDH+AESGCM
+          ssl-default-bind-ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384
+          ssl-default-bind-ciphersuites TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256
           ssl-default-bind-options no-sslv3 no-tlsv10 no-tlsv11
 
           # Enable SSL session caching
@@ -42,6 +46,7 @@
         http-errors errors
           errorfile 503 ${../../html/503.http}
           errorfile 502 ${../../html/502.http}
+
         defaults
           log     global
           mode    http
@@ -78,13 +83,12 @@
 
         frontend https
           mode http
-          bind :::443 v4v6 ssl ${lib.concatStringsSep " " (lib.mapAttrsToList (name: value: "crt ${value.directory}/full.pem") config.security.acme.certs)}
+          bind :::443 v4v6 ssl prefer-client-ciphers crt-list /etc/tls.certlist
+          option forwardfor
           http-response set-header Strict-Transport-Security "max-age=15552000; includeSubDomains"
           http-response set-header X-Content-Type-Options nosniff
           # Opt out of FLoC
           http-response set-header Permissions-Policy "interest-cohort=()"
-          # Offload compression to HAProxy, stripping the Accept-Encoding header
-          compression offload
 
           errorfiles errors
 
