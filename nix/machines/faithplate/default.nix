@@ -56,7 +56,7 @@ in {
       matchConfig.Name = "enp1s0";
       networkConfig.DHCP = "ipv4";
       address = [
-        "${variables.ipv6}"
+        "${variables.ipv6}/64"
       ];
       routes = [
         {Gateway = "fe80::1";}

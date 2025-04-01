@@ -50,8 +50,8 @@
         defaults
           log     global
           mode    http
-          option  httplog
           option  dontlognull
+          option  dontlog-normal
           timeout connect 5000ms
           timeout client  50000ms
           timeout server  50000ms
@@ -65,7 +65,9 @@
 
         frontend metrics
           bind :::8899 v4v6
+          mode http
           http-request use-service prometheus-exporter if { path /metrics }
+          no log
           stats enable
           stats uri /
           stats refresh 10s
@@ -79,6 +81,9 @@
           http-request redirect scheme https unless { ssl_fc } || is_acme
           use_backend acme if is_acme
 
+          http-request capture req.hdr(Host) len 20
+          log-format "%ci:%cp [%tr] %ft %b/%s %ST %ac/%fc/%bc/%sc/%rc %[capture.req.hdr(0)] %HM %{+Q}HU"
+
           errorfiles errors
 
         frontend https
@@ -90,6 +95,10 @@
           # Opt out of FLoC
           http-response set-header Permissions-Policy "interest-cohort=()"
 
+          default_backend default
+          http-request capture req.hdr(Host) len 20
+          log-format "%ci:%cp [%tr] %ft %b/%s %ST %ac/%fc/%bc/%sc/%rc %[capture.req.hdr(0)] %HM %{+Q}HU"
+
           errorfiles errors
 
           # Redirect cpluspatch.dev to cpluspatch.com
@@ -100,6 +109,10 @@
             config.modules.haproxy.acls)}
 
         # Backends
+        backend default
+          mode http
+          http-request deny
+
         # Redirect acme requests to the nginx static file server
         backend acme
           server acme localhost${config.security.acme.defaults.listenHTTP}
