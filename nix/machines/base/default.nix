@@ -137,6 +137,8 @@
     };
   };
 
+  virtualisation.oci-containers.backend = "docker";
+
   # Ban all the things!
   services.fail2ban = {
     enable = true;

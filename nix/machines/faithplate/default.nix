@@ -36,6 +36,7 @@ in {
     ../../services/grafana.nix
     ../../services/jellyfin.nix
     ../../services/nextcloud.nix
+    ../../services/sharelists.nix
     ../../services/sharkey.nix
     ../../services/immich.nix
     ../../services/bitchbot.nix

@@ -41,6 +41,10 @@
         sopsFile = ../../secrets/postgresql/immich.yaml;
         key = "password";
       };
+      "postgresql/sharelists" = {
+        sopsFile = ../../secrets/postgresql/sharelists.yaml;
+        key = "password";
+      };
       "redis/sharkey" = {
         sopsFile = ../../secrets/redis/sharkey.yaml;
         key = "password";
