@@ -113,7 +113,7 @@
           mode http
           http-request deny
 
-        # Redirect acme requests to the nginx static file server
+        # Redirect acme requests to the lego client
         backend acme
           server acme localhost${config.security.acme.defaults.listenHTTP}
 

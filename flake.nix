@@ -26,6 +26,10 @@
       url = "github:CPlusPatch/jesses-vengeance";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    syncbot = {
+      url = "github:CPlusPatch/syncbot";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = {
@@ -35,6 +39,7 @@
     sops-nix,
     simple-nixos-mailserver,
     bitchbot,
+    syncbot,
     ...
   } @ inputs: {
     nixosConfigurations = {
@@ -46,6 +51,7 @@
           sops-nix.nixosModules.sops
           simple-nixos-mailserver.nixosModule
           bitchbot.nixosModules.${system}.bitchbot
+          syncbot.nixosModules.${system}.syncbot
           ./nix/machines/base
           ./nix/partitions/single-zfs.nix
           ./nix/machines/faithplate
