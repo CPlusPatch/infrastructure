@@ -4,7 +4,7 @@
   config,
   ...
 }: {
-  sops.templates.postgres_env = {
+  sops.templates.sharelists_postgres_env = {
     content = ''
       POSTGRES_DB=sharelists
       POSTGRES_PASSWORD=${config.sops.placeholder."postgresql/sharelists"}
@@ -61,7 +61,7 @@
   virtualisation.oci-containers.containers."sharelists-postgres" = {
     image = "postgres:17-alpine";
     environmentFiles = [
-      config.sops.templates.postgres_env.path
+      config.sops.templates.sharelists_postgres_env.path
     ];
     volumes = [
       "sharelists_sharelists-postgres:/var/lib/postgresql/data:rw"

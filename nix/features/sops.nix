@@ -45,6 +45,10 @@
         sopsFile = ../../secrets/postgresql/sharelists.yaml;
         key = "password";
       };
+      "postgresql/versia" = {
+        sopsFile = ../../secrets/postgresql/versia.yaml;
+        key = "password";
+      };
       "docker/ghcr" = {
         sopsFile = ../../secrets/docker.yaml;
         key = "ghcr_password";
