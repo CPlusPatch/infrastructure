@@ -28,6 +28,11 @@
       "--network-alias=sharelists"
       "--network=sharelists_default"
     ];
+    login = {
+      username = "cpluspatch";
+      registry = "https://ghcr.io";
+      passwordFile = config.sops.secrets."docker/ghcr".path;
+    };
   };
 
   systemd.services."docker-sharelists" = {

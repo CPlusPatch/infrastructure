@@ -362,11 +362,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1743520985,
-        "narHash": "sha256-SbPlOTuEiuImaSrDgOJJJl80asxHuu/swNoPV9NOJE0=",
+        "lastModified": 1743612533,
+        "narHash": "sha256-K5dUGMloZ/6EetZLGnX4GpUeV8oTt6ioUe8wovLz21Y=",
         "owner": "CPlusPatch",
         "repo": "syncbot",
-        "rev": "4848cbcba40443433ea7c370e461392ae0d6b3e1",
+        "rev": "27b4df7992ed88162de9a41f610e5d1897072147",
         "type": "github"
       },
       "original": {

@@ -40,6 +40,7 @@ in {
     ../../services/sharkey.nix
     ../../services/immich.nix
     ../../services/bitchbot.nix
+    ../../services/syncbot.nix
   ];
 
   disko.devices.disk.main.device = "/dev/sda";

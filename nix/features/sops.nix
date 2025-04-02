@@ -45,6 +45,10 @@
         sopsFile = ../../secrets/postgresql/sharelists.yaml;
         key = "password";
       };
+      "docker/ghcr" = {
+        sopsFile = ../../secrets/docker.yaml;
+        key = "ghcr_password";
+      };
       "redis/sharkey" = {
         sopsFile = ../../secrets/redis/sharkey.yaml;
         key = "password";
