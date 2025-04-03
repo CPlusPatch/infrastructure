@@ -143,8 +143,8 @@
           use_backend varnish if varnish_available pseudo_static
 
           # Redirect cpluspatch.dev to cpluspatch.com
-          acl is_old_site hdr(host) -i cpluspatch.dev !{ path_beg /.well-known/matrix }
-          http-request redirect code 301 location https://cpluspatch.com%[capture.req.uri] if is_old_site
+          acl is_old_site hdr(host) -i cpluspatch.dev
+          http-request redirect code 301 location https://cpluspatch.com%[capture.req.uri] if is_old_site !{ path_beg /.well-known/matrix }
 
         ${lib.concatStringsSep "\n\n" (lib.mapAttrsToList (name: value: "  ${lib.concatStringsSep "\n  " (lib.splitString "\n" value)}")
             config.modules.haproxy.acls)}
