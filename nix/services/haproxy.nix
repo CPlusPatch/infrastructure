@@ -1,6 +1,7 @@
 {
   config,
   lib,
+  pkgs,
   ...
 }: {
   options.modules.haproxy = {
@@ -11,6 +12,12 @@
     acls = lib.mkOption {
       type = lib.types.attrsOf lib.types.str;
       default = {};
+    };
+
+    enableConfigCheck = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+      description = "Enable syntax checking of the HAProxy configuration";
     };
   };
 
@@ -24,6 +31,12 @@
     environment.etc."tls.certlist" = {
       text = "${lib.concatStringsSep "\n" (lib.mapAttrsToList (name: value: "${value.directory}/full.pem") config.security.acme.certs)}\n";
     };
+
+    system.checks = lib.mkIf config.modules.haproxy.enableConfigCheck [
+      (pkgs.runCommand "check-haproxy-syntax" {} ''
+        ${pkgs.haproxy}/bin/haproxy -c -f ${config.environment.etc."haproxy.cfg".source} 2> $out || (cat $out; exit 1)
+      '')
+    ];
 
     services.haproxy = {
       enable = true;
@@ -86,6 +99,21 @@
 
           errorfiles errors
 
+        # Used by Varnish when updating its cache
+        frontend varnish_cache
+          mode http
+          bind :::19872 v4v6
+          # TODO: Make this actually fail on errors
+          monitor-uri /healthcheck
+
+          # Preserve X-Forwarded-For header, set by Varnish
+          option forwardfor if-none
+
+          default_backend default
+
+        ${lib.concatStringsSep "\n\n" (lib.mapAttrsToList (name: value: "  ${lib.concatStringsSep "\n  " (lib.splitString "\n" value)}")
+            config.modules.haproxy.acls)}
+
         frontend https
           mode http
           bind :::443 v4v6 ssl prefer-client-ciphers crt-list /etc/tls.certlist
@@ -101,9 +129,22 @@
 
           errorfiles errors
 
+          # AP ACLs
+          acl is_activitypub_req hdr(Accept) -i ld+json application/activity+json
+          acl is_activitypub_payload hdr(Content-Type) -i application/ld+json application/activity+json
+
+          # Static content detection
+          acl static_content path_end .jpg .gif .png .css .js .htm .html .ico .svg .webp
+          acl pseudo_static path_end .php ! path_beg /dynamic/
+          acl varnish_available nbsrv(varnish) ge 1
+
+          # Caches health detection + routing decision
+          use_backend varnish if varnish_available static_content
+          use_backend varnish if varnish_available pseudo_static
+
           # Redirect cpluspatch.dev to cpluspatch.com
-          #acl is_old_site hdr(host) -i cpluspatch.dev
-          #http-request redirect code 301 location https://cpluspatch.com%[capture.req.uri] if is_old_site !{ path_beg /.well-known/matrix }
+          acl is_old_site hdr(host) -i cpluspatch.dev !{ path_beg /.well-known/matrix }
+          http-request redirect code 301 location https://cpluspatch.com%[capture.req.uri] if is_old_site
 
         ${lib.concatStringsSep "\n\n" (lib.mapAttrsToList (name: value: "  ${lib.concatStringsSep "\n  " (lib.splitString "\n" value)}")
             config.modules.haproxy.acls)}
@@ -116,6 +157,16 @@
         # Redirect acme requests to the lego client
         backend acme
           server acme localhost${config.security.acme.defaults.listenHTTP}
+
+        # Varnish backend
+        backend varnish
+          mode http
+          # Varnish must tell it's ready to accept traffic
+          option httpchk HEAD /healthcheck
+          http-check expect status 200
+          option forwardfor
+          hash-type consistent
+          server varnish1 127.0.0.1:6081
 
         ${lib.concatStringsSep "\n\n" (lib.mapAttrsToList (name: value: value) config.modules.haproxy.backends)}
       '';
