@@ -127,4 +127,11 @@
       }
     '';
   };
+
+  services.prometheus.exporters.varnish = {
+    enable = true;
+    withGoMetrics = true;
+    group = "varnish";
+    instance = "/var/run/varnishd";
+  };
 }

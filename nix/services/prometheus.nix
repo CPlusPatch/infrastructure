@@ -63,7 +63,12 @@ in {
           {targets = ["${ips.zerotier-ips.faithplate}:${toString config.services.prometheus.exporters.nextcloud.port}"];}
         ];
       }
-      # TODO: Add synapse, docker and jellyfin
+      {
+        job_name = "varnish";
+        static_configs = [
+          {targets = ["${ips.zerotier-ips.faithplate}:${toString config.services.prometheus.exporters.varnish.port}"];}
+        ];
+      }
     ];
 
     exporters = {
