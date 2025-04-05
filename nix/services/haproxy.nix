@@ -3,7 +3,11 @@
   lib,
   pkgs,
   ...
-}: {
+}: let
+  # Pad a string, adding a prefix to each line
+  padString = prefix: str: lib.concatStringsSep "\n" (lib.map (line: "${prefix}${line}") (lib.splitString "\n" str));
+  separateModule = modules: lib.concatStringsSep "\n\n" modules;
+in {
   options.modules.haproxy = {
     backends = lib.mkOption {
       type = lib.types.attrsOf lib.types.str;
@@ -117,8 +121,7 @@
 
           default_backend default
 
-        ${lib.concatStringsSep "\n\n" (lib.mapAttrsToList (name: value: "  ${lib.concatStringsSep "\n  " (lib.splitString "\n" value)}")
-            config.modules.haproxy.acls)}
+        ${separateModule (lib.mapAttrsToList (name: value: padString "  " value) config.modules.haproxy.acls)}
 
         frontend https
           mode http
@@ -152,10 +155,9 @@
           acl is_old_site hdr(host) -i cpluspatch.dev
           http-request redirect code 301 location https://cpluspatch.com%[capture.req.uri] if is_old_site !{ path_beg /.well-known/matrix }
 
-        ${lib.concatStringsSep "\n\n" (lib.mapAttrsToList (name: value: "  ${lib.concatStringsSep "\n  " (lib.splitString "\n" value)}")
-            config.modules.haproxy.acls)}
+        ${separateModule (lib.mapAttrsToList (name: value: padString "  " value) config.modules.haproxy.acls)}
 
-        ${lib.concatStringsSep "\n\n" (lib.mapAttrsToList (name: value: value) config.modules.haproxy.frontends)}
+        ${separateModule (lib.mapAttrsToList (name: value: value) config.modules.haproxy.frontends)}
 
         # Backends
         backend default
@@ -176,7 +178,7 @@
           hash-type consistent
           server varnish1 127.0.0.1:6081
 
-        ${lib.concatStringsSep "\n\n" (lib.mapAttrsToList (name: value: value) config.modules.haproxy.backends)}
+        ${separateModule (lib.mapAttrsToList (name: value: value) config.modules.haproxy.backends)}
       '';
     };
 
