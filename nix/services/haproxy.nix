@@ -118,8 +118,6 @@
           mode http
           bind :::443 v4v6 ssl prefer-client-ciphers crt-list /etc/tls.certlist
           option forwardfor
-          http-response set-header Strict-Transport-Security "max-age=15552000; includeSubDomains"
-          http-response set-header X-Content-Type-Options nosniff
           # Opt out of FLoC
           http-response set-header Permissions-Policy "interest-cohort=()"
 
@@ -138,9 +136,11 @@
           acl pseudo_static path_end .php ! path_beg /dynamic/
           acl varnish_available nbsrv(varnish) ge 1
 
+          acl is_servarr hdr(host) -i -m end lgs.cpluspatch.com
+
           # Caches health detection + routing decision
-          use_backend varnish if varnish_available static_content
-          use_backend varnish if varnish_available pseudo_static
+          use_backend varnish if varnish_available static_content !is_servarr
+          use_backend varnish if varnish_available pseudo_static !is_servarr
 
           # Redirect cpluspatch.dev to cpluspatch.com
           acl is_old_site hdr(host) -i cpluspatch.dev
