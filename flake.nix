@@ -30,6 +30,10 @@
       url = "github:CPlusPatch/syncbot";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    nix-minecraft = {
+      url = "github:Infinidoge/nix-minecraft";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = {
@@ -40,6 +44,7 @@
     simple-nixos-mailserver,
     bitchbot,
     syncbot,
+    nix-minecraft,
     ...
   } @ inputs: {
     nixosConfigurations = {
@@ -50,6 +55,10 @@
           disko.nixosModules.disko
           sops-nix.nixosModules.sops
           simple-nixos-mailserver.nixosModule
+          nix-minecraft.nixosModules.minecraft-servers
+          {
+            nixpkgs.overlays = [nix-minecraft.overlay];
+          }
           bitchbot.nixosModules.${system}.bitchbot
           syncbot.nixosModules.${system}.syncbot
           ./nix/machines/base

@@ -9,6 +9,12 @@
       type = lib.types.attrsOf lib.types.str;
       default = {};
     };
+
+    frontends = lib.mkOption {
+      type = lib.types.attrsOf lib.types.str;
+      default = {};
+    };
+
     acls = lib.mkOption {
       type = lib.types.attrsOf lib.types.str;
       default = {};
@@ -148,6 +154,8 @@
 
         ${lib.concatStringsSep "\n\n" (lib.mapAttrsToList (name: value: "  ${lib.concatStringsSep "\n  " (lib.splitString "\n" value)}")
             config.modules.haproxy.acls)}
+
+        ${lib.concatStringsSep "\n\n" (lib.mapAttrsToList (name: value: value) config.modules.haproxy.frontends)}
 
         # Backends
         backend default
