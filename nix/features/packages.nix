@@ -28,5 +28,12 @@
     bat.enable = true;
     direnv.enable = true;
     git.enable = true;
+    tmux = {
+      enable = true;
+      terminal = "xterm-256color";
+      extraConfig = ''
+        set -g mouse on
+      '';
+    };
   };
 }

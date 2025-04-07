@@ -1,12 +1,30 @@
+# Minecraft records
+resource "cloudflare_dns_record" "camaradcraft_srv" {
+  zone_id = var.cpluspatch-com-zone_id
+  comment = "SRV record for camaradcraft"
+  name    = "_minecraft._tcp.camaradcraft.cpluspatch.com"
+  type    = "SRV"
+  data = {
+    service  = "_minecraft"
+    proto    = "_tcp"
+    name     = "camaradcraft.cpluspatch.com."
+    priority = 5
+    weight   = 0
+    port     = 25565
+    target   = "${hcloud_server.faithplate.name}.infra.cpluspatch.com."
+  }
+  ttl = 1
+}
+
 # Email records
 resource "cloudflare_dns_record" "email_mx" {
-  zone_id = var.cpluspatch-com-zone_id
-  comment = "MX record for cpluspatch.com"
-  name    = "cpluspatch.com"
-  type    = "MX"
+  zone_id  = var.cpluspatch-com-zone_id
+  comment  = "MX record for cpluspatch.com"
+  name     = "cpluspatch.com"
+  type     = "MX"
   priority = 10
-  content = "${hcloud_server.faithplate.name}.infra.cpluspatch.com"
-  ttl     = 1
+  content  = "${hcloud_server.faithplate.name}.infra.cpluspatch.com"
+  ttl      = 1
 }
 
 resource "cloudflare_dns_record" "email_spf" {
@@ -28,12 +46,12 @@ resource "cloudflare_dns_record" "email_dmarc" {
 }
 
 resource "cloudflare_dns_record" "email_dkim" {
-	zone_id = var.cpluspatch-com-zone_id
-	comment = "DKIM record for cpluspatch.com"
-	name    = "mail._domainkey.cpluspatch.com"
-	type    = "TXT"
-	content = "\"v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDXwL4re4GT78duA4Nfjo/GZ69GCrH4z0fDZFmQNUpoQvVIst4TNkltLh11XlgpvIKU1mn0dRTiqoMloyhfnlOtawNdjS78B5Pb6XzBjLbWvn8rds84Jt5ruvj1o4XD6ADK4yfc9mpLT1e0pu5gMRhuYrxAGeK1y7+P4N6jfZgFAwIDAQAB\""
-	ttl     = 10800
+  zone_id = var.cpluspatch-com-zone_id
+  comment = "DKIM record for cpluspatch.com"
+  name    = "mail._domainkey.cpluspatch.com"
+  type    = "TXT"
+  content = "\"v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDXwL4re4GT78duA4Nfjo/GZ69GCrH4z0fDZFmQNUpoQvVIst4TNkltLh11XlgpvIKU1mn0dRTiqoMloyhfnlOtawNdjS78B5Pb6XzBjLbWvn8rds84Jt5ruvj1o4XD6ADK4yfc9mpLT1e0pu5gMRhuYrxAGeK1y7+P4N6jfZgFAwIDAQAB\""
+  ttl     = 10800
 }
 
 # Email autodiscover records
@@ -41,8 +59,8 @@ resource "cloudflare_dns_record" "email_autodiscover_submission" {
   zone_id = var.cpluspatch-com-zone_id
   comment = "Used for email client autodiscover"
   name    = "_submission._tcp.cpluspatch.com"
-  type = "SRV"
-  data   = {
+  type    = "SRV"
+  data = {
     service  = "_submission"
     proto    = "_tcp"
     name     = "cpluspatch.com."
@@ -58,8 +76,8 @@ resource "cloudflare_dns_record" "email_autodiscover_submissions" {
   zone_id = var.cpluspatch-com-zone_id
   comment = "Used for email client autodiscover"
   name    = "_submissions._tcp.cpluspatch.com"
-  type = "SRV"
-  data   = {
+  type    = "SRV"
+  data = {
     service  = "_submissions"
     proto    = "_tcp"
     name     = "cpluspatch.com."
@@ -74,8 +92,8 @@ resource "cloudflare_dns_record" "email_autodiscover_imap" {
   zone_id = var.cpluspatch-com-zone_id
   comment = "Used for email client autodiscover"
   name    = "_imap._tcp.cpluspatch.com"
-  type = "SRV"
-  data   = {
+  type    = "SRV"
+  data = {
     service  = "_imap"
     proto    = "_tcp"
     name     = "cpluspatch.com."
@@ -91,8 +109,8 @@ resource "cloudflare_dns_record" "email_autodiscover_imaps" {
   zone_id = var.cpluspatch-com-zone_id
   comment = "Used for email client autodiscover"
   name    = "_imaps._tcp.cpluspatch.com"
-  type = "SRV"
-  data   = {
+  type    = "SRV"
+  data = {
     service  = "_imaps"
     proto    = "_tcp"
     name     = "cpluspatch.com."
@@ -134,7 +152,7 @@ resource "hcloud_rdns" "infra_ip_rdns" {
   for_each = tomap({ for s in local.servers : s.server.name => s })
 
   ip_address = each.value.server.ipv4_address
-  server_id = each.value.server.id
+  server_id  = each.value.server.id
   dns_ptr    = "${each.value.server.name}.infra.cpluspatch.com"
 }
 

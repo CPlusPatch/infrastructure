@@ -56,7 +56,7 @@ locals {
     "sonarr.lgs.cpluspatch.com"   = hcloud_server.faithplate
     "dl.lgs.cpluspatch.com"       = hcloud_server.faithplate
     "status.cpluspatch.com"       = hcloud_server.faithplate
-	"rspamd.cpluspatch.com"       = hcloud_server.faithplate
+    "rspamd.cpluspatch.com"       = hcloud_server.faithplate
     "matrix.cpluspatch.dev"       = hcloud_server.faithplate
     "cpluspatch.dev"              = hcloud_server.faithplate
     "vault.cpluspatch.com"        = hcloud_server.faithplate
@@ -66,9 +66,10 @@ locals {
     "stream.cpluspatch.com"       = hcloud_server.faithplate
     "cloud.cpluspatch.com"        = hcloud_server.faithplate
     "mk.cpluspatch.com"           = hcloud_server.faithplate
-	"photos.cpluspatch.com"       = hcloud_server.faithplate
-	"api.sl.cpluspatch.dev"       = hcloud_server.faithplate
+    "photos.cpluspatch.com"       = hcloud_server.faithplate
+    "api.sl.cpluspatch.dev"       = hcloud_server.faithplate
     "social.lysand.org"           = hcloud_server.faithplate
+    "camaradcraft.cpluspatch.com" = hcloud_server.faithplate
   }
 
   domain_zone_mappings = {

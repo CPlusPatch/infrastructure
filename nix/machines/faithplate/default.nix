@@ -43,6 +43,7 @@ in {
     ../../services/bitchbot.nix
     ../../services/syncbot.nix
     ../../services/versia.nix
+    ../../services/minecraft.nix
   ];
 
   disko.devices.disk.main.device = "/dev/sda";
