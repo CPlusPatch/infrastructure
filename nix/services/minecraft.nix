@@ -18,6 +18,8 @@ in {
     eula = true;
     openFirewall = true;
 
+    managementSystem.systemd-socket.enable = true;
+
     servers.camaradcraft = {
       enable = true;
       autoStart = true;
