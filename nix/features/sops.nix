@@ -61,6 +61,10 @@
         sopsFile = ../../secrets/redis/immich.yaml;
         key = "password";
       };
+      "redis/bitchbot" = {
+        sopsFile = ../../secrets/redis/bitchbot.yaml;
+        key = "password";
+      };
       "s3/backups/keyid" = {
         sopsFile = ../../secrets/s3/backups.yaml;
         key = "key_id";

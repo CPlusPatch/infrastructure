@@ -18,6 +18,13 @@ in {
         bind = ips.zerotier-ips.freeman;
         requirePassFile = config.sops.secrets."redis/immich".path;
       };
+
+      bitchbot = {
+        enable = true;
+        port = 6382;
+        bind = ips.zerotier-ips.freeman;
+        requirePassFile = config.sops.secrets."redis/bitchbot".path;
+      };
     };
   };
 }
