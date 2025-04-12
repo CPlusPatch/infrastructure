@@ -162,7 +162,7 @@ module "nixos_install" {
   # Warning: IPv6 will not work until the first rebuild
   # (which will configure the network interfaces), which
   # means an IPv4 address has to be used here
-  target_host                = coalesce( each.value.server.ipv6_address)
+  target_host                = coalesce(each.value.server.ipv4_address, each.value.server.ipv6_address)
   nixos_system_attr          = "..#nixosConfigurations.${each.key}.config.system.build.toplevel"
   nixos_partitioner_attr     = "..#nixosConfigurations.${each.key}.config.system.build.diskoScriptNoDeps"
   nixos_generate_config_path = "${path.module}/../nix/machines/${each.key}/hardware-configuration.nix"
