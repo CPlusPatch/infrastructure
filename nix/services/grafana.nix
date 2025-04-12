@@ -1,5 +1,5 @@
 {config, ...}: let
-  ips = import ../lib/zerotier-ips.nix;
+  inherit (import ../lib/ips.nix) ips;
 in {
   sops.secrets."grafana/secret-key" = {
     owner = "grafana";
@@ -32,7 +32,7 @@ in {
 
       database = {
         type = "postgres";
-        host = "${ips.zerotier-ips.freeman}:5432";
+        host = "${ips.freeman}:5432";
         user = "grafana";
         password = "$__file{${config.sops.secrets."postgresql/grafana".path}}";
         name = "grafana";

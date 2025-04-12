@@ -8,5 +8,5 @@
 
   networking.firewall.trustedInterfaces = ["ztuku27hp3"];
 
-  # Don't forget to add 10.147.19.0/24 to allowed IPs in Postgres hba.conf
+  # Don't forget to add 10.0.0.0/8 to allowed IPs in Postgres hba.conf
 }

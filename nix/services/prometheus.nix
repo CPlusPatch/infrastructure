@@ -1,5 +1,5 @@
 {config, ...}: let
-  ips = import ../lib/zerotier-ips.nix;
+  inherit (import ../lib/ips.nix) ips;
 in {
   services.prometheus = {
     enable = true;
@@ -12,7 +12,7 @@ in {
       {
         job_name = "haproxy";
         static_configs = [
-          {targets = ["${ips.zerotier-ips.faithplate}:8899"];}
+          {targets = ["${ips.faithplate}:8899"];}
         ];
       }
       {
@@ -36,37 +36,37 @@ in {
       {
         job_name = "sonarr";
         static_configs = [
-          {targets = ["${ips.zerotier-ips.faithplate}:${toString config.services.prometheus.exporters.exportarr-sonarr.port}"];}
+          {targets = ["${ips.faithplate}:${toString config.services.prometheus.exporters.exportarr-sonarr.port}"];}
         ];
       }
       {
         job_name = "radarr";
         static_configs = [
-          {targets = ["${ips.zerotier-ips.faithplate}:${toString config.services.prometheus.exporters.exportarr-radarr.port}"];}
+          {targets = ["${ips.faithplate}:${toString config.services.prometheus.exporters.exportarr-radarr.port}"];}
         ];
       }
       {
         job_name = "prowlarr";
         static_configs = [
-          {targets = ["${ips.zerotier-ips.faithplate}:${toString config.services.prometheus.exporters.exportarr-prowlarr.port}"];}
+          {targets = ["${ips.faithplate}:${toString config.services.prometheus.exporters.exportarr-prowlarr.port}"];}
         ];
       }
       {
         job_name = "synapse";
         static_configs = [
-          {targets = ["${ips.zerotier-ips.faithplate}:9000"];}
+          {targets = ["${ips.faithplate}:9000"];}
         ];
       }
       {
         job_name = "nextcloud";
         static_configs = [
-          {targets = ["${ips.zerotier-ips.faithplate}:${toString config.services.prometheus.exporters.nextcloud.port}"];}
+          {targets = ["${ips.faithplate}:${toString config.services.prometheus.exporters.nextcloud.port}"];}
         ];
       }
       {
         job_name = "varnish";
         static_configs = [
-          {targets = ["${ips.zerotier-ips.faithplate}:${toString config.services.prometheus.exporters.varnish.port}"];}
+          {targets = ["${ips.faithplate}:${toString config.services.prometheus.exporters.varnish.port}"];}
         ];
       }
     ];

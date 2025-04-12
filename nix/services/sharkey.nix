@@ -1,5 +1,5 @@
 {config, ...}: let
-  ips = import ../lib/zerotier-ips.nix;
+  inherit (import ../lib/ips.nix) ips;
 in {
   imports = [../packages/sharkey/import.mod.nix];
 
@@ -17,14 +17,14 @@ in {
     domain = "mk.cpluspatch.com";
 
     database = {
-      host = ips.zerotier-ips.freeman;
+      host = ips.freeman;
       port = 5432;
       name = "misskey";
       passwordFile = config.sops.secrets."postgresql/sharkey".path;
     };
 
     redis = {
-      host = ips.zerotier-ips.freeman;
+      host = ips.freeman;
       port = 6380;
       passwordFile = config.sops.secrets."redis/sharkey".path;
     };

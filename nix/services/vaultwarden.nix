@@ -1,9 +1,9 @@
 {config, ...}: let
-  ips = import ../lib/zerotier-ips.nix;
+  inherit (import ../lib/ips.nix) ips;
 in {
   sops.templates."vaultwarden.env" = {
     content = ''
-      DATABASE_URL=postgresql://vaultwarden:${config.sops.placeholder."postgresql/vaultwarden"}@${ips.zerotier-ips.freeman}/vaultwarden
+      DATABASE_URL=postgresql://vaultwarden:${config.sops.placeholder."postgresql/vaultwarden"}@${ips.freeman}/vaultwarden
     '';
     owner = "vaultwarden";
   };

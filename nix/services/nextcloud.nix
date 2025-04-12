@@ -3,7 +3,7 @@
   pkgs,
   ...
 }: let
-  ips = import ../lib/zerotier-ips.nix;
+  inherit (import ../lib/ips.nix) ips;
 in {
   sops.templates."nextcloud-secrets.json" = {
     owner = "nextcloud";
@@ -57,7 +57,7 @@ in {
       adminuser = "admin";
       adminpassFile = builtins.toFile "admin-password" "admin";
 
-      dbhost = ips.zerotier-ips.freeman;
+      dbhost = ips.freeman;
       dbname = "nextcloud";
       dbpassFile = config.sops.secrets."postgresql/nextcloud".path;
       dbtype = "pgsql";

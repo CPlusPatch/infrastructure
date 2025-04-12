@@ -145,6 +145,9 @@
     maxretry = 5;
   };
 
+  # Trust the LAN interface
+  networking.firewall.trustedInterfaces = ["enp7s0"];
+
   system = {
     # This value determines the NixOS release from which the default
     # settings for stateful data, like file locations and database versions

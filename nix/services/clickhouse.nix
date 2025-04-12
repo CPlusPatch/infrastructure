@@ -1,5 +1,5 @@
 {...}: let
-  ips = import ../lib/zerotier-ips.nix;
+  inherit (import ../lib/ips.nix) ips;
 in {
   services.clickhouse = {
     enable = true;
@@ -9,7 +9,7 @@ in {
     "clickhouse-server/config.d/listen.xml" = {
       text = ''
         <clickhouse>
-          <listen_host>${ips.zerotier-ips.freeman}</listen_host>
+          <listen_host>${ips.freeman}</listen_host>
         </clickhouse>
       '';
     };

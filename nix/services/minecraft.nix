@@ -58,16 +58,4 @@ in {
       };
     };
   };
-
-  modules.haproxy.acls.minecraft-cpluscraft = ''
-    acl is_cpluscraft hdr(host) -i mc.cpluspatch.com
-    use_backend minecraft-cpluscraft-bluemap if is_cpluscraft
-  '';
-
-  modules.haproxy.backends.minecraft-cpluscraft-bluemap = ''
-    backend minecraft-cpluscraft-bluemap
-      server minecraft-cpluscraft-bluemap 127.0.0.1:8100
-  '';
-
-  security.acme.certs."mc.cpluspatch.com" = {};
 }

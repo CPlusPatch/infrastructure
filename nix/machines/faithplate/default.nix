@@ -43,7 +43,6 @@ in {
     ../../services/bitchbot.nix
     ../../services/syncbot.nix
     ../../services/versia.nix
-    ../../services/minecraft.nix
   ];
 
   disko.devices.disk.main.device = "/dev/sda";
@@ -59,13 +58,22 @@ in {
     enable = true;
     networks."30-wan" = {
       matchConfig.Name = "enp1s0";
-      networkConfig.DHCP = "ipv4";
+      networkConfig.DHCP = "no";
       address = [
+        "${variables.ipv4}/32"
         "${variables.ipv6}/64"
       ];
       routes = [
+        {
+          Gateway = "172.31.1.1";
+          GatewayOnLink = true;
+        }
         {Gateway = "fe80::1";}
       ];
+    };
+    networks."31-lan" = {
+      matchConfig.Name = "enp7s0";
+      networkConfig.DHCP = "ipv4";
     };
   };
 

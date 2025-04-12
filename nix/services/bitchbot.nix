@@ -1,9 +1,9 @@
 {config, ...}: let
-  ips = import ../lib/zerotier-ips.nix;
+  inherit (import ../lib/ips.nix) ips;
 in {
   sops.templates."bitchbot.env" = {
     content = ''
-      REDIS_URL=redis://:${config.sops.placeholder."redis/bitchbot"}@${ips.zerotier-ips.freeman}:6382
+      REDIS_URL=redis://:${config.sops.placeholder."redis/bitchbot"}@${ips.freeman}:6382
       CONSOLA_LEVEL=4
     '';
     owner = "bitchbot";

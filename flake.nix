@@ -89,6 +89,26 @@
           inherit inputs;
         };
       };
+
+      eli = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        modules = [
+          lix-module.nixosModules.lixFromNixpkgs
+          disko.nixosModules.disko
+          sops-nix.nixosModules.sops
+          nix-minecraft.nixosModules.minecraft-servers
+          {
+            nixpkgs.overlays = [nix-minecraft.overlay];
+          }
+          ./nix/machines/base
+          ./nix/partitions/single-zfs.nix
+          ./nix/machines/eli
+        ];
+
+        specialArgs = {
+          inherit inputs;
+        };
+      };
     };
   };
 }

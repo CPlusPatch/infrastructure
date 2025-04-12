@@ -7,6 +7,7 @@
   # Pad a string, adding a prefix to each line
   padString = prefix: str: lib.concatStringsSep "\n" (lib.map (line: "${prefix}${line}") (lib.splitString "\n" str));
   separateModule = modules: lib.concatStringsSep "\n\n" modules;
+  inherit (import ../lib/ips.nix) ips;
 in {
   options.modules.haproxy = {
     backends = lib.mkOption {
@@ -32,6 +33,31 @@ in {
   };
 
   config = {
+    modules.haproxy.frontends.minecraft-eli = ''
+      frontend minecraft-eli
+        mode tcp
+        bind :::25565 v4v6
+        default_backend minecraft-eli
+    '';
+
+    modules.haproxy.backends.minecraft-eli = ''
+      backend minecraft-eli
+        mode tcp
+        server minecraft-eli ${ips.eli}:25565
+    '';
+
+    modules.haproxy.acls.minecraft-cpluscraft = ''
+      acl is_cpluscraft hdr(host) -i mc.cpluspatch.com
+      use_backend minecraft-cpluscraft-bluemap if is_cpluscraft
+    '';
+
+    modules.haproxy.backends.minecraft-cpluscraft-bluemap = ''
+      backend minecraft-cpluscraft-bluemap
+        server minecraft-cpluscraft-bluemap ${ips.eli}:8100
+    '';
+
+    security.acme.certs."mc.cpluspatch.com" = {};
+
     services.nginx = {
       # Change ports to 8080 and 8443, because 80/443 are already used by HAProxy
       defaultHTTPListenPort = 8080;

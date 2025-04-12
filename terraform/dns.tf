@@ -126,7 +126,7 @@ resource "cloudflare_dns_record" "email_autodiscover_imaps" {
 resource "cloudflare_dns_record" "infra_ipv4" {
   # Local.servers is an array of objects
   # So it must be transformed before it can be used as a for_each
-  for_each = tomap({ for s in local.servers : s.server.name => s })
+  for_each = tomap({ for s in local.servers : s.server.name => s if s.ipv4 })
 
   zone_id = var.cpluspatch-com-zone_id
   comment = "Main IPv4 record for the ${each.value.server.name} server"
@@ -137,7 +137,7 @@ resource "cloudflare_dns_record" "infra_ipv4" {
 }
 
 resource "cloudflare_dns_record" "infra_ipv6" {
-  for_each = tomap({ for s in local.servers : s.server.name => s })
+  for_each = tomap({ for s in local.servers : s.server.name => s if s.ipv6 })
 
   zone_id = var.cpluspatch-com-zone_id
   comment = "Main IPv6 record for the ${each.value.server.name} server"
@@ -149,7 +149,7 @@ resource "cloudflare_dns_record" "infra_ipv6" {
 
 # Reverse DNS records
 resource "hcloud_rdns" "infra_ip_rdns" {
-  for_each = tomap({ for s in local.servers : s.server.name => s })
+  for_each = tomap({ for s in local.servers : s.server.name => s if s.ipv4 })
 
   ip_address = each.value.server.ipv4_address
   server_id  = each.value.server.id

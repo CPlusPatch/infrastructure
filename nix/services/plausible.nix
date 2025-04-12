@@ -3,11 +3,11 @@
   lib,
   ...
 }: let
-  ips = import ../lib/zerotier-ips.nix;
+  inherit (import ../lib/ips.nix) ips;
 in {
   sops.templates."plausible.env" = {
     content = ''
-      DATABASE_URL=postgres://plausible:${config.sops.placeholder."postgresql/plausible"}@${ips.zerotier-ips.freeman}:5432/plausible
+      DATABASE_URL=postgres://plausible:${config.sops.placeholder."postgresql/plausible"}@${ips.freeman}:5432/plausible
       SECRET_KEY_BASE=${config.sops.placeholder."plausible/secret-key-base"}
     '';
   };
@@ -28,7 +28,7 @@ in {
       };
 
       clickhouse = {
-        url = "http://${ips.zerotier-ips.freeman}:8123/plausible_events_db";
+        url = "http://${ips.freeman}:8123/plausible_events_db";
         setup = false;
       };
     };

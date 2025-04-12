@@ -1,5 +1,5 @@
 {config, ...}: let
-  ips = import ../lib/zerotier-ips.nix;
+  inherit (import ../lib/ips.nix) ips;
 in {
   services.redis = {
     vmOverCommit = true;
@@ -8,21 +8,21 @@ in {
       sharkey = {
         enable = true;
         port = 6380;
-        bind = ips.zerotier-ips.freeman;
+        bind = ips.freeman;
         requirePassFile = config.sops.secrets."redis/sharkey".path;
       };
 
       immich = {
         enable = true;
         port = 6381;
-        bind = ips.zerotier-ips.freeman;
+        bind = ips.freeman;
         requirePassFile = config.sops.secrets."redis/immich".path;
       };
 
       bitchbot = {
         enable = true;
         port = 6382;
-        bind = ips.zerotier-ips.freeman;
+        bind = ips.freeman;
         requirePassFile = config.sops.secrets."redis/bitchbot".path;
       };
     };

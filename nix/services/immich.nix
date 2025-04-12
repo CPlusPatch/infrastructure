@@ -3,7 +3,7 @@
   lib,
   ...
 }: let
-  inherit (import ../lib/zerotier-ips.nix) zerotier-ips;
+  inherit (import ../lib/ips.nix) ips;
 in {
   sops.templates."immich-secrets.env" = {
     owner = "immich";
@@ -249,14 +249,14 @@ in {
       createDB = true;
       enable = true;
       # Use local database due to usage of pgvecto-rs extension
-      #host = zerotier-ips.freeman;
+      #host = ips.freeman;
       name = "immich";
       user = "immich";
     };
 
     redis = {
       enable = false;
-      host = zerotier-ips.freeman;
+      host = ips.freeman;
       port = 6381;
     };
   };
@@ -278,7 +278,7 @@ in {
     local   replication     all                                     peer
     host    replication     all             127.0.0.1/32            md5
     host    replication     all             ::1/128                 md5
-    host    all             all             10.147.19.0/24        scram-sha-256
+    host    all             all             10.0.0.0/8             scram-sha-256
   '';
 
   # Add CAP_FOWNER to immich to prevent permission errors

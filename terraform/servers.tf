@@ -38,13 +38,42 @@ resource "hcloud_server" "freeman" {
   }
 }
 
+resource "hcloud_server" "eli" {
+  name                     = "eli"
+  image                    = "ubuntu-24.04"
+  server_type              = "cx22"
+  location                 = "fsn1"
+  ssh_keys                 = [hcloud_ssh_key.jesse.id]
+  delete_protection        = false
+  rebuild_protection       = false
+  shutdown_before_deletion = true
+
+  public_net {
+    ipv4_enabled = true
+    ipv6_enabled = true
+  }
+
+  lifecycle {
+    ignore_changes = [ssh_keys]
+  }
+}
+
 locals {
   servers = [
     {
       server = hcloud_server.faithplate
+      ipv4 = true
+      ipv6 = true
+    },
+    {
+      server = hcloud_server.eli
+      ipv4 = true
+      ipv6 = true
     },
     {
       server = hcloud_server.freeman
+      ipv4 = true
+      ipv6 = true
     }
   ]
 
@@ -86,6 +115,25 @@ locals {
   }
 }
 
+# Create a Hetzner Network for the servers
+resource "hcloud_network" "main_network" {
+  name = "main-network"
+  ip_range = "10.0.0.0/8"
+}
+
+resource "hcloud_network_subnet" "main_network_subnet" {
+  network_id = hcloud_network.main_network.id
+  type = "server"
+  ip_range = "10.0.1.0/24"
+  network_zone = "eu-central"
+}
+
+resource "hcloud_server_network" "main_network_server" {
+  for_each = { for s in local.servers : s.server.id => s.server }
+  server_id = each.value.id
+  subnet_id = hcloud_network_subnet.main_network_subnet.id
+}
+
 # Save JSON file to be imported in the NixOS installation
 resource "local_file" "nixos_vars" {
   content = jsonencode({
@@ -93,6 +141,7 @@ resource "local_file" "nixos_vars" {
       ipv4     = s.server.ipv4_address
       ipv6     = s.server.ipv6_address
       hostname = s.server.name
+	  network_ipv4 = hcloud_server_network.main_network_server[s.server.id].ip
     }
   }) # Converts variables to JSON
   filename        = var.nixos_vars_file
@@ -113,7 +162,7 @@ module "nixos_install" {
   # Warning: IPv6 will not work until the first rebuild
   # (which will configure the network interfaces), which
   # means an IPv4 address has to be used here
-  target_host                = each.value.server.ipv4_address
+  target_host                = coalesce( each.value.server.ipv6_address)
   nixos_system_attr          = "..#nixosConfigurations.${each.key}.config.system.build.toplevel"
   nixos_partitioner_attr     = "..#nixosConfigurations.${each.key}.config.system.build.diskoScriptNoDeps"
   nixos_generate_config_path = "${path.module}/../nix/machines/${each.key}/hardware-configuration.nix"
