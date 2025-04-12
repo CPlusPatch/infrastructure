@@ -8,11 +8,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1744328361,
-        "narHash": "sha256-rKIzp2XiI5kAjXc4JRo8GZ8XLm3oj/QGB74IXPS4Onk=",
+        "lastModified": 1744381793,
+        "narHash": "sha256-JTsS0XhfZ3PxrG/lHfqCbjqA6h/gs1DZjWOsbDebgwo=",
         "owner": "CPlusPatch",
         "repo": "jesses-vengeance",
-        "rev": "1afd97c2ab632a1a702d6d4836b16c2f161a48cb",
+        "rev": "3d8de768098733709eed8420d20b0beb252de24d",
         "type": "github"
       },
       "original": {

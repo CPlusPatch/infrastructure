@@ -4,6 +4,7 @@ in {
   sops.templates."bitchbot.env" = {
     content = ''
       REDIS_URL=redis://:${config.sops.placeholder."redis/bitchbot"}@${ips.zerotier-ips.freeman}:6382
+      CONSOLA_LEVEL=4
     '';
     owner = "bitchbot";
   };
@@ -29,7 +30,7 @@ in {
       users = {
         wife = "@nex:nexy7574.co.uk";
         admin = ["@jesse:cpluspatch.dev"];
-        banned = ["*:tomfos.tr" "@tom:*"];
+        banned = ["*:tomfos.tr" "@tom:*" "@star:nexy7574.co.uk" "echo" "ping"];
       };
       wife_id = "@nex:nexy7574.co.uk";
       response_cooldown = 60;
