@@ -41,14 +41,9 @@ in {
       matchConfig.Name = "enp1s0";
       networkConfig.DHCP = "no";
       address = [
-        "${variables.ipv4}/32"
         "${variables.ipv6}/64"
       ];
       routes = [
-        {
-          Gateway = "172.31.1.1";
-          GatewayOnLink = true;
-        }
         {Gateway = "fe80::1";}
       ];
     };

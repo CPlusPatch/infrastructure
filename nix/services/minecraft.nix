@@ -7,7 +7,7 @@
   commit = "c380348d98ff3f76b7d1b36cbccf900ed28391a4";
   modpack = pkgs.fetchPackwizModpack {
     url = "https://github.com/CPlusPatch/cpluscraft/raw/${commit}/pack.toml";
-    packHash = "sha256-ZTOXti8v5Oy0G2JjL0b1aeuvgmz22kATc+zsHJWZQCY=";
+    packHash = "sha256-n8NWITV86yXTN2cfvg7/nZAkDjBYbLL77JaAxh/r2G4=";
   };
   serverIcon = pkgs.fetchurl {
     url = "https://raw.githubusercontent.com/CPlusPatch/cpluscraft/${commit}/server-icon.png";
@@ -36,7 +36,7 @@ in {
       whitelist = {
         CPlusPatch = "ca8539a0-654d-48a8-8a01-32cfc94458ce";
       };
-      jvmOpts = "";
+      jvmOpts = "-Djava.net.preferIPV4stack=false -Djava.net.preferIPv6Addresses=true -Xms3G -Xmx3G -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCMode=iu -XX:+UseNUMA -XX:+AlwaysPreTouch -XX:+DisableExplicitGC -Dfile.encoding=UTF-8";
       serverProperties = {
         server-port = 25565;
         allow-flight = true;
