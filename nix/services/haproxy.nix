@@ -40,6 +40,9 @@ in {
         default_backend minecraft-eli
     '';
 
+    # Allow Minecraft traffic
+    networking.firewall.allowedTCPPorts = [25565];
+
     modules.haproxy.backends.minecraft-eli = ''
       backend minecraft-eli
         mode tcp
