@@ -4,13 +4,14 @@
   ...
 }: let
   inherit (inputs.nix-minecraft.lib) collectFilesAt;
+  commit = "c380348d98ff3f76b7d1b36cbccf900ed28391a4";
   modpack = pkgs.fetchPackwizModpack {
-    url = "https://github.com/CPlusPatch/camaradcraft/raw/60340cf298d1b2c5c0e56846ca92d5a3cefc07da/pack.toml";
+    url = "https://github.com/CPlusPatch/cpluscraft/raw/${commit}/pack.toml";
     packHash = "sha256-ZTOXti8v5Oy0G2JjL0b1aeuvgmz22kATc+zsHJWZQCY=";
   };
   serverIcon = pkgs.fetchurl {
-    url = "https://raw.githubusercontent.com/CPlusPatch/camaradcraft/60340cf298d1b2c5c0e56846ca92d5a3cefc07da/server-icon.png";
-    sha256 = "sha256-cAe4B0oJYdrGGs5rKOx1cQgsAbAW2h9p+PcMHTlo5Sw=";
+    url = "https://raw.githubusercontent.com/CPlusPatch/cpluscraft/${commit}/server-icon.png";
+    sha256 = "sha256-xwHTw7A6CtjCKVNEi/OIMll9BQlIm0ijNYNI+1urS6g=";
   };
 in {
   services.minecraft-servers = {
@@ -20,7 +21,7 @@ in {
 
     managementSystem.systemd-socket.enable = true;
 
-    servers.camaradcraft = {
+    servers.cpluscraft = {
       enable = true;
       autoStart = true;
 
@@ -58,15 +59,15 @@ in {
     };
   };
 
-  modules.haproxy.acls.minecraft-camaradcraft = ''
-    acl is_camaradcraft hdr(host) -i camaradcraft.cpluspatch.com
-    use_backend minecraft-camaradcraft-bluemap if is_camaradcraft
+  modules.haproxy.acls.minecraft-cpluscraft = ''
+    acl is_cpluscraft hdr(host) -i mc.cpluspatch.com
+    use_backend minecraft-cpluscraft-bluemap if is_cpluscraft
   '';
 
-  modules.haproxy.backends.minecraft-camaradcraft-bluemap = ''
-    backend minecraft-camaradcraft-bluemap
-      server minecraft-camaradcraft-bluemap 127.0.0.1:8100
+  modules.haproxy.backends.minecraft-cpluscraft-bluemap = ''
+    backend minecraft-cpluscraft-bluemap
+      server minecraft-cpluscraft-bluemap 127.0.0.1:8100
   '';
 
-  security.acme.certs."camaradcraft.cpluspatch.com" = {};
+  security.acme.certs."mc.cpluspatch.com" = {};
 }

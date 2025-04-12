@@ -1,13 +1,13 @@
 # Minecraft records
-resource "cloudflare_dns_record" "camaradcraft_srv" {
+resource "cloudflare_dns_record" "cpluscraft_srv" {
   zone_id = var.cpluspatch-com-zone_id
-  comment = "SRV record for camaradcraft"
-  name    = "_minecraft._tcp.camaradcraft.cpluspatch.com"
+  comment = "SRV record for cpluscraft"
+  name    = "_minecraft._tcp.mc.cpluspatch.com"
   type    = "SRV"
   data = {
     service  = "_minecraft"
     proto    = "_tcp"
-    name     = "camaradcraft.cpluspatch.com."
+    name     = "mc.cpluspatch.com."
     priority = 5
     weight   = 0
     port     = 25565

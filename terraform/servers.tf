@@ -69,7 +69,7 @@ locals {
     "photos.cpluspatch.com"       = hcloud_server.faithplate
     "api.sl.cpluspatch.dev"       = hcloud_server.faithplate
     "social.lysand.org"           = hcloud_server.faithplate
-    "camaradcraft.cpluspatch.com" = hcloud_server.faithplate
+    "mc.cpluspatch.com"           = hcloud_server.faithplate
   }
 
   domain_zone_mappings = {
