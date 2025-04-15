@@ -1,9 +1,82 @@
-{config}: let
+{
+  pkgs,
+  config,
+  ...
+}: let
   inherit (import ../lib/ips.nix) ips;
 in {
+  sops.secrets = {
+    "postgresql/versia2" = {
+      owner = config.services.versia-server.user;
+    };
+    "redis/versia2" = {
+      owner = config.services.versia-server.user;
+    };
+    "s3/versia2/keyid" = {
+      owner = config.services.versia-server.user;
+    };
+    "s3/versia2/secret" = {
+      owner = config.services.versia-server.user;
+    };
+    "versia2/sonic" = {
+      owner = config.services.versia-server.user;
+    };
+    "versia2/oidc-client-secret" = {
+      owner = config.services.versia-server.user;
+    };
+    "versia2/instance-public-key" = {
+      owner = config.services.versia-server.user;
+    };
+    "versia2/instance-private-key" = {
+      owner = config.services.versia-server.user;
+    };
+    "versia2/vapid-public-key" = {
+      owner = config.services.versia-server.user;
+    };
+    "versia2/vapid-private-key" = {
+      owner = config.services.versia-server.user;
+    };
+    "versia2/oidc-public-key" = {
+      owner = config.services.versia-server.user;
+    };
+    "versia2/oidc-private-key" = {
+      owner = config.services.versia-server.user;
+    };
+  };
+
+  sops.templates."sonic.env" = {
+    content = ''
+      SONIC_PASSWORD=${config.sops.placeholder."versia2/sonic"}
+    '';
+    owner = config.services.versia-server.user;
+  };
+
+  services.sonic-server = {
+    enable = true;
+    settings = {
+      channel = {
+        inet = "127.0.0.1:${toString config.services.versia-server.config.search.sonic.port}";
+        tcp_timeout = 300;
+        auth_password = "\${env.SONIC_PASSWORD}";
+        search = {
+          query_limit_default = 10;
+          query_limit_maximum = 100;
+          query_alternates_try = 4;
+
+          suggest_limit_default = 5;
+          suggest_limit_maximum = 20;
+
+          list_limit_default = 100;
+          list_limit_maximum = 500;
+        };
+      };
+    };
+  };
+
+  systemd.services.sonic-server.serviceConfig.EnvironmentFile = config.sops.templates."sonic.env".path;
+
   services.versia-server = {
     enable = true;
-    dataDir = "/var/lib/versia-server";
 
     user = "versia-server";
     group = "versia-server";
@@ -34,10 +107,10 @@ in {
         };
       };
       search = {
-        enabled = true;
+        enabled = false;
         sonic = {
           host = "localhost";
-          port = 7700;
+          port = 1491;
           password = "PATH:${config.sops.secrets."versia2/sonic".path}";
         };
       };
@@ -54,6 +127,7 @@ in {
         banned_user_agents = [];
       };
       frontend = {
+        path = "${pkgs.versia-fe}/versia-fe";
         enabled = true;
         routes = {
         };
@@ -77,10 +151,10 @@ in {
         access_key = "PATH:${config.sops.secrets."s3/versia2/keyid".path}";
         secret_access_key = "PATH:${config.sops.secrets."s3/versia2/secret".path}";
         region = "eu-central";
-        bucket = "versia-cpp";
+        bucket_name = "versia-cpp";
         public_url = "https://cdn.cpluspatch.com";
         path = "versia-cpp";
-        force_path_style = true;
+        path_style = true;
       };
       validation = {
         accounts = {
@@ -131,7 +205,10 @@ in {
       notifications = {
         push = {
           subject = "mailto:admin+versia@cpluspatch.com";
-          vapid_keys = {};
+          vapid_keys = {
+            public = "PATH:${config.sops.secrets."versia2/vapid-public-key".path}";
+            private = "PATH:${config.sops.secrets."versia2/vapid-private-key".path}";
+          };
         };
       };
       defaults = {
@@ -193,12 +270,17 @@ in {
             hint = "BITCH.";
           }
         ];
+        keys = {
+          public = "PATH:${config.sops.secrets."versia2/instance-public-key".path}";
+          private = "PATH:${config.sops.secrets."versia2/instance-private-key".path}";
+        };
       };
       permissions = {
       };
       logging = {
         log_level = "info";
-        log_file_path = "logs/versia.log";
+        # We don't need the file logger, we already record through journalctl
+        log_file_path = "/dev/null";
         types = {
         };
       };
@@ -212,6 +294,11 @@ in {
           "@versia/openid" = {
             forced = true;
             allow_registration = true;
+
+            keys = {
+              public = "PATH:${config.sops.secrets."versia2/oidc-public-key".path}";
+              private = "PATH:${config.sops.secrets."versia2/oidc-private-key".path}";
+            };
 
             providers = [
               {
@@ -228,4 +315,16 @@ in {
       };
     };
   };
+
+  modules.haproxy.acls.versia2 = ''
+    acl is_versia2 hdr_sub(host) vs.cpluspatch.com
+    use_backend versia2 if is_versia2
+  '';
+
+  modules.haproxy.backends.versia2 = ''
+    backend versia2
+      server versia2 127.0.0.1:${toString config.services.versia-server.config.http.bind_port}
+  '';
+
+  security.acme.certs."vs.cpluspatch.com" = {};
 }

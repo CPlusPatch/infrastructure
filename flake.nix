@@ -37,6 +37,10 @@
       url = "github:versia-pub/server";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    versia-fe = {
+      url = "github:versia-pub/frontend";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = {
@@ -49,6 +53,7 @@
     syncbot,
     versia-server,
     nix-minecraft,
+    versia-fe,
     ...
   } @ inputs: {
     nixosConfigurations = {
@@ -56,7 +61,7 @@
         system = "x86_64-linux";
         modules = [
           {
-            nixpkgs.overlays = [nix-minecraft.overlay];
+            nixpkgs.overlays = [nix-minecraft.overlay versia-server.overlays.default versia-fe.overlays.default];
           }
           lix-module.nixosModules.lixFromNixpkgs
           disko.nixosModules.disko

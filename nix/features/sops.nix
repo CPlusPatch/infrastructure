@@ -185,6 +185,30 @@
         sopsFile = ../../secrets/versia2.yaml;
         key = "oidc_client_secret";
       };
+      "versia2/instance-public-key" = {
+        sopsFile = ../../secrets/versia2.yaml;
+        key = "instance_public_key";
+      };
+      "versia2/instance-private-key" = {
+        sopsFile = ../../secrets/versia2.yaml;
+        key = "instance_private_key";
+      };
+      "versia2/vapid-public-key" = {
+        sopsFile = ../../secrets/versia2.yaml;
+        key = "vapid_public_key";
+      };
+      "versia2/vapid-private-key" = {
+        sopsFile = ../../secrets/versia2.yaml;
+        key = "vapid_private_key";
+      };
+      "versia2/oidc-public-key" = {
+        sopsFile = ../../secrets/versia2.yaml;
+        key = "oidc_public_key";
+      };
+      "versia2/oidc-private-key" = {
+        sopsFile = ../../secrets/versia2.yaml;
+        key = "oidc_private_key";
+      };
     };
 
     # Set by the Terraform deployment

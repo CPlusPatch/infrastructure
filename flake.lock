@@ -179,6 +179,24 @@
         "type": "github"
       }
     },
+    "flake-utils_6": {
+      "inputs": {
+        "systems": "systems_6"
+      },
+      "locked": {
+        "lastModified": 1731533236,
+        "narHash": "sha256-l0KFg5HjrsfsO/JpG+r7fRrqm12kzFHyUHqHCVpMMbI=",
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "rev": "11707dc2f618dd54ca8739b309ec4fc024de578b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "type": "github"
+      }
+    },
     "flakey-profile": {
       "locked": {
         "lastModified": 1712898590,
@@ -313,6 +331,7 @@
         "simple-nixos-mailserver": "simple-nixos-mailserver",
         "sops-nix": "sops-nix",
         "syncbot": "syncbot",
+        "versia-fe": "versia-fe",
         "versia-server": "versia-server"
       }
     },
@@ -456,7 +475,22 @@
         "type": "github"
       }
     },
-    "versia-server": {
+    "systems_6": {
+      "locked": {
+        "lastModified": 1681028828,
+        "narHash": "sha256-Vy1rq5AaRuLzOxct8nz4T6wlgyUR7zLU309k9mBC768=",
+        "owner": "nix-systems",
+        "repo": "default",
+        "rev": "da67096a3b9bf56a91d16901293e51ba5b49a27e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-systems",
+        "repo": "default",
+        "type": "github"
+      }
+    },
+    "versia-fe": {
       "inputs": {
         "flake-utils": "flake-utils_5",
         "nixpkgs": [
@@ -464,11 +498,32 @@
         ]
       },
       "locked": {
-        "lastModified": 1744719336,
-        "narHash": "sha256-1Jif0dD3YoSn6ly6UjZV4/Rj52wBjXNFFPfmZvHPrn4=",
+        "lastModified": 1744752710,
+        "narHash": "sha256-BeA0uK84+vBvXs+r6n9AgHrTXKFJkO70l7voWvzHbXk=",
+        "owner": "versia-pub",
+        "repo": "frontend",
+        "rev": "e0204e234bf30126f71d76746983d2ca62860436",
+        "type": "github"
+      },
+      "original": {
+        "owner": "versia-pub",
+        "repo": "frontend",
+        "type": "github"
+      }
+    },
+    "versia-server": {
+      "inputs": {
+        "flake-utils": "flake-utils_6",
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1744750745,
+        "narHash": "sha256-kVwZF5Nhh9bqWXUi2B2xct1A/7bB8urgAcAV3gw+BU8=",
         "owner": "versia-pub",
         "repo": "server",
-        "rev": "765348c440495ec19c179369a57646f9fdf51a85",
+        "rev": "0a712128a5204d5b196e298d436818bfc914bf95",
         "type": "github"
       },
       "original": {
