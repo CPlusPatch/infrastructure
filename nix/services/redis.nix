@@ -25,6 +25,13 @@ in {
         bind = ips.freeman;
         requirePassFile = config.sops.secrets."redis/bitchbot".path;
       };
+
+      versia = {
+        enable = true;
+        port = 6383;
+        bind = ips.freeman;
+        requirePassFile = config.sops.secrets."redis/versia2".path;
+      };
     };
   };
 }

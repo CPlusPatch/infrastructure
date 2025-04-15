@@ -1,7 +1,6 @@
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    nixpkgs-synapse127.url = "github:NixOS/nixpkgs/02588b5ff18d8c1b572d406a52fe86e62fd6a1d9";
     lix-module = {
       url = "https://git.lix.systems/lix-project/nixos-module/archive/2.92.0-1.tar.gz";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -34,6 +33,10 @@
       url = "github:Infinidoge/nix-minecraft";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    versia-server = {
+      url = "github:versia-pub/server";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = {
@@ -44,6 +47,7 @@
     simple-nixos-mailserver,
     bitchbot,
     syncbot,
+    versia-server,
     nix-minecraft,
     ...
   } @ inputs: {
@@ -51,19 +55,20 @@
       faithplate = nixpkgs.lib.nixosSystem rec {
         system = "x86_64-linux";
         modules = [
+          {
+            nixpkgs.overlays = [nix-minecraft.overlay];
+          }
           lix-module.nixosModules.lixFromNixpkgs
           disko.nixosModules.disko
           sops-nix.nixosModules.sops
           simple-nixos-mailserver.nixosModule
           nix-minecraft.nixosModules.minecraft-servers
-          {
-            nixpkgs.overlays = [nix-minecraft.overlay];
-          }
           bitchbot.nixosModules.${system}.bitchbot
           syncbot.nixosModules.${system}.syncbot
           ./nix/machines/base
           ./nix/partitions/single-zfs.nix
           ./nix/machines/faithplate
+          versia-server.nixosModules.versia-server
         ];
 
         # This is needed otherwise you get recursion errors

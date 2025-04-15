@@ -1,6 +1,5 @@
 {
   config,
-  inputs,
   lib,
   ...
 }: let
@@ -9,12 +8,6 @@ in {
   nixpkgs.config.permittedInsecurePackages = [
     # Why does mautrix-signal use this? :(
     "olm-3.2.16"
-  ];
-
-  nixpkgs.overlays = [
-    (final: prev: {
-      inherit (inputs.nixpkgs-synapse127.legacyPackages.${prev.system}) matrix-synapse;
-    })
   ];
 
   # Make secrets accessible to Synapse

@@ -8,11 +8,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1744381793,
-        "narHash": "sha256-JTsS0XhfZ3PxrG/lHfqCbjqA6h/gs1DZjWOsbDebgwo=",
+        "lastModified": 1744578283,
+        "narHash": "sha256-Ar3n5ig/AL3tmSk/3sxomw79Bo721OyG3ChQNyKcoxU=",
         "owner": "CPlusPatch",
         "repo": "jesses-vengeance",
-        "rev": "3d8de768098733709eed8420d20b0beb252de24d",
+        "rev": "31b4b48ec9c85f265b28c9c934839334dcd6c867",
         "type": "github"
       },
       "original": {
@@ -161,6 +161,24 @@
         "type": "github"
       }
     },
+    "flake-utils_5": {
+      "inputs": {
+        "systems": "systems_5"
+      },
+      "locked": {
+        "lastModified": 1731533236,
+        "narHash": "sha256-l0KFg5HjrsfsO/JpG+r7fRrqm12kzFHyUHqHCVpMMbI=",
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "rev": "11707dc2f618dd54ca8739b309ec4fc024de578b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "type": "github"
+      }
+    },
     "flakey-profile": {
       "locked": {
         "lastModified": 1712898590,
@@ -284,22 +302,6 @@
         "type": "indirect"
       }
     },
-    "nixpkgs-synapse127": {
-      "locked": {
-        "lastModified": 1743032476,
-        "narHash": "sha256-1Gmq+jWzxbN9go4QweNJEEeyCMUSMfkylhgbTdg0cyY=",
-        "owner": "NixOS",
-        "repo": "nixpkgs",
-        "rev": "02588b5ff18d8c1b572d406a52fe86e62fd6a1d9",
-        "type": "github"
-      },
-      "original": {
-        "owner": "NixOS",
-        "repo": "nixpkgs",
-        "rev": "02588b5ff18d8c1b572d406a52fe86e62fd6a1d9",
-        "type": "github"
-      }
-    },
     "root": {
       "inputs": {
         "bitchbot": "bitchbot",
@@ -308,10 +310,10 @@
         "lix-module": "lix-module",
         "nix-minecraft": "nix-minecraft",
         "nixpkgs": "nixpkgs",
-        "nixpkgs-synapse127": "nixpkgs-synapse127",
         "simple-nixos-mailserver": "simple-nixos-mailserver",
         "sops-nix": "sops-nix",
-        "syncbot": "syncbot"
+        "syncbot": "syncbot",
+        "versia-server": "versia-server"
       }
     },
     "simple-nixos-mailserver": {
@@ -436,6 +438,42 @@
       "original": {
         "owner": "nix-systems",
         "repo": "default",
+        "type": "github"
+      }
+    },
+    "systems_5": {
+      "locked": {
+        "lastModified": 1681028828,
+        "narHash": "sha256-Vy1rq5AaRuLzOxct8nz4T6wlgyUR7zLU309k9mBC768=",
+        "owner": "nix-systems",
+        "repo": "default",
+        "rev": "da67096a3b9bf56a91d16901293e51ba5b49a27e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-systems",
+        "repo": "default",
+        "type": "github"
+      }
+    },
+    "versia-server": {
+      "inputs": {
+        "flake-utils": "flake-utils_5",
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1744719336,
+        "narHash": "sha256-1Jif0dD3YoSn6ly6UjZV4/Rj52wBjXNFFPfmZvHPrn4=",
+        "owner": "versia-pub",
+        "repo": "server",
+        "rev": "765348c440495ec19c179369a57646f9fdf51a85",
+        "type": "github"
+      },
+      "original": {
+        "owner": "versia-pub",
+        "repo": "server",
         "type": "github"
       }
     }

@@ -62,18 +62,18 @@ locals {
   servers = [
     {
       server = hcloud_server.faithplate
-      ipv4 = true
-      ipv6 = true
+      ipv4   = true
+      ipv6   = true
     },
     {
       server = hcloud_server.eli
-      ipv4 = false
-      ipv6 = true
+      ipv4   = false
+      ipv6   = true
     },
     {
       server = hcloud_server.freeman
-      ipv4 = true
-      ipv6 = true
+      ipv4   = true
+      ipv6   = true
     }
   ]
 
@@ -99,6 +99,7 @@ locals {
     "api.sl.cpluspatch.dev"       = hcloud_server.faithplate
     "social.lysand.org"           = hcloud_server.faithplate
     "mc.cpluspatch.com"           = hcloud_server.faithplate
+    "vs.cpluspatch.com"           = hcloud_server.faithplate
   }
 
   domain_zone_mappings = {
@@ -117,19 +118,19 @@ locals {
 
 # Create a Hetzner Network for the servers
 resource "hcloud_network" "main_network" {
-  name = "main-network"
+  name     = "main-network"
   ip_range = "10.0.0.0/8"
 }
 
 resource "hcloud_network_subnet" "main_network_subnet" {
-  network_id = hcloud_network.main_network.id
-  type = "server"
-  ip_range = "10.0.1.0/24"
+  network_id   = hcloud_network.main_network.id
+  type         = "server"
+  ip_range     = "10.0.1.0/24"
   network_zone = "eu-central"
 }
 
 resource "hcloud_server_network" "main_network_server" {
-  for_each = { for s in local.servers : s.server.id => s.server }
+  for_each  = { for s in local.servers : s.server.id => s.server }
   server_id = each.value.id
   subnet_id = hcloud_network_subnet.main_network_subnet.id
 }
@@ -138,10 +139,10 @@ resource "hcloud_server_network" "main_network_server" {
 resource "local_file" "nixos_vars" {
   content = jsonencode({
     for s in local.servers : s.server.name => {
-      ipv4     = s.server.ipv4_address
-      ipv6     = s.server.ipv6_address
-      hostname = s.server.name
-	  network_ipv4 = hcloud_server_network.main_network_server[s.server.id].ip
+      ipv4         = s.server.ipv4_address
+      ipv6         = s.server.ipv6_address
+      hostname     = s.server.name
+      network_ipv4 = hcloud_server_network.main_network_server[s.server.id].ip
     }
   }) # Converts variables to JSON
   filename        = var.nixos_vars_file

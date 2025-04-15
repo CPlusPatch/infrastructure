@@ -49,6 +49,10 @@
         sopsFile = ../../secrets/postgresql/versia.yaml;
         key = "password";
       };
+      "postgresql/versia2" = {
+        sopsFile = ../../secrets/postgresql/versia2.yaml;
+        key = "password";
+      };
       "docker/ghcr" = {
         sopsFile = ../../secrets/docker.yaml;
         key = "ghcr_password";
@@ -59,6 +63,10 @@
       };
       "redis/immich" = {
         sopsFile = ../../secrets/redis/immich.yaml;
+        key = "password";
+      };
+      "redis/versia2" = {
+        sopsFile = ../../secrets/redis/versia2.yaml;
         key = "password";
       };
       "redis/bitchbot" = {
@@ -75,6 +83,14 @@
       };
       "s3/nextcloud/secret" = {
         sopsFile = ../../secrets/s3/nextcloud.yaml;
+        key = "key_secret";
+      };
+      "s3/versia2/keyid" = {
+        sopsFile = ../../secrets/s3/versia2.yaml;
+        key = "key_id";
+      };
+      "s3/versia2/secret" = {
+        sopsFile = ../../secrets/s3/versia2.yaml;
         key = "key_secret";
       };
       "radarr/key" = {
@@ -159,6 +175,14 @@
       };
       "immich/oidc-client-secret" = {
         sopsFile = ../../secrets/immich.yaml;
+        key = "oidc_client_secret";
+      };
+      "versia2/sonic" = {
+        sopsFile = ../../secrets/versia2.yaml;
+        key = "sonic_password";
+      };
+      "versia2/oidc-client-secret" = {
+        sopsFile = ../../secrets/versia2.yaml;
         key = "oidc_client_secret";
       };
     };
