@@ -44,6 +44,7 @@ in {
     ../../services/syncbot.nix
     ../../services/versia.nix
     ../../services/versia2.nix
+    ../../services/glance.nix
   ];
 
   disko.devices.disk.main.device = "/dev/sda";
