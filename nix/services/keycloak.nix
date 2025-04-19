@@ -34,6 +34,11 @@ in {
     };
   };
 
+  systemd.services.keycloak.serviceConfig = {
+    Restart = "always";
+    TimeoutSec = 60;
+  };
+
   modules.haproxy.acls.keycloak = ''
     acl is_keycloak hdr(host) -i id.cpluspatch.com
     use_backend keycloak if is_keycloak

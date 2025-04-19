@@ -157,7 +157,7 @@ resource "local_file" "nixos_vars" {
 
 # Call nixos-anywhere module for each server
 module "nixos_install" {
-  source = "github.com/numtide/nixos-anywhere//terraform/all-in-one"
+  source = "github.com/numtide/nixos-anywhere/terraform/all-in-one"
 
   for_each = { for s in local.servers : s.server.name => s }
   # Warning: IPv6 will not work until the first rebuild

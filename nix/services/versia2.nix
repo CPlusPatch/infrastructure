@@ -52,7 +52,7 @@ in {
   };
 
   services.sonic-server = {
-    enable = true;
+    enable = false;
     settings = {
       channel = {
         inet = "127.0.0.1:${toString config.services.versia-server.config.search.sonic.port}";
@@ -73,7 +73,7 @@ in {
     };
   };
 
-  systemd.services.sonic-server.serviceConfig.EnvironmentFile = config.sops.templates."sonic.env".path;
+  #systemd.services.sonic-server.serviceConfig.EnvironmentFile = config.sops.templates."sonic.env".path;
 
   services.versia-server = {
     enable = true;

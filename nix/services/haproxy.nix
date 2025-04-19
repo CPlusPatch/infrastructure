@@ -218,7 +218,8 @@ in {
         listenHTTP = ":1360";
         group = config.services.haproxy.group;
       };
-      certs."${config.networking.hostName}.infra.cpluspatch.com" = {};
     };
+
+    security.acme.certs."${config.networking.hostName}.infra.cpluspatch.com" = {};
   };
 }
