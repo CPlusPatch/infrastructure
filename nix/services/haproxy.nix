@@ -175,10 +175,11 @@ in {
           acl varnish_available nbsrv(varnish) ge 1
 
           acl is_servarr hdr(host) -i -m end lgs.cpluspatch.com
+          acl is_lysand_social hdr(host) -i social.lysand.org
 
           # Caches health detection + routing decision
-          use_backend varnish if varnish_available static_content !is_servarr
-          use_backend varnish if varnish_available pseudo_static !is_servarr
+          use_backend varnish if varnish_available static_content !is_servarr !is_lysand_social
+          use_backend varnish if varnish_available pseudo_static !is_servarr !is_lysand_social
 
           # Redirect cpluspatch.dev to cpluspatch.com
           acl is_old_site hdr(host) -i cpluspatch.dev
