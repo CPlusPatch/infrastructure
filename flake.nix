@@ -61,19 +61,19 @@
         system = "x86_64-linux";
         modules = [
           {
-            nixpkgs.overlays = [nix-minecraft.overlay versia-server.overlays.default versia-fe.overlays.default];
+            nixpkgs.overlays = [nix-minecraft.overlay versia-server.overlays.default versia-fe.overlays.default bitchbot.overlays.default];
           }
           lix-module.nixosModules.lixFromNixpkgs
           disko.nixosModules.disko
           sops-nix.nixosModules.sops
           simple-nixos-mailserver.nixosModule
           nix-minecraft.nixosModules.minecraft-servers
-          bitchbot.nixosModules.${system}.bitchbot
           syncbot.nixosModules.${system}.syncbot
           ./nix/machines/base
           ./nix/partitions/single-zfs.nix
           ./nix/machines/faithplate
           versia-server.nixosModules.versia-server
+          bitchbot.nixosModules.bitchbot
         ];
 
         # This is needed otherwise you get recursion errors

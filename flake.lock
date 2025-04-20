@@ -8,11 +8,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1744721527,
-        "narHash": "sha256-1FvycBg7PcmjHcoGiT7uPKc4LwSRiwN9uIuBfgtMzuI=",
+        "lastModified": 1745163039,
+        "narHash": "sha256-6sEr6aYwQf+VhDTOsLLlEMjxxcO5qqoKF5ehKmVtt5M=",
         "owner": "CPlusPatch",
         "repo": "jesses-vengeance",
-        "rev": "9b58d24ca097ef45fdfa84c38c58c3896b148503",
+        "rev": "98deff1b6c2d47c53df695883d1a9d376450a745",
         "type": "github"
       },
       "original": {
@@ -519,11 +519,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1745064908,
-        "narHash": "sha256-Jc792L9dBIDh1P4hELjVP37iZhGQkl09tvrj4qw6lug=",
+        "lastModified": 1745161726,
+        "narHash": "sha256-zgqmLHaQCZmmtBK3SUj/3YGpTg65st/IwhUgencCeJQ=",
         "owner": "versia-pub",
         "repo": "server",
-        "rev": "138f4fade36b352e05ec2c5d2f43164eb734c91b",
+        "rev": "9e08248f0c72c354e519cb1f310fcaadde528b3e",
         "type": "github"
       },
       "original": {

@@ -6,16 +6,16 @@ in {
       REDIS_URL=redis://:${config.sops.placeholder."redis/bitchbot"}@${ips.freeman}:6382
       CONSOLA_LEVEL=4
     '';
-    #owner = "bitchbot";
+    owner = "bitchbot";
   };
 
   services.bitchbot = {
-    enable = false;
+    enable = true;
     config = {
       login = {
         homeserver = "https://matrix.cpluspatch.dev";
         username = "bitchbot";
-        store_path = "store.json";
+        store_path = "${config.services.bitchbot.dataDir}/store.json";
       };
       monitoring.health_check_uri = "https://status.cpluspatch.com/api/push/vHNWvZsz1k?status=up&msg=OK&ping=";
       commands = {
@@ -25,7 +25,7 @@ in {
         cooldown = 10;
       };
       encryption = {
-        store_path = "store";
+        store_path = "${config.services.bitchbot.dataDir}/store";
       };
       users = {
         wife = "@nex:nexy7574.co.uk";
@@ -38,7 +38,5 @@ in {
     };
   };
 
-  #systemd.services.bitchbot.serviceConfig = {
-  #  EnvironmentFile = config.sops.templates."bitchbot.env".path;
-  #};
+  systemd.services.bitchbot.serviceConfig.EnvironmentFile = config.sops.templates."bitchbot.env".path;
 }
