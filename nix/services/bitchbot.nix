@@ -1,4 +1,8 @@
-{config, ...}: let
+{
+  config,
+  lib,
+  ...
+}: let
   inherit (import ../lib/ips.nix) ips;
 in {
   sops.templates."bitchbot.env" = {
@@ -6,11 +10,11 @@ in {
       REDIS_URL=redis://:${config.sops.placeholder."redis/bitchbot"}@${ips.freeman}:6382
       CONSOLA_LEVEL=4
     '';
-    #owner = "bitchbot";
+    owner = "bitchbot";
   };
 
   services.bitchbot = {
-    enable = false;
+    enable = true;
     config = {
       login = {
         homeserver = "https://matrix.cpluspatch.dev";
@@ -38,5 +42,9 @@ in {
     };
   };
 
-  #systemd.services.bitchbot.serviceConfig.EnvironmentFile = config.sops.templates."bitchbot.env".path;
+  systemd.services.bitchbot.serviceConfig = {
+    EnvironmentFile = config.sops.templates."bitchbot.env".path;
+    User = lib.mkForce "root";
+    Group = lib.mkForce "root";
+  };
 }
