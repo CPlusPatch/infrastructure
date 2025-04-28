@@ -101,12 +101,14 @@ locals {
     "mc.cpluspatch.com"           = hcloud_server.faithplate
     "vs.cpluspatch.com"           = hcloud_server.faithplate
     "glance.cpluspatch.com"       = hcloud_server.faithplate
+    "pissing.nexus"               = hcloud_server.faithplate
   }
 
   domain_zone_mappings = {
     "cpluspatch.com" = var.cpluspatch-com-zone_id
     "cpluspatch.dev" = var.cpluspatch-dev-zone_id
     "lysand.org"     = var.lysand-org-zone_id
+    "pissing.nexus"  = var.pissing-nexus-zone_id
   }
 
   final_domains = {
