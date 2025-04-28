@@ -4,7 +4,7 @@
     autosuggestion.enable = true;
     enableCompletion = true;
     syntaxHighlighting.enable = true;
-    initExtra = ''
+    initContent = ''
       export PATH="$HOME/.local/bin:$PATH"
       source ~/.p10k.zsh
     '';

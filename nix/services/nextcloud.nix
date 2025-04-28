@@ -66,7 +66,7 @@ in {
       objectstore.s3 = {
         enable = true;
         bucket = "cloud";
-        autocreate = true;
+        verify_bucket_exists = true;
         hostname = "eu-central.object.fastlystorage.app";
         region = "eu-central";
         key = "bpV8YxQW2BnSUeGFJncw93";
