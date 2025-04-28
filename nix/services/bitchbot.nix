@@ -1,6 +1,7 @@
 {
   config,
   lib,
+  pkgs,
   ...
 }: let
   inherit (import ../lib/ips.nix) ips;
@@ -47,4 +48,27 @@ in {
     User = lib.mkForce "root";
     Group = lib.mkForce "root";
   };
+
+  modules.haproxy.acls.bitchbot = ''
+    acl is_bitchbot hdr(host) -i bitchbot.cpluspatch.com
+    acl is_bitchbot_api path_beg /api
+    use_backend bitchbot_api if is_bitchbot is_bitchbot_api
+    use_backend bitchbot_fe if is_bitchbot !is_bitchbot_api
+  '';
+
+  modules.haproxy.backends.bitchbot = ''
+    backend bitchbot_api
+      server bitchbot_api_server 127.0.0.1:16193
+  '';
+
+  modules.haproxy.backends.bitchbot_fe = ''
+    backend bitchbot_fe
+      server bitchbot_fe_server 127.0.0.1:${toString config.services.nginx.defaultHTTPListenPort}
+  '';
+
+  services.nginx.virtualHosts."bitchbot.cpluspatch.com" = {
+    root = "${pkgs.bitchbot}/bitchbot/dist";
+  };
+
+  security.acme.certs."bitchbot.cpluspatch.com" = {};
 }
