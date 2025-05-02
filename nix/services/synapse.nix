@@ -201,6 +201,12 @@ in {
   # Allows the prometheus performance metrics to be collected
   # nixpkgs defaults it to "invisible", which doesn't let prometheus scrape it
   systemd.services.matrix-synapse.serviceConfig.ProcSubset = lib.mkForce "all";
+  systemd.services.matrix-synapse-worker-federation_sender_1.serviceConfig.SupplementaryGroups = [
+    "mautrix-signal"
+  ];
+  systemd.services.matrix-synapse-worker-federation_sender_2.serviceConfig.SupplementaryGroups = [
+    "mautrix-signal"
+  ];
 
   sops.templates."mautrix-signal/environment.env" = {
     content = ''
