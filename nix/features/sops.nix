@@ -73,6 +73,10 @@
         sopsFile = ../../secrets/redis/bitchbot.yaml;
         key = "password";
       };
+      "redis/synapse" = {
+        sopsFile = ../../secrets/redis/synapse.yaml;
+        key = "password";
+      };
       "s3/backups/keyid" = {
         sopsFile = ../../secrets/s3/backups.yaml;
         key = "key_id";

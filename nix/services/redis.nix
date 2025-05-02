@@ -32,6 +32,13 @@ in {
         bind = ips.freeman;
         requirePassFile = config.sops.secrets."redis/versia2".path;
       };
+
+      synapse = {
+        enable = true;
+        port = 6384;
+        bind = ips.freeman;
+        requirePassFile = config.sops.secrets."redis/synapse".path;
+      };
     };
   };
 }

@@ -39,6 +39,9 @@ in {
     "synapse/pickle-key" = {
       owner = "mautrix-signal";
     };
+    "redis/synapse" = {
+      owner = "matrix-synapse";
+    };
   };
 
   sops.templates."synapse/extra-config.yaml" = {
@@ -72,6 +75,11 @@ in {
       config.sops.templates."synapse/extra-config.yaml".path
     ];
 
+    workers = {
+      "federation_sender_1" = {};
+      "federation_sender_2" = {};
+    };
+
     settings = {
       database.args = {
         user = "synapse";
@@ -79,6 +87,18 @@ in {
         host = ips.freeman;
         passfile = config.sops.templates."synapse/pgpass".path;
       };
+
+      redis = {
+        enabled = true;
+        host = ips.freeman;
+        port = 6384;
+        password_path = config.sops.secrets."redis/synapse".path;
+      };
+
+      federation_sender_instances = [
+        "federation_sender_1"
+        "federation_sender_2"
+      ];
 
       enable_metrics = true;
       enable_registration = false;
@@ -121,6 +141,21 @@ in {
         {
           bind_addresses = [
             "127.0.0.1"
+          ];
+          port = 9093;
+          type = "http";
+          tls = false;
+          resources = [
+            {
+              names = [
+                "replication"
+              ];
+            }
+          ];
+        }
+        {
+          bind_addresses = [
+            "127.0.0.1"
             "${ips.faithplate}"
           ];
           resources = [
@@ -135,6 +170,13 @@ in {
           type = "metrics";
         }
       ];
+
+      instance_map = {
+        main = {
+          host = "127.0.0.1";
+          port = 9093;
+        };
+      };
 
       oidc_providers = [
         {
