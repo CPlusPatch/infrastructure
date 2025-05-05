@@ -1,6 +1,10 @@
-{
+{lib, ...}: {
   services.jellyfin = {
     enable = true;
+  };
+
+  systemd.services.jellyfin.serviceConfig = {
+    Restart = lib.mkForce "always";
   };
 
   modules.haproxy.acls.jellyfin = ''
