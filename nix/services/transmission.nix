@@ -27,6 +27,11 @@
     };
   };
 
+  systemd.services.transmission.serviceConfig = {
+    Restart = "always";
+    RestartSec = "5s";
+  };
+
   modules.haproxy.acls.transmission = ''
     acl is_transmission hdr(host) -i dl.lgs.cpluspatch.com
     use_backend transmission if is_transmission

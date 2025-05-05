@@ -29,7 +29,7 @@ resource "hcloud_server" "freeman" {
   shutdown_before_deletion = true
 
   public_net {
-    ipv4_enabled = true
+    ipv4_enabled = false
     ipv6_enabled = true
   }
 
@@ -72,7 +72,7 @@ locals {
     },
     {
       server = hcloud_server.freeman
-      ipv4   = true
+      ipv4   = false
       ipv6   = true
     }
   ]
