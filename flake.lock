@@ -345,11 +345,11 @@
         "nixpkgs-24_11": "nixpkgs-24_11"
       },
       "locked": {
-        "lastModified": 1746220417,
-        "narHash": "sha256-cN2Vf/d9KKy3V6eJIoxYHD7X0HQHfgP+lMnj3AdbsEc=",
+        "lastModified": 1746488000,
+        "narHash": "sha256-gS+VBq41RB67evZN+IXyrIor9BdnE3jYt9bHO5Z0sx4=",
         "owner": "simple-nixos-mailserver",
         "repo": "nixos-mailserver",
-        "rev": "95e2de368fe76ec0675b3d380168c5ca1c1b955d",
+        "rev": "7091fad860796deee4cea10727e6994da8a19914",
         "type": "gitlab"
       },
       "original": {
@@ -366,11 +366,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1745310711,
-        "narHash": "sha256-ePyTpKEJTgX0gvgNQWd7tQYQ3glIkbqcW778RpHlqgA=",
+        "lastModified": 1746485181,
+        "narHash": "sha256-PxrrSFLaC7YuItShxmYbMgSuFFuwxBB+qsl9BZUnRvg=",
         "owner": "Mic92",
         "repo": "sops-nix",
-        "rev": "5e3e92b16d6fdf9923425a8d4df7496b2434f39c",
+        "rev": "e93ee1d900ad264d65e9701a5c6f895683433386",
         "type": "github"
       },
       "original": {
@@ -387,11 +387,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1743612533,
-        "narHash": "sha256-K5dUGMloZ/6EetZLGnX4GpUeV8oTt6ioUe8wovLz21Y=",
+        "lastModified": 1746467935,
+        "narHash": "sha256-dR/70/r6UIszVOHhbVdCPta9g60CwSeBCf/tggRcusQ=",
         "owner": "CPlusPatch",
         "repo": "syncbot",
-        "rev": "27b4df7992ed88162de9a41f610e5d1897072147",
+        "rev": "0713513923abdc904490ad39e5e796597c18951c",
         "type": "github"
       },
       "original": {
@@ -498,11 +498,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1746129339,
-        "narHash": "sha256-HYswXFHonqZ1XaZhLjV1PHkkr1QakoTpbbFn9C115n8=",
+        "lastModified": 1746468761,
+        "narHash": "sha256-SDdthnaplzwoU1wf3DER+7iwR00Cud6FrYlOXilzXfU=",
         "owner": "versia-pub",
         "repo": "frontend",
-        "rev": "1ec56ef150b772dd5b60a86cb9bac8116a8a2e77",
+        "rev": "e98682505644e56f90793cb5a802c94bcd24c8ab",
         "type": "github"
       },
       "original": {
@@ -519,11 +519,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1746369517,
-        "narHash": "sha256-HPPnC105VP+1wqB/SlIdVmkwi0qqsuvYN0i2VsfM21I=",
+        "lastModified": 1746461037,
+        "narHash": "sha256-Tsmwg4quFlXfRq6aqRXhYzAeT5atedqRf9SRl5Wj4UE=",
         "owner": "versia-pub",
         "repo": "server",
-        "rev": "ddb3cfc978fa58af352565fc7153912a97e2a662",
+        "rev": "cf08479c48e280a995e50a716196f7ac13d451f4",
         "type": "github"
       },
       "original": {
