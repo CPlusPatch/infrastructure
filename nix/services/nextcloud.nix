@@ -94,10 +94,6 @@ in {
     };
   };
 
-  mailserver.loginAccounts."cloud@cpluspatch.com" = {
-    hashedPassword = "$2b$05$WzQ2/O96Awk9kFomIdXLw.680ut/0Q1Dn.TAzHU8w0j/R6/1tdLje";
-  };
-
   services.prometheus.exporters.nextcloud = {
     enable = true;
     port = 9205;
