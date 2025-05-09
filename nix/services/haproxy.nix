@@ -159,9 +159,24 @@ in {
           # Opt out of FLoC
           http-response set-header Permissions-Policy "interest-cohort=()"
 
+          stick-table type ipv6 size 1m expire 2d store gpt(2)
+          http-request track-sc0 src
+
           default_backend default
           http-request capture req.hdr(Host) len 20
           log-format "%ci:%cp [%tr] %ft %b/%s %ST %ac/%fc/%bc/%sc/%rc %[capture.req.hdr(0)] %HM %{+Q}HU"
+
+          # Bot protection ACLs
+          acl protected_backend hdr(host) -i mk.cpluspatch.com
+          acl is_challenge_req path_beg /_challenge
+
+          # Matches the default config of anubis of triggering on "Mozilla"
+          acl protected_ua hdr(User-Agent) -m beg Mozilla/
+          acl protected acl(protected_backend,protected_ua,!is_challenge_req)
+
+          acl accepted sc_get_gpt(1,0) gt 0
+          http-request return status 200 content-type "text/html; charset=UTF-8" hdr "Cache-control" "max-age=0, no-cache" lf-file ${../../html/challenge.html} if protected !accepted
+          use_backend challenge if is_challenge_req
 
           errorfiles errors
 
@@ -197,6 +212,30 @@ in {
         # Redirect acme requests to the lego client
         backend acme
           server acme localhost${config.security.acme.defaults.listenHTTP}
+
+        # Used for Anubis-style challenges
+        # Based on David Leadbeater's work
+        # See https://github.com/dgl/haphash
+        backend challenge
+          mode http
+          option http-buffer-request
+
+          # Must match the stick table used in the frontend.
+          http-request track-sc0 src table https
+          acl challenge_req method POST
+
+          # Calculate the challenge
+          http-request set-var(txn.tries) req.body_param(tries)
+          http-request set-var(txn.timestamp) req.body_param(timestamp)
+          http-request set-var(txn.host) hdr(Host),host_only
+          http-request set-var(txn.hash) src,concat(;,txn.host,),concat(;,txn.timestamp,),concat(;,txn.tries),digest(SHA-256),hex
+          acl timestamp_recent date,neg,add(txn.timestamp) ge -60
+
+          # 4 is the difficulty, should match "diff" in challenge.html.
+          acl hash_good var(txn.hash) -m reg 0{4}.*
+          http-request sc-set-gpt(1,0) 1 if challenge_req timestamp_recent hash_good
+          http-request return status 200 if challenge_req hash_good
+          http-request return status 400 content-type "text/html; charset=UTF-8" hdr "Cache-control" "max-age=0" string "Bad request" if !challenge_req OR !hash_good
 
         # Varnish backend
         backend varnish
