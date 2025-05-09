@@ -167,7 +167,7 @@ in {
           log-format "%ci:%cp [%tr] %ft %b/%s %ST %ac/%fc/%bc/%sc/%rc %[capture.req.hdr(0)] %HM %{+Q}HU"
 
           # Bot protection ACLs
-          acl protected_backend hdr(host) -i mk.cpluspatch.com
+          acl protected_backend hdr(host) -i mk.cpluspatch.com vs.cpluspatch.com social.lysand.org
           acl is_challenge_req path_beg /_challenge
 
           # Matches the default config of anubis of triggering on "Mozilla"
