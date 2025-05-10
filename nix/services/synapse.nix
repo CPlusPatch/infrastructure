@@ -76,8 +76,46 @@ in {
     ];
 
     workers = {
-      "federation_sender_1" = {};
-      "federation_sender_2" = {};
+      "federation_sender_1" = {
+        worker_listeners = [
+          {
+            bind_addresses = [
+              "127.0.0.1"
+              "${ips.faithplate}"
+            ];
+            resources = [
+              {
+                names = [
+                  "metrics"
+                ];
+              }
+            ];
+            tls = false;
+            port = 9001;
+            type = "metrics";
+          }
+        ];
+      };
+      "federation_sender_2" = {
+        worker_listeners = [
+          {
+            bind_addresses = [
+              "127.0.0.1"
+              "${ips.faithplate}"
+            ];
+            resources = [
+              {
+                names = [
+                  "metrics"
+                ];
+              }
+            ];
+            tls = false;
+            port = 9002;
+            type = "metrics";
+          }
+        ];
+      };
     };
 
     settings = {
@@ -201,13 +239,18 @@ in {
   # Allows the prometheus performance metrics to be collected
   # nixpkgs defaults it to "invisible", which doesn't let prometheus scrape it
   systemd.services.matrix-synapse.serviceConfig.ProcSubset = lib.mkForce "all";
-  systemd.services.matrix-synapse-worker-federation_sender_1.serviceConfig.SupplementaryGroups = [
-    "mautrix-signal"
-  ];
-  systemd.services.matrix-synapse-worker-federation_sender_2.serviceConfig.SupplementaryGroups = [
-    "mautrix-signal"
-  ];
-
+  systemd.services.matrix-synapse-worker-federation_sender_1.serviceConfig = {
+    ProcSubset = lib.mkForce "all";
+    SupplementaryGroups = [
+      "mautrix-signal"
+    ];
+  };
+  systemd.services.matrix-synapse-worker-federation_sender_2.serviceConfig = {
+    ProcSubset = lib.mkForce "all";
+    SupplementaryGroups = [
+      "mautrix-signal"
+    ];
+  };
   sops.templates."mautrix-signal/environment.env" = {
     content = ''
       MAUTRIX_SIGNAL_BRIDGE_LOGIN_SHARED_SECRET=${config.sops.placeholder."synapse/ssap-secret"}

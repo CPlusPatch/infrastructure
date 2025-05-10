@@ -519,11 +519,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1746701844,
-        "narHash": "sha256-oCx9wpdJT/fOUJtWcT4FLoyu1UoG247fVOFKdQTgp4I=",
+        "lastModified": 1746809248,
+        "narHash": "sha256-xpJrlOiLBcZe75u6fGimA/sF2sqX1jN4+PdOFgrrPpc=",
         "owner": "versia-pub",
         "repo": "server",
-        "rev": "4d8fe931885e05c515923649439d1a880c0115fb",
+        "rev": "58bcbc4da79d137be6a911ea179042115330423e",
         "type": "github"
       },
       "original": {
