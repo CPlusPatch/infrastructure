@@ -70,13 +70,26 @@ See https://github.com/dgl/haphash
         iframe {
             display: none;
         }
+
+        @keyframes rotate {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .rotate {
+            animation: rotate 1s linear infinite;
+        }
     </style>
 </head>
 
 <body>
     <main>
         <section>
-            <h1 id="progress-icon">🌀</h1>
+            <h1 id="progress-icon" class="rotate">🌀</h1>
             <h2 id="progress-text">Checking whether you're a scraper...</h2>
         </section>
         <p>JavaScript is required to pass the challenge.</p>
@@ -88,10 +101,6 @@ See https://github.com/dgl/haphash
         <input type="hidden" name="difficulty" value="4" />
         <input type="hidden" name="tries" value="" />
     </form>
-    <div id="progress">
-        <span id="progressText"></span>
-        <div id="progressBar"></div>
-    </div>
     <iframe srcdoc="" src="about:blank" name="post" role="presentation"></iframe>
     <script>
         "use strict";
@@ -173,10 +182,12 @@ See https://github.com/dgl/haphash
          * Sets the message and icon for the progress bar.
          * @param {string} icon - The icon to display.
          * @param {string} message - The message to display.
+         * @param {boolean} rotate - Whether to rotate the icon.
          */
-        function setMessage(icon, message) {
+        function setMessage(icon, message, rotate = false) {
             progressIcon.innerText = icon;
             progressText.innerText = message;
+            progressIcon.classList.toggle("rotate", rotate);
         }
 
         async function submitAnswer(form) {
