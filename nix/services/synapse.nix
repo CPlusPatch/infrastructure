@@ -244,12 +244,16 @@ in {
     SupplementaryGroups = [
       "mautrix-signal"
     ];
+    Restart = lib.mkForce "always";
+    RestartSec = lib.mkForce "5s";
   };
   systemd.services.matrix-synapse-worker-federation_sender_2.serviceConfig = {
     ProcSubset = lib.mkForce "all";
     SupplementaryGroups = [
       "mautrix-signal"
     ];
+    Restart = lib.mkForce "always";
+    RestartSec = lib.mkForce "5s";
   };
   sops.templates."mautrix-signal/environment.env" = {
     content = ''
