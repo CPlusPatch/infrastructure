@@ -239,22 +239,22 @@ in {
   # Allows the prometheus performance metrics to be collected
   # nixpkgs defaults it to "invisible", which doesn't let prometheus scrape it
   systemd.services.matrix-synapse.serviceConfig.ProcSubset = lib.mkForce "all";
+
   systemd.services.matrix-synapse-worker-federation_sender_1.serviceConfig = {
     ProcSubset = lib.mkForce "all";
+    # Gives access to the Signal bridge config
     SupplementaryGroups = [
       "mautrix-signal"
     ];
-    Restart = lib.mkForce "always";
-    RestartSec = lib.mkForce "5s";
   };
+
   systemd.services.matrix-synapse-worker-federation_sender_2.serviceConfig = {
     ProcSubset = lib.mkForce "all";
     SupplementaryGroups = [
       "mautrix-signal"
     ];
-    Restart = lib.mkForce "always";
-    RestartSec = lib.mkForce "5s";
   };
+
   sops.templates."mautrix-signal/environment.env" = {
     content = ''
       MAUTRIX_SIGNAL_BRIDGE_LOGIN_SHARED_SECRET=${config.sops.placeholder."synapse/ssap-secret"}
