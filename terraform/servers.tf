@@ -171,7 +171,7 @@ module "nixos_install" {
   target_host                = coalesce(each.value.server.ipv4_address, each.value.server.ipv6_address)
   nixos_system_attr          = "..#nixosConfigurations.${each.key}.config.system.build.toplevel"
   nixos_partitioner_attr     = "..#nixosConfigurations.${each.key}.config.system.build.diskoScriptNoDeps"
-  nixos_generate_config_path = "${path.module}/../nix/machines/${each.key}/hardware-configuration.nix"
+  nixos_generate_config_path = "${path.module}/../nix/hosts/${each.key}/hardware-configuration.nix"
   instance_id                = each.value.server.id
   debug_logging              = true
 

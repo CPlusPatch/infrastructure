@@ -4,7 +4,7 @@
   config,
   ...
 }: {
-  imports = [../../home-manager ../../features/sops.nix];
+  imports = [../../features/home-manager ../../features/sops.nix];
 
   nix = {
     settings = {

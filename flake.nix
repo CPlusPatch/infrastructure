@@ -69,9 +69,9 @@
           simple-nixos-mailserver.nixosModule
           nix-minecraft.nixosModules.minecraft-servers
           syncbot.nixosModules.${system}.syncbot
-          ./nix/machines/base
-          ./nix/partitions/single-zfs.nix
-          ./nix/machines/faithplate
+          ./nix/hosts/base
+          ./nix/features/partitions/single-zfs.nix
+          ./nix/hosts/faithplate
           versia-server.nixosModules.versia-server
           bitchbot.nixosModules.bitchbot
         ];
@@ -90,9 +90,9 @@
           lix-module.nixosModules.lixFromNixpkgs
           disko.nixosModules.disko
           sops-nix.nixosModules.sops
-          ./nix/machines/base
-          ./nix/partitions/single-zfs.nix
-          ./nix/machines/freeman
+          ./nix/hosts/base
+          ./nix/features/partitions/single-zfs.nix
+          ./nix/hosts/freeman
         ];
 
         specialArgs = {
@@ -110,9 +110,9 @@
           {
             nixpkgs.overlays = [nix-minecraft.overlay];
           }
-          ./nix/machines/base
-          ./nix/partitions/single-zfs.nix
-          ./nix/machines/eli
+          ./nix/hosts/base
+          ./nix/features/partitions/single-zfs.nix
+          ./nix/hosts/eli
         ];
 
         specialArgs = {
