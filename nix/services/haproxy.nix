@@ -96,8 +96,8 @@ in {
           tune.ssl.lifetime 300
 
         http-errors errors
-          errorfile 503 ${../../html/503.http}
-          errorfile 502 ${../../html/502.http}
+          errorfile 503 ${pkgs.cpluspatch-pages}/503.http
+          errorfile 502 ${pkgs.cpluspatch-pages}/502.http
 
         defaults
           log     global
@@ -175,7 +175,7 @@ in {
           acl protected acl(protected_backend,protected_ua,!is_challenge_req)
 
           acl accepted sc_get_gpt(1,0) gt 0
-          http-request return status 200 content-type "text/html; charset=UTF-8" hdr "Cache-control" "max-age=0, no-cache" lf-file ${../../html/challenge.html} if protected !accepted
+          http-request return status 200 content-type "text/html; charset=UTF-8" hdr "Cache-control" "max-age=0, no-cache" lf-file ${pkgs.cpluspatch-pages}/challenge.html if protected !accepted
           use_backend challenge if is_challenge_req
 
           errorfiles errors
