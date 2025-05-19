@@ -129,20 +129,20 @@ async function startChallenge(form) {
     }
 
     let backoff = 0;
-    let tryOnce = (_) => {
+    let tryOnce = () => {
         if (backoff > 8) {
             setMessage("❌", "Failed to submit after several tries. Try reloading.");
             return;
         }
         setTimeout(
-            async (_) => submitAnswer(form),
+            async () => submitAnswer(form),
             1000 * (Math.pow(2, backoff++) - 1)
         );
     };
 
     form.addEventListener("error", tryOnce);
     let iframe = document.querySelector("iframe");
-    iframe?.addEventListener("load", (_) =>
+    iframe?.addEventListener("load", () =>
         location.hash.length ? location.reload() : location.replace(location.href)
     );
     tryOnce();
@@ -169,7 +169,7 @@ async function submitAnswer(form) {
     let start = Date.now();
     let tries = await challenge(form.difficulty.value, form.ip.value, form.timestamp.value);
 
-    if (tries === undefined) {
+    if (tries === null) {
         setMessage("🤯", "Unable to calculate challenge. Try reloading or a different browser.");
         return;
     }
@@ -180,4 +180,4 @@ async function submitAnswer(form) {
 }
 
 // @ts-expect-error the one piece is real!
-window.addEventListener("load", _ => startChallenge(document.forms.challenge));
+window.addEventListener("load", () => startChallenge(document.forms.challenge));
