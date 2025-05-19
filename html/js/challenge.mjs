@@ -1,34 +1,105 @@
+// @ts-check
 "use strict";
+
+// @ts-expect-error This is imported as text, not a module
+import challengeWorkerCode from "./challenge-worker.mjs" with { type: "text" };
 
 const progressIcon = document.getElementById("progress-icon");
 const progressText = document.getElementById("progress-text");
 
 /**
- * Solves the cryptographic challenge.
+ * Creates a worker script blob for our worker threads
+ * @returns {string} URL for the worker script
+ */
+function createWorkerScript() {
+    const blob = new Blob([challengeWorkerCode], { type: 'application/javascript' });
+    return URL.createObjectURL(blob);
+}
+
+/**
+ * Solves the cryptographic challenge using Web Workers (one per CPU core).
  * @param {number} difficulty - The difficulty level of the challenge.
  * @param {string} ip - The IP address of the user.
  * @param {string} timestamp - The timestamp of the challenge.
- * @return {Promise<number>} - The number of tries taken to solve the challenge.
+ * @return {Promise<number | null>} - The number of tries taken to solve the challenge.
  */
 async function challenge(difficulty, ip, timestamp) {
-    let encoder = new TextEncoder();
-    let tries = 0;
+    // Determine number of CPU cores (use navigator.hardwareConcurrency or fallback to 4)
+    const cpuCount = navigator.hardwareConcurrency || 4;
+    const workerScript = createWorkerScript();
+    const MAX_TRIES = 10_000_000;
+    const chunkSize = Math.ceil(MAX_TRIES / cpuCount);
     
-    for (; tries < 10_000_000; tries++) {
-        let hash = await crypto.subtle.digest(
-            "SHA-256",
-            encoder.encode([ip, location.hostname, timestamp, tries].join(";"))
-        );
-        let hashByteArray = new Uint8Array(hash);
+    return new Promise((resolve) => {
+        let activeWorkers = 0;
+        let workers = [];
+        
+        // Function to clean up workers when done
+        const terminateWorkers = () => {
+            for (const worker of workers) {
+                if (worker) {
+                    worker.terminate();
+                }
+            }
 
-        let i = 0;
-        while (i < difficulty / 2) {
-            if (hashByteArray[i] > 0x0f) break;
-            if (i * 2 + 1 >= difficulty) return tries;
-            if (hashByteArray[i++] > 0) break;
-            if (i * 2 >= difficulty) return tries;
+            URL.revokeObjectURL(workerScript);
+        };
+        
+        // Create and start workers
+        for (let i = 0; i < cpuCount; i++) {
+            const startTries = i * chunkSize;
+            const endTries = Math.min((i + 1) * chunkSize, MAX_TRIES);
+            
+            try {
+                // Use import.meta.url so that the bundler can resolve the path correctly
+                const worker = new Worker(workerScript);
+                workers.push(worker);
+                activeWorkers++;
+                
+                worker.onmessage = (e) => {
+                    if (e.data.solved) {
+                        terminateWorkers();
+                        resolve(e.data.tries);
+                    } else {
+                        // This worker finished without finding a solution
+                        activeWorkers--;
+                        if (activeWorkers === 0) {
+                            terminateWorkers();
+                            resolve(null); // No solution found
+                        }
+                    }
+                };
+                
+                worker.onerror = (err) => {
+                    console.error('Worker error:', err);
+                    activeWorkers--;
+
+                    if (activeWorkers === 0) {
+                        terminateWorkers();
+                        resolve(null);
+                    }
+                };
+                
+                // Start the worker with its chunk of tries
+                worker.postMessage({
+                    difficulty,
+                    ip,
+                    hostname: location.hostname,
+                    timestamp,
+                    startTries,
+                    endTries
+                });
+            } catch (error) {
+                console.error('Error creating worker:', error);
+                activeWorkers--;
+
+                if (activeWorkers === 0) {
+                    terminateWorkers();
+                    resolve(null);
+                }
+            }
         }
-    }
+    });
 }
 
 /**
@@ -42,6 +113,10 @@ async function checkCompatibility() {
         } else {
             throw new Error("No WebCrypto support in your browser. This is required to pass the challenge.");
         }
+    }
+    
+    if (!window.Worker) {
+        throw new Error("Web Workers are not supported in this browser. This is required for parallel computation.");
     }
 }
 
@@ -67,8 +142,8 @@ async function startChallenge(form) {
 
     form.addEventListener("error", tryOnce);
     let iframe = document.querySelector("iframe");
-    iframe.addEventListener("load", (_) =>
-        location.hash.length ? location.reload() : location.replace(location)
+    iframe?.addEventListener("load", (_) =>
+        location.hash.length ? location.reload() : location.replace(location.href)
     );
     tryOnce();
 }
@@ -80,14 +155,18 @@ async function startChallenge(form) {
  * @param {boolean} rotate - Whether to rotate the icon.
  */
 function setMessage(icon, message, rotate = false) {
+    if (!(progressIcon && progressText)) {
+        console.error("Progress elements not found.");
+        return;
+    }
+
     progressIcon.innerText = icon;
     progressText.innerText = message;
     progressIcon.classList.toggle("rotate", rotate);
 }
 
 async function submitAnswer(form) {
-    let start = new Date();
-    ;
+    let start = Date.now();
     let tries = await challenge(form.difficulty.value, form.ip.value, form.timestamp.value);
 
     if (tries === undefined) {
@@ -96,8 +175,9 @@ async function submitAnswer(form) {
     }
     form.tries.value = tries;
 
-    setMessage("✅", `Took ${(new Date() - start)}ms.`);
+    setMessage("✅", `Took ${(Date.now() - start)}ms.`);
     form.submit();
 }
 
+// @ts-expect-error the one piece is real!
 window.addEventListener("load", _ => startChallenge(document.forms.challenge));
