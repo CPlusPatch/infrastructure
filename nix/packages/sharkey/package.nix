@@ -22,50 +22,20 @@
 }:
 stdenv.mkDerivation (finalAttrs: {
   pname = "sharkey";
-  version = "2025.2.3";
+  version = "2025.4.2";
 
   src = fetchFromGitLab {
     owner = "TransFem-org";
     repo = "Sharkey";
     domain = "activitypub.software";
     rev = finalAttrs.version;
-    hash = "sha256-VBfkJuoQzQ93sUmJNnr1JUjA2GQNgOIuX+j8nAz3bb4=";
+    hash = "sha256-gCZY9d/YLNQRGVFqsK7//UDiS19Jtqa7adGliIdE+4c=";
     fetchSubmodules = true;
   };
 
-  pnpmDeps = stdenv.mkDerivation {
-    pname = "${finalAttrs.pname}-pnpm-deps";
-    inherit (finalAttrs) src version;
-
-    nativeBuildInputs = [
-      jq
-      moreutils
-      pnpm_9
-      cacert
-    ];
-
-    # https://github.com/NixOS/nixpkgs/blob/763e59ffedb5c25774387bf99bc725df5df82d10/pkgs/applications/misc/pot/default.nix#L56
-    # Avoids downloading binaries
-    installPhase = ''
-      export HOME=$(mktemp -d)
-
-      pnpm config set store-dir $out
-      pnpm config set side-effects-cache false
-      pnpm install --force --frozen-lockfile --ignore-scripts
-    '';
-
-    # Remove non-deterministic fields from JSON files
-    fixupPhase = ''
-      rm -rf $out/v3/tmp
-      for f in $(find $out -name "*.json"); do
-        sed -i -E -e 's/"checkedAt":[0-9]+,//g' $f
-        jq --sort-keys . $f | sponge $f
-      done
-    '';
-
-    dontBuild = true;
-    outputHashMode = "recursive";
-    outputHash = "sha256-ALstAaN8dr5qSnc/ly0hv+oaeKrYFQ3GhObYXOv4E6I=";
+  pnpmDeps = pnpm_9.fetchDeps {
+    inherit (finalAttrs) pname version src;
+    hash = "sha256-2bt/sHKGNIjKfOvZ6DCXvdJcKoOJX/ueWdLULlYK3YU=";
   };
 
   nativeBuildInputs = [
@@ -123,6 +93,7 @@ stdenv.mkDerivation (finalAttrs: {
   buildPhase = ''
     runHook preBuild
 
+    find . -type f -exec sed -i 's/"packageManager": "pnpm@9\.6\.0",//g' {} +
     pnpm build
 
     runHook postBuild

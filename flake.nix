@@ -2,7 +2,7 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     lix-module = {
-      url = "https://git.lix.systems/lix-project/nixos-module/archive/2.92.0-1.tar.gz";
+      url = "https://git.lix.systems/lix-project/nixos-module/archive/2.93.0.tar.gz";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     disko = {
@@ -63,7 +63,7 @@
           {
             nixpkgs.overlays = [nix-minecraft.overlay versia-server.overlays.default versia-fe.overlays.default bitchbot.overlays.default];
           }
-          lix-module.nixosModules.lixFromNixpkgs
+          lix-module.nixosModules.default
           disko.nixosModules.disko
           sops-nix.nixosModules.sops
           simple-nixos-mailserver.nixosModule
@@ -87,7 +87,7 @@
       freeman = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
         modules = [
-          lix-module.nixosModules.lixFromNixpkgs
+          lix-module.nixosModules.default
           disko.nixosModules.disko
           sops-nix.nixosModules.sops
           ./nix/hosts/base
@@ -103,7 +103,7 @@
       eli = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
         modules = [
-          lix-module.nixosModules.lixFromNixpkgs
+          lix-module.nixosModules.default
           disko.nixosModules.disko
           sops-nix.nixosModules.sops
           nix-minecraft.nixosModules.minecraft-servers
