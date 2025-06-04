@@ -1,5 +1,5 @@
 {config, ...}: {
-  imports = [../lib/postgresql.nix];
+  imports = [../modules/postgresql.nix];
 
   modules.postgresql = {
     enable = true;

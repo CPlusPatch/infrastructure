@@ -4,7 +4,7 @@
   lib,
   ...
 }: let
-  inherit (import ./ips.nix) ips;
+  inherit (import ../lib/ips.nix) ips;
 in {
   # Need to use the "options" namespace to declare options
   options = {
