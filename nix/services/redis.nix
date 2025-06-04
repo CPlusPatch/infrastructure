@@ -1,6 +1,14 @@
 {config, ...}: let
   inherit (import ../lib/ips.nix) ips;
 in {
+  imports = [
+    ../secrets/redis/sharkey.nix
+    ../secrets/redis/immich.nix
+    ../secrets/redis/bitchbot.nix
+    ../secrets/redis/versia2.nix
+    ../secrets/redis/synapse.nix
+  ];
+
   services.redis = {
     vmOverCommit = true;
 

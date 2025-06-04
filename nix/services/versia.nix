@@ -4,6 +4,10 @@
   config,
   ...
 }: {
+  imports = [
+    ../secrets/postgresql/versia.nix
+  ];
+
   sops.templates.versia_postgres_env = {
     content = ''
       POSTGRES_DB=lysand

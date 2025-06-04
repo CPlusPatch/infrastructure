@@ -5,17 +5,26 @@
 }: let
   inherit (import ../lib/ips.nix) ips;
 in {
-  sops.templates."nextcloud-secrets.json" = {
-    owner = "nextcloud";
-    content = builtins.toJSON {
-      secret = config.sops.placeholder."nextcloud/secret";
-    };
-  };
+  imports = [
+    ../secrets/nextcloud.nix
+    ../secrets/postgresql/nextcloud.nix
+    ../secrets/s3/nextcloud.nix
+    ../secrets/keycloak/nextcloud.nix
+  ];
 
-  sops.secrets."postgresql/nextcloud".owner = "nextcloud";
-  sops.secrets."s3/nextcloud/secret".owner = "nextcloud";
-  sops.secrets."nextcloud/oidc-client-secret".owner = "nextcloud";
-  sops.secrets."nextcloud/exporter-password".owner = "nextcloud-exporter";
+  sops = {
+    templates."nextcloud-secrets.json" = {
+      owner = "nextcloud";
+      content = builtins.toJSON {
+        secret = config.sops.placeholder."nextcloud/secret";
+      };
+    };
+
+    secrets."postgresql/nextcloud".owner = "nextcloud";
+    secrets."s3/nextcloud/secret_key".owner = "nextcloud";
+    secrets."keycloak/nextcloud/client_secret".owner = "nextcloud";
+    secrets."nextcloud/exporter_password".owner = "nextcloud-exporter";
+  };
 
   services.nextcloud = {
     enable = true;
@@ -70,7 +79,7 @@ in {
         hostname = "eu-central.object.fastlystorage.app";
         region = "eu-central";
         key = "bpV8YxQW2BnSUeGFJncw93";
-        secretFile = config.sops.secrets."s3/nextcloud/secret".path;
+        secretFile = config.sops.secrets."s3/nextcloud/secret_key".path;
         usePathStyle = true;
       };
     };
@@ -98,7 +107,7 @@ in {
     enable = true;
     port = 9205;
     url = "https://cloud.cpluspatch.com";
-    passwordFile = config.sops.secrets."nextcloud/exporter-password".path;
+    passwordFile = config.sops.secrets."nextcloud/exporter_password".path;
     username = "admin";
   };
 

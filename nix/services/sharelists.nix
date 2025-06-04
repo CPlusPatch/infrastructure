@@ -4,6 +4,11 @@
   config,
   ...
 }: {
+  imports = [
+    ../secrets/docker.nix
+    ../secrets/postgresql/sharelists.nix
+  ];
+
   sops.templates.sharelists_postgres_env = {
     content = ''
       POSTGRES_DB=sharelists

@@ -1,6 +1,10 @@
 {config, ...}: let
   inherit (import ../lib/ips.nix) ips;
 in {
+  imports = [
+    ../secrets/postgresql/vaultwarden.nix
+  ];
+
   sops.templates."vaultwarden.env" = {
     content = ''
       DATABASE_URL=postgresql://vaultwarden:${config.sops.placeholder."postgresql/vaultwarden"}@${ips.freeman}/vaultwarden

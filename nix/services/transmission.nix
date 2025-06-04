@@ -3,6 +3,10 @@
   config,
   ...
 }: {
+  imports = [
+    ../secrets/transmission.nix
+  ];
+
   sops.templates."transmission.json" = {
     content = ''
       {

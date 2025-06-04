@@ -6,6 +6,10 @@
 }: let
   inherit (import ../lib/ips.nix) ips;
 in {
+  imports = [
+    ../secrets/redis/bitchbot.nix
+  ];
+
   sops.templates."bitchbot.env" = {
     content = ''
       REDIS_URL=redis://:${config.sops.placeholder."redis/bitchbot"}@${ips.freeman}:6382

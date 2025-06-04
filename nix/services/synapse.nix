@@ -5,61 +5,52 @@
 }: let
   inherit (import ../lib/ips.nix) ips;
 in {
+  imports = [
+    ../secrets/postgresql/synapse.nix
+    ../secrets/postgresql/mautrix-signal.nix
+    ../secrets/redis/synapse.nix
+    ../secrets/keycloak/synapse.nix
+    ../secrets/synapse.nix
+  ];
+
   nixpkgs.config.permittedInsecurePackages = [
     # Why does mautrix-signal use this? :(
     "olm-3.2.16"
   ];
 
   # Make secrets accessible to Synapse
-  sops.secrets = {
-    "synapse/registration-shared-secret" = {
-      owner = "matrix-synapse";
+  sops = {
+    secrets = {
+      "synapse/registration_shared_secret".owner = "matrix-synapse";
+      "synapse/signing_key".owner = "matrix-synapse";
+      "synapse/form_secret".owner = "matrix-synapse";
+      "synapse/macaroon_secret_key".owner = "matrix-synapse";
+      "synapse/ssap_secret".owner = "matrix-synapse";
+      "synapse/as_token".owner = "mautrix-signal";
+      "synapse/hs_token".owner = "mautrix-signal";
+      "synapse/pickle_key".owner = "mautrix-signal";
+      "redis/synapse".owner = "matrix-synapse";
+      "keycloak/synapse/client_secret".owner = "matrix-synapse";
     };
-    "synapse/signing-key" = {
-      owner = "matrix-synapse";
-    };
-    "synapse/form-secret" = {
-      owner = "matrix-synapse";
-    };
-    "synapse/macaroon-secret-key" = {
-      owner = "matrix-synapse";
-    };
-    "synapse/ssap-secret" = {
-      owner = "matrix-synapse";
-    };
-    "synapse/oidc-client-secret" = {
-      owner = "matrix-synapse";
-    };
-    "synapse/as-token" = {
-      owner = "mautrix-signal";
-    };
-    "synapse/hs-token" = {
-      owner = "mautrix-signal";
-    };
-    "synapse/pickle-key" = {
-      owner = "mautrix-signal";
-    };
-    "redis/synapse" = {
-      owner = "matrix-synapse";
-    };
-  };
 
-  sops.templates."synapse/extra-config.yaml" = {
-    content = ''
-      modules:
-        - module: shared_secret_authenticator.SharedSecretAuthProvider
-          config:
-            shared_secret: ${config.sops.placeholder."synapse/ssap-secret"}"
-            m_login_password_support_enabled: false
-    '';
-    owner = "matrix-synapse";
-  };
-
-  sops.templates."synapse/pgpass" = {
-    content = ''
-      ${config.services.matrix-synapse.settings.database.args.host}:*:${config.services.matrix-synapse.settings.database.args.database}:${config.services.matrix-synapse.settings.database.args.user}:${config.sops.placeholder."postgresql/synapse"}
-    '';
-    owner = "matrix-synapse";
+    templates = {
+      "synapse/extra-config.yaml" = {
+        content = ''
+          modules:
+            - module: shared_secret_authenticator.SharedSecretAuthProvider
+              config:
+                shared_secret: ${config.sops.placeholder."synapse/ssap_secret"}
+                m_login_password_support_enabled: false
+        '';
+        owner = "matrix-synapse";
+      };
+      "synapse/pgpass" = {
+        content = ''
+          ${config.services.matrix-synapse.settings.database.args.host}:*:${config.services.matrix-synapse.settings.database.args.database}:${config.services.matrix-synapse.settings.database.args.user}:${config.sops.placeholder."postgresql/synapse"}
+        '';
+        owner = "matrix-synapse";
+      };
+    };
   };
 
   services.matrix-synapse = {
@@ -149,10 +140,10 @@ in {
       server_name = "cpluspatch.dev";
       serve_server_wellknown = false;
 
-      signing_key_path = config.sops.secrets."synapse/signing-key".path;
-      registration_shared_secret_path = config.sops.secrets."synapse/registration-shared-secret".path;
-      form_secret_path = config.sops.secrets."synapse/form-secret".path;
-      macaroon_secret_key_path = config.sops.secrets."synapse/macaroon-secret-key".path;
+      signing_key_path = config.sops.secrets."synapse/signing_key".path;
+      registration_shared_secret_path = config.sops.secrets."synapse/registration_shared_secret".path;
+      form_secret_path = config.sops.secrets."synapse/form_secret".path;
+      macaroon_secret_key_path = config.sops.secrets."synapse/macaroon_secret_key".path;
 
       listeners = [
         {
@@ -224,7 +215,7 @@ in {
           discover = true;
           issuer = "https://id.cpluspatch.com/realms/master/";
           client_id = "synapse";
-          client_secret_path = config.sops.secrets."synapse/oidc-client-secret".path;
+          client_secret_path = config.sops.secrets."keycloak/synapse/client_secret".path;
           scopes = ["openid" "profile"];
           backchannel_logout_enabled = true;
           user_mapping_provider.config = {
@@ -257,10 +248,10 @@ in {
 
   sops.templates."mautrix-signal/environment.env" = {
     content = ''
-      MAUTRIX_SIGNAL_BRIDGE_LOGIN_SHARED_SECRET=${config.sops.placeholder."synapse/ssap-secret"}
-      MAUTRIX_SIGNAL_BRIDGE_HS_TOKEN=${config.sops.placeholder."synapse/hs-token"}
-      MAUTRIX_SIGNAL_BRIDGE_AS_TOKEN=${config.sops.placeholder."synapse/as-token"}
-      MAUTRIX_SIGNAL_BRIDGE_PICKLE_KEY=${config.sops.placeholder."synapse/pickle-key"}
+      MAUTRIX_SIGNAL_BRIDGE_LOGIN_SHARED_SECRET=${config.sops.placeholder."synapse/ssap_secret"}
+      MAUTRIX_SIGNAL_BRIDGE_HS_TOKEN=${config.sops.placeholder."synapse/hs_token"}
+      MAUTRIX_SIGNAL_BRIDGE_AS_TOKEN=${config.sops.placeholder."synapse/as_token"}
+      MAUTRIX_SIGNAL_BRIDGE_PICKLE_KEY=${config.sops.placeholder."synapse/pickle_key"}
       MAUTRIX_SIGNAL_BRIDGE_POSTGRES_PASSWORD=${config.sops.placeholder."postgresql/mautrix-signal"}
     '';
     owner = "mautrix-signal";

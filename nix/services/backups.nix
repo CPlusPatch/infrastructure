@@ -1,11 +1,12 @@
 {config, ...}: {
   imports = [
     ../../modules/s3fs.nix
+    ../../secrets/s3/backups.nix
   ];
 
   sops.templates."s3fs-passwd" = {
     content = ''
-      ${config.sops.placeholder."s3/backups/keyid"}:${config.sops.placeholder."s3/backups/secret"}
+      ${config.sops.placeholder."s3/backups/key_id"}:${config.sops.placeholder."s3/backups/secret_key"}
     '';
   };
 

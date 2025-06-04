@@ -5,10 +5,15 @@
 }: let
   inherit (import ../lib/ips.nix) ips;
 in {
+  imports = [
+    ../secrets/postgresql/plausible.nix
+    ../secrets/plausible.nix
+  ];
+
   sops.templates."plausible.env" = {
     content = ''
       DATABASE_URL=postgres://plausible:${config.sops.placeholder."postgresql/plausible"}@${ips.freeman}:5432/plausible
-      SECRET_KEY_BASE=${config.sops.placeholder."plausible/secret-key-base"}
+      SECRET_KEY_BASE=${config.sops.placeholder."plausible/secret_key_base"}
     '';
   };
 
@@ -19,7 +24,7 @@ in {
       disableRegistration = true;
       baseUrl = "https://logs.cpluspatch.com";
       port = 10239;
-      secretKeybaseFile = config.sops.secrets."plausible/secret-key-base".path;
+      secretKeybaseFile = config.sops.secrets."plausible/secret_key_base".path;
     };
 
     database = {

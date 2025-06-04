@@ -1,14 +1,15 @@
 {config, ...}: let
   inherit (import ../lib/ips.nix) ips;
 in {
-  imports = [../packages/sharkey/import.mod.nix];
+  imports = [
+    ../packages/sharkey/import.mod.nix
+    ../secrets/postgresql/sharkey.nix
+    ../secrets/redis/sharkey.nix
+  ];
 
-  sops.secrets."postgresql/sharkey" = {
-    owner = "sharkey";
-  };
-
-  sops.secrets."redis/sharkey" = {
-    owner = "sharkey";
+  sops = {
+    secrets."postgresql/sharkey".owner = "sharkey";
+    secrets."redis/sharkey".owner = "sharkey";
   };
 
   services.sharkey = {

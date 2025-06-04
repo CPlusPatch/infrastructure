@@ -1,4 +1,8 @@
 {config, ...}: {
+  imports = [
+    ../secrets/servarr.nix
+  ];
+
   nixpkgs.overlays = [
     (import ../overlays/flaresolverr-unstable.nix)
   ];

@@ -3,6 +3,10 @@
   config,
   ...
 }: {
+  imports = [
+    ../secrets/fs-01b.nix
+  ];
+
   sops.templates."smb-secrets" = {
     content = ''
       username=u397505
