@@ -2,9 +2,10 @@
   inherit (import ../lib/ips.nix) ips;
 in {
   imports = [
-    ../packages/sharkey/import.mod.nix
     ../secrets/postgresql/sharkey.nix
     ../secrets/redis/sharkey.nix
+
+    ../packages/sharkey/import.mod.nix
   ];
 
   sops = {

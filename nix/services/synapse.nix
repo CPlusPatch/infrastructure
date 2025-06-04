@@ -11,6 +11,8 @@ in {
     ../secrets/redis/synapse.nix
     ../secrets/keycloak/synapse.nix
     ../secrets/synapse.nix
+
+    ../modules/backups.nix
   ];
 
   nixpkgs.config.permittedInsecurePackages = [
@@ -358,6 +360,10 @@ in {
       http-request return status 200 content-type application/json string '{"m.server":"matrix.cpluspatch.dev:443"}'
   '';
 
-  security.acme.certs."matrix.cpluspatch.dev" = {};
-  security.acme.certs."cpluspatch.dev" = {};
+  security.acme.certs = {
+    "matrix.cpluspatch.dev" = {};
+    "cpluspatch.dev" = {};
+  };
+
+  services.backups.jobs.synapse.source = "/var/lib/matrix-synapse";
 }

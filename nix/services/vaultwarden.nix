@@ -3,6 +3,8 @@
 in {
   imports = [
     ../secrets/postgresql/vaultwarden.nix
+
+    ../modules/backups.nix
   ];
 
   sops.templates."vaultwarden.env" = {
@@ -35,4 +37,6 @@ in {
   '';
 
   security.acme.certs."vault.cpluspatch.com" = {};
+
+  services.backups.jobs.vaultwarden.source = "/var/lib/vaultwarden";
 }

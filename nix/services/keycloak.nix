@@ -6,8 +6,9 @@
   inherit (import ../lib/ips.nix) ips;
 in {
   imports = [
-    ./keycloak-themes
     ../secrets/postgresql/keycloak.nix
+
+    ./keycloak-themes
   ];
 
   services.keycloak = {

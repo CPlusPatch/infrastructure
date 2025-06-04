@@ -1,4 +1,8 @@
 {config, ...}: {
+  imports = [
+    ../modules/backups.nix
+  ];
+
   mailserver = {
     enable = true;
     fqdn = "${config.networking.hostName}.infra.cpluspatch.com";
@@ -79,4 +83,10 @@
   '';
 
   security.acme.certs."rspamd.cpluspatch.com" = {};
+
+  services.backups.jobs = {
+    mail.source = config.mailserver.mailDirectory;
+    mail-sieve.source = config.mailserver.sieveDirectory;
+    mail-dkim.source = config.mailserver.dkimKeyDirectory;
+  };
 }

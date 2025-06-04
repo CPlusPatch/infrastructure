@@ -1,4 +1,8 @@
 {lib, ...}: {
+  imports = [
+    ../modules/backups.nix
+  ];
+
   services.jellyfin = {
     enable = true;
   };
@@ -18,4 +22,6 @@
   '';
 
   security.acme.certs."stream.cpluspatch.com" = {};
+
+  services.backups.jobs.jellyfin.source = "/var/lib/jellyfin";
 }

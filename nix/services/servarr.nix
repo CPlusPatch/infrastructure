@@ -1,6 +1,8 @@
 {config, ...}: {
   imports = [
     ../secrets/servarr.nix
+
+    ../modules/backups.nix
   ];
 
   nixpkgs.overlays = [
@@ -30,6 +32,8 @@
 
   security.acme.certs."radarr.lgs.cpluspatch.com" = {};
 
+  services.backups.jobs.radarr.source = "/var/lib/radarr";
+
   services.prowlarr = {
     enable = true;
   };
@@ -53,6 +57,8 @@
 
   security.acme.certs."prowlarr.lgs.cpluspatch.com" = {};
 
+  services.backups.jobs.prowlarr.source = "/var/lib/prowlarr";
+
   services.sonarr = {
     enable = true;
   };
@@ -75,6 +81,8 @@
   '';
 
   security.acme.certs."sonarr.lgs.cpluspatch.com" = {};
+
+  services.backups.jobs.sonarr.source = "/var/lib/sonarr";
 
   services.flaresolverr = {
     enable = true;

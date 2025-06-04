@@ -1,4 +1,8 @@
 {config, ...}: {
+  imports = [
+    ../modules/backups.nix
+  ];
+
   services.uptime-kuma = {
     enable = true;
     settings = {
@@ -17,4 +21,6 @@
   '';
 
   security.acme.certs."status.cpluspatch.com" = {};
+
+  services.backups.jobs.uptime_kuma.source = "/var/lib/uptime-kuma";
 }

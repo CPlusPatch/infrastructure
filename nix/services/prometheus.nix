@@ -1,6 +1,10 @@
 {config, ...}: let
   inherit (import ../lib/ips.nix) ips;
 in {
+  imports = [
+    ../modules/backups.nix
+  ];
+
   services.prometheus = {
     enable = true;
 
@@ -112,4 +116,6 @@ in {
       };
     };
   };
+
+  services.backups.jobs.prometheus.source = "/var/lib/prometheus";
 }

@@ -14,6 +14,10 @@
     sha256 = "sha256-xwHTw7A6CtjCKVNEi/OIMll9BQlIm0ijNYNI+1urS6g=";
   };
 in {
+  imports = [
+    ../modules/backups.nix
+  ];
+
   services.minecraft-servers = {
     enable = true;
     eula = true;
@@ -57,4 +61,6 @@ in {
       };
     };
   };
+
+  services.backups.jobs.minecraft.source = "/srv/minecraft/cpluscraft";
 }

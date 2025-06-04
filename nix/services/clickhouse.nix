@@ -1,6 +1,10 @@
 {...}: let
   inherit (import ../lib/ips.nix) ips;
 in {
+  imports = [
+    ../modules/backups.nix
+  ];
+
   services.clickhouse = {
     enable = true;
   };
@@ -86,4 +90,6 @@ in {
       '';
     };
   };
+
+  services.backups.jobs.clickhouse.source = "/var/lib/clickhouse";
 }
