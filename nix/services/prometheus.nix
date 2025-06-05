@@ -117,5 +117,5 @@ in {
     };
   };
 
-  services.backups.jobs.prometheus.source = "/var/lib/prometheus";
+  services.backups.jobs.prometheus.source = "/var/lib/prometheus2";
 }
