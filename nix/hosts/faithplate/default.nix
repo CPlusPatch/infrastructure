@@ -56,6 +56,19 @@ in {
     # Generate with:
     # head -c4 /dev/urandom | od -A none -t x4
     hostId = "76b7fe3c";
+    firewall = {
+      allowedTCPPorts = [
+        80 # HTTP
+        443 # HTTPS
+        25 # SMTP
+        465 # SMTP over SSL
+        587 # SMTP submission
+        993 # IMAP over SSL
+      ];
+      allowedUDPPorts = [
+        443 # HTTP/3
+      ];
+    };
   };
 
   systemd.network = {

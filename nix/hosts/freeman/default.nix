@@ -57,7 +57,4 @@ in {
   };
 
   boot.kernelPackages = latestKernelPackage;
-  # Close all ports that aren't from the intranet, except SSH :)
-  networking.firewall.allowedTCPPorts = lib.mkForce [22];
-  networking.firewall.allowedUDPPorts = lib.mkForce [];
 }

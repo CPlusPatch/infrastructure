@@ -51,13 +51,8 @@
       enable = true;
       allowedTCPPorts = [
         22 # SSH
-        80 # HTTP
-        443 # HTTPS
-        25 # SMTP
-        465 # SMTP over SSL
-        587 # SMTP submission
-        993 # IMAP over SSL
       ];
+      allowedUDPPorts = [];
     };
   };
 

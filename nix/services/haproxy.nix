@@ -154,10 +154,15 @@ in {
 
         frontend https
           mode http
-          bind :::443 v4v6 ssl prefer-client-ciphers crt-list /etc/tls.certlist
+          bind :::443 v4v6 ssl prefer-client-ciphers crt-list /etc/tls.certlist alpn h2,http/1.1
+          bind quic4@:443 ssl prefer-client-ciphers crt-list /etc/tls.certlist alpn h3
+          bind quic6@:443 ssl prefer-client-ciphers crt-list /etc/tls.certlist alpn h3
           option forwardfor
           # Opt out of FLoC
           http-response set-header Permissions-Policy "interest-cohort=()"
+
+          # Advertise QUIC
+          http-after-response add-header alt-svc 'h3=":443"; ma=60'
 
           stick-table type ipv6 size 1m expire 2d store gpt(2)
           http-request track-sc0 src
