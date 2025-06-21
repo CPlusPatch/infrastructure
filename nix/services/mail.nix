@@ -7,7 +7,7 @@
     enable = true;
     fqdn = "${config.networking.hostName}.infra.cpluspatch.com";
     domains = ["cpluspatch.com" "cpluspatch.dev"];
-    stateVersion = 1;
+    stateVersion = 3;
 
     # Use Let's Encrypt certificates
     certificateScheme = "manual";

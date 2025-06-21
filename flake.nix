@@ -1,6 +1,7 @@
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixpkgs-synapse.url = "github:NickCao/nixpkgs/synapse";
     lix-module = {
       url = "https://git.lix.systems/lix-project/nixos-module/archive/2.93.0.tar.gz";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -45,6 +46,7 @@
 
   outputs = {
     nixpkgs,
+    nixpkgs-synapse,
     lix-module,
     disko,
     sops-nix,
@@ -61,7 +63,15 @@
         system = "x86_64-linux";
         modules = [
           {
-            nixpkgs.overlays = [nix-minecraft.overlay versia-server.overlays.default versia-fe.overlays.default bitchbot.overlays.default];
+            nixpkgs.overlays = [
+              nix-minecraft.overlay
+              versia-server.overlays.default
+              versia-fe.overlays.default
+              bitchbot.overlays.default
+              (final: prev: {
+                matrix-synapse = nixpkgs-synapse.legacyPackages.x86_64-linux.matrix-synapse;
+              })
+            ];
           }
           lix-module.nixosModules.default
           disko.nixosModules.disko
