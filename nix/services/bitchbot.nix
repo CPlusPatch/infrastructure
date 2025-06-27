@@ -15,11 +15,11 @@ in {
       REDIS_URL=redis://:${config.sops.placeholder."redis/bitchbot"}@${ips.freeman}:6382
       CONSOLA_LEVEL=4
     '';
-    owner = "bitchbot";
+    #owner = "bitchbot";
   };
 
   services.bitchbot = {
-    enable = true;
+    enable = false;
     config = {
       login = {
         homeserver = "https://matrix.cpluspatch.dev";
