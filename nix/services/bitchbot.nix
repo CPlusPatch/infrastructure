@@ -19,7 +19,7 @@ in {
   };
 
   services.bitchbot = {
-    enable = false;
+    enable = true;
     config = {
       login = {
         homeserver = "https://matrix.cpluspatch.dev";
@@ -31,7 +31,8 @@ in {
         prefix = "j!";
       };
       responses = {
-        cooldown = 10;
+        cooldown = 600;
+        enabled = false;
       };
       encryption = {
         store_path = "${config.services.bitchbot.dataDir}/store";

@@ -265,10 +265,6 @@ in {
       };
       logging = {
         log_level = "info";
-        # We don't need the file logger, we already record through journalctl
-        log_file_path = "/var/lib/versia-server/logs/versia.log";
-        types = {
-        };
       };
       plugins = {
         autoload = true;
