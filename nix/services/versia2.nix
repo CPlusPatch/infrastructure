@@ -266,34 +266,25 @@ in {
       logging = {
         log_level = "info";
       };
-      plugins = {
-        autoload = true;
-        overrides = {
-          enabled = [];
-          disabled = [];
-        };
-        config = {
-          "@versia/openid" = {
-            forced = true;
-            allow_registration = true;
+      authentication = {
+        forced_openid = true;
+        openid_registration = true;
 
-            keys = {
-              public = "PATH:${config.sops.secrets."versia2/oidc_public_key".path}";
-              private = "PATH:${config.sops.secrets."versia2/oidc_private_key".path}";
-            };
-
-            providers = [
-              {
-                name = "CPlusPatch ID";
-                id = "cpluspatch-id";
-                url = "https://id.cpluspatch.com/realms/master";
-                client_id = "versia-cpp";
-                client_secret = "PATH:${config.sops.secrets."keycloak/versia2/client_secret".path}";
-                icon = "https://cpluspatch.com/images/icons/logo.svg";
-              }
-            ];
-          };
+        keys = {
+          public = "PATH:${config.sops.secrets."versia2/oidc_public_key".path}";
+          private = "PATH:${config.sops.secrets."versia2/oidc_private_key".path}";
         };
+
+        openid_providers = [
+          {
+            name = "CPlusPatch ID";
+            id = "cpluspatch-id";
+            url = "https://id.cpluspatch.com/realms/master";
+            client_id = "versia-cpp";
+            client_secret = "PATH:${config.sops.secrets."keycloak/versia2/client_secret".path}";
+            icon = "https://cpluspatch.com/images/icons/logo.svg";
+          }
+        ];
       };
     };
   };

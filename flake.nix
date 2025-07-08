@@ -34,7 +34,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     versia-server = {
-      url = "github:versia-pub/server?ref=refactor%2Fpackages";
+      url = "github:versia-pub/server";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     versia-fe = {
