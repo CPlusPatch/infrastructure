@@ -4,36 +4,41 @@ in {
   imports = [
     ../secrets/postgresql/sharkey.nix
     ../secrets/redis/sharkey.nix
-
-    ../packages/sharkey/import.mod.nix
   ];
 
   sops = {
-    secrets."postgresql/sharkey".owner = "sharkey";
-    secrets."redis/sharkey".owner = "sharkey";
+    templates."sharkey.env".content = ''
+      MK_CONFIG_DB_PASS=${config.sops.placeholder."postgresql/sharkey"}
+      MK_CONFIG_REDIS_PASS=${config.sops.placeholder."redis/sharkey"}
+    '';
   };
 
   services.sharkey = {
     enable = true;
+    setupRedis = false;
+    setupPostgresql = false;
 
-    domain = "mk.cpluspatch.com";
-
-    database = {
-      host = ips.freeman;
-      port = 5432;
-      name = "misskey";
-      passwordFile = config.sops.secrets."postgresql/sharkey".path;
-    };
-
-    redis = {
-      host = ips.freeman;
-      port = 6380;
-      passwordFile = config.sops.secrets."redis/sharkey".path;
-    };
+    environmentFiles = [
+      config.sops.templates."sharkey.env".path
+    ];
 
     settings = {
       port = 3813;
       id = "aidx";
+      url = "https://mk.cpluspatch.com/";
+      fulltextSearch.provider = "sqlLike";
+
+      db = {
+        host = ips.freeman;
+        port = 5432;
+        user = "misskey";
+        db = "misskey";
+      };
+
+      redis = {
+        host = ips.freeman;
+        port = 6380;
+      };
 
       maxNoteLength = 100000;
     };
