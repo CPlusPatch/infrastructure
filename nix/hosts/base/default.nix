@@ -91,9 +91,9 @@
     };
   };
 
-  systemd.extraConfig = ''
-    DefaultTimeoutStopSec=10s
-  '';
+  systemd.settings.Manager = {
+    DefaultTimeoutStopSec = "10s";
+  };
 
   environment = {
     pathsToLink = ["/share/zsh"];

@@ -1,9 +1,13 @@
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     lix-module = {
-      url = "https://git.lix.systems/lix-project/nixos-module/archive/2.93.0.tar.gz";
+      url = "https://git.lix.systems/lix-project/nixos-module/archive/release-2.93.tar.gz";
       inputs.nixpkgs.follows = "nixpkgs";
+      inputs.lix = {
+        url = "git+https://git.lix.systems/lix-project/lix";
+        inputs.nixpkgs.follows = "nixpkgs";
+      };
     };
     disko = {
       url = "github:nix-community/disko";

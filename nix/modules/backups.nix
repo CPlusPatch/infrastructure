@@ -49,6 +49,7 @@ in {
           paths = [job.source];
           startAt = "daily";
           repo = "${config.services.s3fs.mountPath}/directories/${name}";
+          failOnWarnings = false; # Don't fail if file changes during backup
           prune.keep = {
             within = "1d";
             daily = 7;
