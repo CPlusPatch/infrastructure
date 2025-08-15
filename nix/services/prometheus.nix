@@ -66,22 +66,6 @@ in {
               index = "1";
             };
           }
-          {
-            targets = ["${ips.faithplate}:9001"];
-            labels = {
-              instance = "cpluspatch.dev";
-              job = "generic_worker";
-              index = "1";
-            };
-          }
-          {
-            targets = ["${ips.faithplate}:9002"];
-            labels = {
-              instance = "cpluspatch.dev";
-              job = "generic_worker";
-              index = "2";
-            };
-          }
         ];
       }
       {

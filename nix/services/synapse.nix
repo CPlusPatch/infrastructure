@@ -68,49 +68,6 @@ in {
       config.sops.templates."synapse/extra-config.yaml".path
     ];
 
-    workers = {
-      "federation_sender_1" = {
-        worker_listeners = [
-          {
-            bind_addresses = [
-              "127.0.0.1"
-              "${ips.faithplate}"
-            ];
-            resources = [
-              {
-                names = [
-                  "metrics"
-                ];
-              }
-            ];
-            tls = false;
-            port = 9001;
-            type = "metrics";
-          }
-        ];
-      };
-      "federation_sender_2" = {
-        worker_listeners = [
-          {
-            bind_addresses = [
-              "127.0.0.1"
-              "${ips.faithplate}"
-            ];
-            resources = [
-              {
-                names = [
-                  "metrics"
-                ];
-              }
-            ];
-            tls = false;
-            port = 9002;
-            type = "metrics";
-          }
-        ];
-      };
-    };
-
     settings = {
       database.args = {
         user = "synapse";
@@ -125,11 +82,6 @@ in {
         port = 6384;
         password_path = config.sops.secrets."redis/synapse".path;
       };
-
-      federation_sender_instances = [
-        "federation_sender_1"
-        "federation_sender_2"
-      ];
 
       enable_metrics = true;
       enable_registration = false;
@@ -172,21 +124,6 @@ in {
         {
           bind_addresses = [
             "127.0.0.1"
-          ];
-          port = 9093;
-          type = "http";
-          tls = false;
-          resources = [
-            {
-              names = [
-                "replication"
-              ];
-            }
-          ];
-        }
-        {
-          bind_addresses = [
-            "127.0.0.1"
             "${ips.faithplate}"
           ];
           resources = [
@@ -201,13 +138,6 @@ in {
           type = "metrics";
         }
       ];
-
-      instance_map = {
-        main = {
-          host = "127.0.0.1";
-          port = 9093;
-        };
-      };
 
       oidc_providers = [
         {
@@ -232,21 +162,6 @@ in {
   # Allows the prometheus performance metrics to be collected
   # nixpkgs defaults it to "invisible", which doesn't let prometheus scrape it
   systemd.services.matrix-synapse.serviceConfig.ProcSubset = lib.mkForce "all";
-
-  systemd.services.matrix-synapse-worker-federation_sender_1.serviceConfig = {
-    ProcSubset = lib.mkForce "all";
-    # Gives access to the Signal bridge config
-    SupplementaryGroups = [
-      "mautrix-signal"
-    ];
-  };
-
-  systemd.services.matrix-synapse-worker-federation_sender_2.serviceConfig = {
-    ProcSubset = lib.mkForce "all";
-    SupplementaryGroups = [
-      "mautrix-signal"
-    ];
-  };
 
   sops.templates."mautrix-signal/environment.env" = {
     content = ''
