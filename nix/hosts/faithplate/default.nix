@@ -28,6 +28,7 @@ in {
     ../../services/varnish.nix
     ../../services/keycloak.nix
     ../../services/servarr.nix
+    ../../services/nzbget.nix
     ../../services/uptime-kuma.nix
     ../../services/synapse.nix
     ../../services/vaultwarden.nix

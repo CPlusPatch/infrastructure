@@ -103,6 +103,7 @@ locals {
     "bitchbot.cpluspatch.com"     = hcloud_server.faithplate
     "glance.cpluspatch.com"       = hcloud_server.faithplate
     "static.cpluspatch.com"       = hcloud_server.faithplate
+    "nzb.cpluspatch.com"          = hcloud_server.faithplate
     "pissing.nexus"               = hcloud_server.faithplate
   }
 
