@@ -205,6 +205,9 @@ in {
           acl is_old_site hdr(host) -i cpluspatch.dev
           http-request redirect code 301 location https://cpluspatch.com%[capture.req.uri] if is_old_site !{ path_beg /.well-known/matrix }
 
+          acl is_broken hdr(host) -i broken.cpluspatch.com
+          use_backend broken if is_broken
+
         ${separateModule (lib.mapAttrsToList (name: value: padString "  " value) config.modules.haproxy.acls)}
 
         ${separateModule (lib.mapAttrsToList (name: value: value) config.modules.haproxy.frontends)}
@@ -213,6 +216,11 @@ in {
         backend default
           mode http
           http-request deny
+
+        # To test what happens when a request is made to a non-existent backend
+        backend broken
+          mode http
+          server broken 127.0.0.1:9999
 
         # Redirect acme requests to the lego client
         backend acme
@@ -265,5 +273,6 @@ in {
     };
 
     security.acme.certs."${config.networking.hostName}.infra.cpluspatch.com" = {};
+    security.acme.certs."broken.cpluspatch.com" = {};
   };
 }
