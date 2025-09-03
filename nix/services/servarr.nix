@@ -5,10 +5,6 @@
     ../modules/backups.nix
   ];
 
-  nixpkgs.overlays = [
-    (import ../overlays/flaresolverr-unstable.nix)
-  ];
-
   services.radarr = {
     enable = true;
   };
