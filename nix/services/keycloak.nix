@@ -46,6 +46,7 @@ in {
   modules.haproxy.acls.keycloak = ''
     acl is_keycloak hdr(host) -i id.cpluspatch.com
     use_backend keycloak if is_keycloak
+    http-request redirect location /realms/default/account/ if { hdr(host) -i id.cpluspatch.com } { path / }
   '';
 
   modules.haproxy.backends.keycloak = ''
