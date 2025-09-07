@@ -24,7 +24,7 @@
         hashedPassword = "$2b$05$WzQ2/O96Awk9kFomIdXLw.680ut/0Q1Dn.TAzHU8w0j/R6/1tdLje";
       };
       "auth@cpluspatch.com" = {
-        hashedPassword = "$2b$05$q6e7Fynq1IVPzjnW0.LoveueGZFhE5sI5.h835cTypARBguXxXlMS";
+        hashedPassword = "$2b$05$6px1d7Wxh2Sl3EdI3AO8UuARNtHPUKOCbGUTKjCxKq3bQ6lmPvOLe";
       };
     };
 

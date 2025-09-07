@@ -279,8 +279,8 @@ in {
           {
             name = "CPlusPatch ID";
             id = "cpluspatch-id";
-            url = "https://id.cpluspatch.com/realms/master";
-            client_id = "versia-cpp";
+            url = "https://id.cpluspatch.com/realms/default";
+            client_id = "versia";
             client_secret = "PATH:${config.sops.secrets."keycloak/versia2/client_secret".path}";
             icon = "https://cpluspatch.com/images/icons/logo.svg";
           }

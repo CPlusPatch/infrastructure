@@ -143,13 +143,12 @@ in {
         {
           idp_id = "cpluspatch-id";
           idp_name = "CPlusPatch ID";
-          idp_icon = "mxc://cpluspatch.dev/OFjyPnPkIiwJuouaxGTfIhtu";
+          idp_icon = "mxc://cpluspatch.dev/OZgyfGbULQiWtyMWqXsvMpmm";
           discover = true;
-          issuer = "https://id.cpluspatch.com/realms/master/";
+          issuer = "https://id.cpluspatch.com/realms/default";
           client_id = "synapse";
           client_secret_path = config.sops.secrets."keycloak/synapse/client_secret".path;
           scopes = ["openid" "profile"];
-          backchannel_logout_enabled = true;
           user_mapping_provider.config = {
             localpart_template = "{{ user.preferred_username }}";
             display_name_template = "{{ user.name }}";
