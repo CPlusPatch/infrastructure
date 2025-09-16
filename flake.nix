@@ -72,7 +72,7 @@
               bitchbot.overlays.default
             ];
           }
-          lix-module.nixosModules.default
+          lix-module.nixosModules.lixFromNixpkgs
           disko.nixosModules.disko
           sops-nix.nixosModules.sops
           simple-nixos-mailserver.nixosModule
@@ -96,7 +96,7 @@
       freeman = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
         modules = [
-          lix-module.nixosModules.default
+          lix-module.nixosModules.lixFromNixpkgs
           disko.nixosModules.disko
           sops-nix.nixosModules.sops
           ./nix/hosts/base
@@ -112,7 +112,7 @@
       eli = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
         modules = [
-          lix-module.nixosModules.default
+          lix-module.nixosModules.lixFromNixpkgs
           disko.nixosModules.disko
           sops-nix.nixosModules.sops
           nix-minecraft.nixosModules.minecraft-servers
