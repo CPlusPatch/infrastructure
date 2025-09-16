@@ -22,6 +22,7 @@ in {
     ../../features/packages.nix
     ../../features/ssh.nix
     ../../features/zerotier.nix
+    ../../features/tailscale.nix
 
     ../../services/minecraft.nix
   ];
