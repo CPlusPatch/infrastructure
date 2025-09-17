@@ -4,14 +4,14 @@
   ...
 }: let
   inherit (inputs.nix-minecraft.lib) collectFilesAt;
-  commit = "c380348d98ff3f76b7d1b36cbccf900ed28391a4";
+  commit = "a0c7c36d75276f1e41cb6d0115761b4f9a56e1e1";
   modpack = pkgs.fetchPackwizModpack {
-    url = "https://github.com/CPlusPatch/cpluscraft/raw/${commit}/pack.toml";
-    packHash = "sha256-n8NWITV86yXTN2cfvg7/nZAkDjBYbLL77JaAxh/r2G4=";
+    url = "https://github.com/CPlusPatch/dumber-server/raw/${commit}/pack.toml";
+    packHash = "sha256-UZy9wOBB0QJeaKSuSWcJAiSHu4LGXCFjRb0/07P87xM=";
   };
   serverIcon = pkgs.fetchurl {
-    url = "https://raw.githubusercontent.com/CPlusPatch/cpluscraft/${commit}/server-icon.png";
-    sha256 = "sha256-xwHTw7A6CtjCKVNEi/OIMll9BQlIm0ijNYNI+1urS6g=";
+    url = "https://raw.githubusercontent.com/CPlusPatch/dumber-server/${commit}/icon.png";
+    sha256 = "sha256-9JQmsN6LxCibmrnWxRwntpa+AOBGkduqUkuUviYC+OI=";
   };
 in {
   imports = [
@@ -24,22 +24,22 @@ in {
 
     managementSystem.systemd-socket.enable = true;
 
-    servers.cpluscraft = {
+    servers.dumber-server = {
       enable = true;
       autoStart = true;
 
       symlinks =
-        collectFilesAt modpack "mods";
+        removeAttrs (collectFilesAt modpack "mods") ["mods/DistantHorizons-2.3.3-b-1.21.7-fabric-neoforge.jar"];
       files =
-        collectFilesAt modpack "config"
-        // {
+        /*
+           collectFilesAt modpack "config"
+        //
+        */
+        {
           "server-icon.png" = serverIcon;
         };
 
-      package = pkgs.fabricServers.fabric-1_21_5;
-      whitelist = {
-        CPlusPatch = "ca8539a0-654d-48a8-8a01-32cfc94458ce";
-      };
+      package = pkgs.fabricServers.fabric-1_21_7;
       jvmOpts = "-Djava.net.preferIPV4stack=false -Djava.net.preferIPv6Addresses=true -Xms3G -Xmx3G -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCMode=iu -XX:+UseNUMA -XX:+AlwaysPreTouch -XX:+DisableExplicitGC -Dfile.encoding=UTF-8";
       serverProperties = {
         server-port = 25565;
@@ -62,5 +62,5 @@ in {
     };
   };
 
-  services.backups.jobs.minecraft.source = "/srv/minecraft/cpluscraft";
+  services.backups.jobs.minecraft.source = "/srv/minecraft/dumber-server";
 }

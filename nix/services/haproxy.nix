@@ -38,18 +38,27 @@ in {
         mode tcp
         bind :::25565 v4v6
         default_backend minecraft-eli
+
+      frontend minecraft-eli-voicechat
+        bind :::24454 v4v6
+        default_backend minecraft-eli-voicechat
     '';
 
     # Allow Minecraft traffic
     networking.firewall.allowedTCPPorts = [25565];
+    networking.firewall.allowedUDPPorts = [24454];
 
     modules.haproxy.backends.minecraft-eli = ''
       backend minecraft-eli
         mode tcp
         server minecraft-eli ${ips.eli}:25565
+
+      backend minecraft-eli-voicechat
+        server minecraft-eli-voicechat ${ips.eli}:24454
     '';
 
-    modules.haproxy.acls.minecraft-cpluscraft = ''
+    /*
+       modules.haproxy.acls.minecraft-cpluscraft = ''
       acl is_cpluscraft hdr(host) -i mc.cpluspatch.com
       use_backend minecraft-cpluscraft-bluemap if is_cpluscraft
     '';
@@ -58,6 +67,7 @@ in {
       backend minecraft-cpluscraft-bluemap
         server minecraft-cpluscraft-bluemap ${ips.eli}:8100
     '';
+    */
 
     security.acme.certs."mc.cpluspatch.com" = {};
 
