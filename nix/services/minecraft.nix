@@ -58,6 +58,7 @@ in {
         "rcon.password" = "test";
         broadcast-rcon-to-ops = true;
         pause-when-empty-seconds = 0;
+        enable-command-block = true;
       };
     };
   };
