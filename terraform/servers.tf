@@ -41,7 +41,7 @@ resource "hcloud_server" "freeman" {
 resource "hcloud_server" "eli" {
   name                     = "eli"
   image                    = "ubuntu-24.04"
-  server_type              = "cx22"
+  server_type              = "cx32"
   location                 = "fsn1"
   ssh_keys                 = [hcloud_ssh_key.jesse.id]
   delete_protection        = false
