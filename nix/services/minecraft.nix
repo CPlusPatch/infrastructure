@@ -4,10 +4,10 @@
   ...
 }: let
   inherit (inputs.nix-minecraft.lib) collectFilesAt;
-  commit = "a0c7c36d75276f1e41cb6d0115761b4f9a56e1e1";
+  commit = "79a6e02104876db9b69b10e2273cda5e9d285cf3";
   modpack = pkgs.fetchPackwizModpack {
     url = "https://github.com/CPlusPatch/dumber-server/raw/${commit}/pack.toml";
-    packHash = "sha256-UZy9wOBB0QJeaKSuSWcJAiSHu4LGXCFjRb0/07P87xM=";
+    packHash = "sha256-D+o7dcRVmdSeCA/mYxQ3h+Epev9b0+4xtqYFpmb3xEY=";
   };
   serverIcon = pkgs.fetchurl {
     url = "https://raw.githubusercontent.com/CPlusPatch/dumber-server/${commit}/icon.png";
@@ -28,8 +28,10 @@ in {
       enable = true;
       autoStart = true;
 
-      symlinks =
-        removeAttrs (collectFilesAt modpack "mods") ["mods/DistantHorizons-2.3.3-b-1.21.7-fabric-neoforge.jar"];
+      symlinks = removeAttrs (collectFilesAt modpack "mods") [
+        # "mods/DistantHorizons-2.3.3-b-1.21.7-fabric-neoforge.jar"
+        "mods/Chunky-Fabric-1.4.40.jar"
+      ];
       files =
         /*
            collectFilesAt modpack "config"
@@ -39,8 +41,8 @@ in {
           "server-icon.png" = serverIcon;
         };
 
-      package = pkgs.fabricServers.fabric-1_21_7;
-      jvmOpts = "-Djava.net.preferIPV4stack=false -Djava.net.preferIPv6Addresses=true -Xms3G -Xmx3G -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCMode=iu -XX:+UseNUMA -XX:+AlwaysPreTouch -XX:+DisableExplicitGC -Dfile.encoding=UTF-8";
+      package = pkgs.fabricServers.fabric-1_21_8;
+      jvmOpts = "-Djava.net.preferIPV4stack=false -Djava.net.preferIPv6Addresses=true -Xms7G -Xmx7G -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCMode=iu -XX:+UseNUMA -XX:+AlwaysPreTouch -XX:+DisableExplicitGC -Dfile.encoding=UTF-8";
       serverProperties = {
         server-port = 25565;
         allow-flight = true;
@@ -54,7 +56,7 @@ in {
         spawn-protection = 0;
         white-list = true;
         enable-rcon = true;
-        "rcon.port" = 10293;
+        "rcon.port" = 10000;
         "rcon.password" = "test";
         broadcast-rcon-to-ops = true;
         pause-when-empty-seconds = 0;
