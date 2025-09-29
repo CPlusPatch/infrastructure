@@ -4,10 +4,10 @@
   ...
 }: let
   inherit (inputs.nix-minecraft.lib) collectFilesAt;
-  commit = "79a6e02104876db9b69b10e2273cda5e9d285cf3";
+  commit = "03166631d9f5efd4ca059a75a47297f364303015";
   modpack = pkgs.fetchPackwizModpack {
     url = "https://github.com/CPlusPatch/dumber-server/raw/${commit}/pack.toml";
-    packHash = "sha256-D+o7dcRVmdSeCA/mYxQ3h+Epev9b0+4xtqYFpmb3xEY=";
+    packHash = "sha256-MhQal9WM8bjj/ehgqRDiyXcVarwDPXeub+uf6H9WGT8=";
   };
   serverIcon = pkgs.fetchurl {
     url = "https://raw.githubusercontent.com/CPlusPatch/dumber-server/${commit}/icon.png";
@@ -55,6 +55,7 @@ in {
         pvp = true;
         spawn-protection = 0;
         white-list = true;
+        level-seed = 878234104968078356;
         enable-rcon = true;
         "rcon.port" = 10000;
         "rcon.password" = "test";

@@ -69,6 +69,7 @@ in {
       ];
       allowedUDPPorts = [
         443 # HTTP/3
+        24454 # Minecraft Simple Voice Chat
       ];
     };
   };
