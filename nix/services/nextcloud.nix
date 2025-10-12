@@ -34,7 +34,7 @@ in {
       redis = true;
     };
 
-    package = pkgs.nextcloud31;
+    package = pkgs.nextcloud32;
 
     configureRedis = true;
     enableImagemagick = true;
@@ -48,17 +48,16 @@ in {
 
     extraApps = {
       inherit
-        (pkgs.nextcloud31Packages.apps)
+        (pkgs.nextcloud32Packages.apps)
         mail
         calendar
         contacts
         notes
         impersonate
-        tasks
+        #tasks
         user_oidc
         music
         twofactor_webauthn
-        spreed
         ;
     };
 
