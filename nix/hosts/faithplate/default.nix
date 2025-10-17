@@ -49,6 +49,7 @@ in {
     ../../services/glance.nix
     ../../services/nexus.nix
     ../../services/static.nix
+    ../../services/neko.nix
   ];
 
   disko.devices.disk.main.device = "/dev/sda";

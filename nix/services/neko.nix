@@ -1,0 +1,211 @@
+{
+  pkgs,
+  lib,
+  ...
+}: let
+  nekoMembersFile = pkgs.writeText "neko-members.json" ''
+    {
+      "admin": {
+        "password": "J2kPZDwY19c1rEu5/Al0l6dEMcPQB2dmeO2feBeVfGU=",
+        "hash": true,
+        "profile": {
+          "name": "Administrator",
+          "is_admin": true,
+          "can_login": true,
+          "can_connect": true,
+          "can_watch": true,
+          "can_host": true,
+          "can_share_media": true,
+          "can_access_clipboard": true,
+          "sends_inactive_cursor": true,
+          "can_see_inactive_cursors": true,
+          "plugins": {}
+        }
+      }
+    }
+  '';
+in {
+  networking.firewall.allowedUDPPorts = lib.range 52000 52100;
+
+  virtualisation.oci-containers.containers."neko-neko" = {
+    image = "ghcr.io/m1k1o/neko/firefox:latest";
+    environment = {
+      "NEKO_DESKTOP_SCREEN" = "1080x810@30";
+      "NEKO_MEMBER_PROVIDER" = "file";
+      "NEKO_MEMBER_FILE_PATH" = "/members.json";
+      "NEKO_WEBRTC_ENABLE" = "1";
+      "NEKO_WEBRTC_EPR" = "52000-52100";
+      "NEKO_WEBRTC_ICELITE" = "1";
+    };
+    ports = [
+      "127.0.0.1:7924:8080/tcp"
+      "52000:52000/udp"
+      "52001:52001/udp"
+      "52002:52002/udp"
+      "52003:52003/udp"
+      "52004:52004/udp"
+      "52005:52005/udp"
+      "52006:52006/udp"
+      "52007:52007/udp"
+      "52008:52008/udp"
+      "52009:52009/udp"
+      "52010:52010/udp"
+      "52011:52011/udp"
+      "52012:52012/udp"
+      "52013:52013/udp"
+      "52014:52014/udp"
+      "52015:52015/udp"
+      "52016:52016/udp"
+      "52017:52017/udp"
+      "52018:52018/udp"
+      "52019:52019/udp"
+      "52020:52020/udp"
+      "52021:52021/udp"
+      "52022:52022/udp"
+      "52023:52023/udp"
+      "52024:52024/udp"
+      "52025:52025/udp"
+      "52026:52026/udp"
+      "52027:52027/udp"
+      "52028:52028/udp"
+      "52029:52029/udp"
+      "52030:52030/udp"
+      "52031:52031/udp"
+      "52032:52032/udp"
+      "52033:52033/udp"
+      "52034:52034/udp"
+      "52035:52035/udp"
+      "52036:52036/udp"
+      "52037:52037/udp"
+      "52038:52038/udp"
+      "52039:52039/udp"
+      "52040:52040/udp"
+      "52041:52041/udp"
+      "52042:52042/udp"
+      "52043:52043/udp"
+      "52044:52044/udp"
+      "52045:52045/udp"
+      "52046:52046/udp"
+      "52047:52047/udp"
+      "52048:52048/udp"
+      "52049:52049/udp"
+      "52050:52050/udp"
+      "52051:52051/udp"
+      "52052:52052/udp"
+      "52053:52053/udp"
+      "52054:52054/udp"
+      "52055:52055/udp"
+      "52056:52056/udp"
+      "52057:52057/udp"
+      "52058:52058/udp"
+      "52059:52059/udp"
+      "52060:52060/udp"
+      "52061:52061/udp"
+      "52062:52062/udp"
+      "52063:52063/udp"
+      "52064:52064/udp"
+      "52065:52065/udp"
+      "52066:52066/udp"
+      "52067:52067/udp"
+      "52068:52068/udp"
+      "52069:52069/udp"
+      "52070:52070/udp"
+      "52071:52071/udp"
+      "52072:52072/udp"
+      "52073:52073/udp"
+      "52074:52074/udp"
+      "52075:52075/udp"
+      "52076:52076/udp"
+      "52077:52077/udp"
+      "52078:52078/udp"
+      "52079:52079/udp"
+      "52080:52080/udp"
+      "52081:52081/udp"
+      "52082:52082/udp"
+      "52083:52083/udp"
+      "52084:52084/udp"
+      "52085:52085/udp"
+      "52086:52086/udp"
+      "52087:52087/udp"
+      "52088:52088/udp"
+      "52089:52089/udp"
+      "52090:52090/udp"
+      "52091:52091/udp"
+      "52092:52092/udp"
+      "52093:52093/udp"
+      "52094:52094/udp"
+      "52095:52095/udp"
+      "52096:52096/udp"
+      "52097:52097/udp"
+      "52098:52098/udp"
+      "52099:52099/udp"
+      "52100:52100/udp"
+    ];
+    volumes = [
+      "${nekoMembersFile}:/members.json"
+    ];
+    log-driver = "journald";
+    extraOptions = [
+      "--network-alias=neko"
+      "--network=neko_default"
+      "--shm-size=2147483648"
+    ];
+  };
+  systemd.services."docker-neko-neko" = {
+    serviceConfig = {
+      Restart = lib.mkOverride 90 "always";
+      RestartMaxDelaySec = lib.mkOverride 90 "1m";
+      RestartSec = lib.mkOverride 90 "100ms";
+      RestartSteps = lib.mkOverride 90 9;
+    };
+    after = [
+      "docker-network-neko_default.service"
+    ];
+    requires = [
+      "docker-network-neko_default.service"
+    ];
+    partOf = [
+      "docker-compose-neko-root.target"
+    ];
+    wantedBy = [
+      "docker-compose-neko-root.target"
+    ];
+  };
+
+  # Networks
+  systemd.services."docker-network-neko_default" = {
+    path = [pkgs.docker];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      ExecStop = "docker network rm -f neko_default";
+    };
+    script = ''
+      docker network inspect neko_default || docker network create neko_default
+    '';
+    partOf = ["docker-compose-neko-root.target"];
+    wantedBy = ["docker-compose-neko-root.target"];
+  };
+
+  # Root service
+  # When started, this will automatically create all resources and start
+  # the containers. When stopped, this will teardown all resources.
+  systemd.targets."docker-compose-neko-root" = {
+    unitConfig = {
+      Description = "Root target generated by compose2nix.";
+    };
+    wantedBy = ["multi-user.target"];
+  };
+
+  modules.haproxy.acls.neko = ''
+    acl is_neko hdr(host) -i proxy.cpluspatch.com
+    use_backend neko if is_neko
+  '';
+
+  modules.haproxy.backends.neko = ''
+    backend neko
+      server neko 127.0.0.1:7924
+  '';
+
+  security.acme.certs."proxy.cpluspatch.com" = {};
+}

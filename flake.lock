@@ -283,17 +283,17 @@
     "lix": {
       "flake": false,
       "locked": {
-        "lastModified": 1760628174,
-        "narHash": "sha256-HlzunxwqIXCDcmJ+w+Oc5vvwdXuaRrYkN6542FX3skg=",
+        "lastModified": 1760728877,
+        "narHash": "sha256-y3HzKkfXNajVgYSBNUbxiPFcRzt0xpOg8/LLmZX0Kpc=",
         "ref": "refs/heads/main",
-        "rev": "ac8209404cb1b6b89ad3ee527985ac2e7ad7e253",
-        "revCount": 18439,
+        "rev": "a55fe35dac3495fc3f9243b5817ce8a5314a8dd5",
+        "revCount": 18451,
         "type": "git",
         "url": "https://git.lix.systems/lix-project/lix"
       },
       "original": {
-        "type": "tarball",
-        "url": "https://git.lix.systems/lix-project/lix/archive/release-2.93.tar.gz"
+        "type": "git",
+        "url": "https://git.lix.systems/lix-project/lix"
       }
     },
     "lix-module": {
