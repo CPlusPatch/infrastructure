@@ -1,7 +1,7 @@
 resource "hcloud_server" "faithplate" {
   name                     = "faithplate"
   image                    = "ubuntu-24.04"
-  server_type              = "cx32"
+  server_type              = "cx33"
   location                 = "fsn1"
   ssh_keys                 = [hcloud_ssh_key.jesse.id]
   delete_protection        = false
@@ -21,7 +21,7 @@ resource "hcloud_server" "faithplate" {
 resource "hcloud_server" "freeman" {
   name                     = "freeman"
   image                    = "ubuntu-24.04"
-  server_type              = "cx22"
+  server_type              = "cx23"
   location                 = "fsn1"
   ssh_keys                 = [hcloud_ssh_key.jesse.id]
   delete_protection        = false
@@ -41,7 +41,7 @@ resource "hcloud_server" "freeman" {
 resource "hcloud_server" "eli" {
   name                     = "eli"
   image                    = "ubuntu-24.04"
-  server_type              = "cx32"
+  server_type              = "cx33"
   location                 = "fsn1"
   ssh_keys                 = [hcloud_ssh_key.jesse.id]
   delete_protection        = false
