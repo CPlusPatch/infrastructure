@@ -106,6 +106,7 @@ locals {
     "nzb.cpluspatch.com"          = hcloud_server.faithplate
     "broken.cpluspatch.com"       = hcloud_server.faithplate
     "proxy.cpluspatch.com"        = hcloud_server.faithplate
+    "tv.cpluspatch.com"           = hcloud_server.faithplate
     "pissing.nexus"               = hcloud_server.faithplate
   }
 

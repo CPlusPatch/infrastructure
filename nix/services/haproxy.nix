@@ -69,7 +69,18 @@ in {
     '';
     */
 
+    modules.haproxy.acls.jellyfin2 = ''
+      acl is_jellyfin2 hdr(host) -i tv.cpluspatch.com
+      use_backend jellyfin2 if is_jellyfin2
+    '';
+
+    modules.haproxy.backends.jellyfin2 = ''
+      backend jellyfin2
+        server jellyfin2 kleiner:8096
+    '';
+
     security.acme.certs."mc.cpluspatch.com" = {};
+    security.acme.certs."tv.cpluspatch.com" = {};
 
     services.nginx = {
       # Change ports to 8080 and 8443, because 80/443 are already used by HAProxy

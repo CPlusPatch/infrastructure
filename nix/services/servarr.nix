@@ -81,13 +81,7 @@
   services.backups.jobs.sonarr.source = "/var/lib/sonarr";
 
   services.flaresolverr = {
-    enable = true;
+    enable = false;
     port = 8191;
-  };
-
-  systemd.services.flaresolverr.serviceConfig = {
-    Environment = [
-      "LOG_LEVEL=debug"
-    ];
   };
 }
