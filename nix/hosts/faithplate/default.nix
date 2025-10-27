@@ -50,6 +50,7 @@ in {
     ../../services/nexus.nix
     ../../services/static.nix
     ../../services/neko.nix
+    ../../services/fitbit-prometheus.nix
   ];
 
   disko.devices.disk.main.device = "/dev/sda";
