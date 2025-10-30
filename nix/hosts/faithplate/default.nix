@@ -49,7 +49,6 @@ in {
     ../../services/glance.nix
     ../../services/nexus.nix
     ../../services/static.nix
-    ../../services/neko.nix
     ../../services/fitbit-prometheus.nix
   ];
 
