@@ -8,7 +8,7 @@
     jq
     micro
     lftp
-    linuxPackages_latest.perf
+    perf
     lshw
     fastfetch
     magic-wormhole-rs

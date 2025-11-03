@@ -18,7 +18,7 @@ in {
       type = types.attrsOf (types.submodule {
         options = {
           source = mkOption {
-            type = types.string;
+            type = types.str;
           };
         };
       });
