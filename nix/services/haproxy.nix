@@ -79,8 +79,30 @@ in {
         server jellyfin2 kleiner:8096
     '';
 
+    modules.haproxy.acls.radarr = ''
+      acl is_radarr hdr(host) -i radarr.lgs.cpluspatch.com
+      use_backend radarr if is_radarr
+    '';
+
+    modules.haproxy.backends.radarr = ''
+      backend radarr
+        server radarr kleiner:7878
+    '';
+
+    modules.haproxy.acls.sonarr = ''
+      acl is_sonarr hdr(host) -i sonarr.lgs.cpluspatch.com
+      use_backend sonarr if is_sonarr
+    '';
+
+    modules.haproxy.backends.sonarr = ''
+      backend sonarr
+        server sonarr kleiner:8989
+    '';
+
     security.acme.certs."mc.cpluspatch.com" = {};
     security.acme.certs."tv.cpluspatch.com" = {};
+    security.acme.certs."radarr.lgs.cpluspatch.com" = {};
+    security.acme.certs."sonarr.lgs.cpluspatch.com" = {};
 
     services.nginx = {
       # Change ports to 8080 and 8443, because 80/443 are already used by HAProxy

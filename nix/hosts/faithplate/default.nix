@@ -29,7 +29,6 @@ in {
     ../../services/varnish.nix
     ../../services/keycloak.nix
     ../../services/servarr.nix
-    ../../services/nzbget.nix
     ../../services/uptime-kuma.nix
     ../../services/synapse.nix
     ../../services/vaultwarden.nix
@@ -37,16 +36,12 @@ in {
     ../../services/mail.nix
     ../../services/transmission.nix
     ../../services/grafana.nix
-    ../../services/jellyfin.nix
     ../../services/nextcloud.nix
-    ../../services/sharelists.nix
     ../../services/sharkey.nix
     ../../services/immich.nix
-    ../../services/bitchbot.nix
     ../../services/syncbot.nix
     ../../services/versia.nix
     ../../services/versia2.nix
-    ../../services/glance.nix
     ../../services/nexus.nix
     ../../services/static.nix
     ../../services/fitbit-prometheus.nix
