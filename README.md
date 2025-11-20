@@ -13,15 +13,11 @@
 
 My infra's [`OpenTofu`](https://opentofu.org) and [`NixOS`](https://nixos.org) configuration files.
 
-# Deployment
+## Documentation
 
-## OpenTofu
+Documentation is available in the [DOCS.md](./DOCS.md) file.
 
-```bash
-tofu -chdir=terraform apply
-```
-
-# Patches
+## Patches
 
 Allows using swap during install.
 
@@ -39,6 +35,6 @@ SSH
 # Also remove the "swapoff -a" on line 727 in the same file. 
 ```
 
-# License
+## License
 
 This project is currently licensed under an "All Rights Reserved" license. I will make it properly FOSS, but I need to figure out the best license and I don't have time to do that right now.
