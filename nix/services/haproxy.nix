@@ -124,8 +124,7 @@ in {
       enable = true;
       config = ''
         global
-          log /dev/log local0
-          log /dev/log local1 notice
+          log /dev/log local0 notice
           stats timeout 30s
           daemon
 
@@ -146,7 +145,7 @@ in {
           log     global
           mode    http
           option  dontlognull
-          option  dontlog-normal
+          # option  dontlog-normal
           timeout connect 5000ms
           timeout client  50000ms
           timeout server  50000ms
@@ -215,7 +214,7 @@ in {
           log-format "%ci:%cp [%tr] %ft %b/%s %ST %ac/%fc/%bc/%sc/%rc %[capture.req.hdr(0)] %HM %{+Q}HU"
 
           # Bot protection ACLs
-          acl protected_backend hdr(host) -i mk.cpluspatch.com vs.cpluspatch.com social.lysand.org stats.cpluspatch.com
+          acl protected_backend hdr(host) -i mk.cpluspatch.com vs.cpluspatch.com stats.cpluspatch.com
           acl is_challenge_req path_beg /_challenge
 
           # Matches the default config of anubis of triggering on "Mozilla"
@@ -238,11 +237,10 @@ in {
           acl varnish_available nbsrv(varnish) ge 1
 
           acl is_servarr hdr(host) -i -m end lgs.cpluspatch.com
-          acl is_lysand_social hdr(host) -i social.lysand.org
 
           # Caches health detection + routing decision
-          use_backend varnish if varnish_available static_content !is_servarr !is_lysand_social
-          use_backend varnish if varnish_available pseudo_static !is_servarr !is_lysand_social
+          use_backend varnish if varnish_available static_content !is_servarr
+          use_backend varnish if varnish_available pseudo_static !is_servarr
 
           # Redirect cpluspatch.dev to cpluspatch.com
           acl is_old_site hdr(host) -i cpluspatch.dev

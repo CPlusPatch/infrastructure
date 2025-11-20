@@ -40,7 +40,6 @@ in {
     ../../services/sharkey.nix
     ../../services/immich.nix
     ../../services/syncbot.nix
-    ../../services/versia.nix
     ../../services/versia2.nix
     ../../services/nexus.nix
     ../../services/static.nix

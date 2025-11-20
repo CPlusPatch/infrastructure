@@ -22,12 +22,6 @@ variable "cpluspatch-dev-zone_id" {
   nullable    = false
 }
 
-variable "lysand-org-zone_id" {
-  type        = string
-  description = "Cloudflare Zone ID for lysand.org"
-  nullable    = false
-}
-
 variable "pissing-nexus-zone_id" {
   type        = string
   description = "Cloudflare Zone ID for pissing.nexus"

@@ -97,7 +97,6 @@ locals {
     "mk.cpluspatch.com"           = hcloud_server.faithplate
     "photos.cpluspatch.com"       = hcloud_server.faithplate
     "api.sl.cpluspatch.dev"       = hcloud_server.faithplate
-    "social.lysand.org"           = hcloud_server.faithplate
     "mc.cpluspatch.com"           = hcloud_server.faithplate
     "vs.cpluspatch.com"           = hcloud_server.faithplate
     "bitchbot.cpluspatch.com"     = hcloud_server.faithplate
@@ -113,7 +112,6 @@ locals {
   domain_zone_mappings = {
     "cpluspatch.com" = var.cpluspatch-com-zone_id
     "cpluspatch.dev" = var.cpluspatch-dev-zone_id
-    "lysand.org"     = var.lysand-org-zone_id
     "pissing.nexus"  = var.pissing-nexus-zone_id
   }
 
