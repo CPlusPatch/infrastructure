@@ -97,8 +97,6 @@
 
   environment = {
     pathsToLink = ["/share/zsh"];
-    # Makes ghostty and kitty work
-    enableAllTerminfo = true;
   };
 
   programs.zsh.enable = true;
