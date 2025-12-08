@@ -33,13 +33,13 @@ in {
   };
 
   config = {
-    modules.haproxy.frontends.minecraft-eli = ''
-      frontend minecraft-eli
+    modules.haproxy.frontends.minecraft-eli-fe = ''
+      frontend minecraft-eli-fe
         mode tcp
         bind :::25565 v4v6
         default_backend minecraft-eli
 
-      frontend minecraft-eli-voicechat
+      frontend minecraft-eli-voicechat-fe
         bind :::24454 v4v6
         default_backend minecraft-eli-voicechat
     '';
