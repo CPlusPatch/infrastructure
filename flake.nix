@@ -1,7 +1,6 @@
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-    nixpkgs-bun12.url = "github:NixOS/nixpkgs/8f5ad84f711da68f7a5798905c533860b942f749";
     lix = {
       url = "https://git.lix.systems/lix-project/lix/archive/main.tar.gz";
       flake = false;
@@ -51,7 +50,6 @@
 
   outputs = {
     nixpkgs,
-    nixpkgs-bun12,
     lix-module,
     disko,
     sops-nix,
@@ -73,10 +71,6 @@
               versia-server.overlays.default
               versia-fe.overlays.default
               bitchbot.overlays.default
-              (final: prev: {
-                # Keep Bun at 1.2 because 1.3 doesn't build for whatever stupid fuckass reason
-                inherit (nixpkgs-bun12.legacyPackages.${prev.stdenv.hostPlatform.system}) bun;
-              })
             ];
           }
           lix-module.nixosModules.lixFromNixpkgs

@@ -201,6 +201,7 @@ in {
           bind quic4@:443 ssl prefer-client-ciphers crt-list /etc/tls.certlist alpn h3
           bind quic6@:443 ssl prefer-client-ciphers crt-list /etc/tls.certlist alpn h3
           option forwardfor
+          http-request set-header X-Forwarded-Proto https
           # Opt out of FLoC
           http-response set-header Permissions-Policy "interest-cohort=()"
 
@@ -246,6 +247,10 @@ in {
           # Redirect cpluspatch.dev to cpluspatch.com
           acl is_old_site hdr(host) -i cpluspatch.dev
           http-request redirect code 301 location https://cpluspatch.com%[capture.req.uri] if is_old_site !{ path_beg /.well-known/matrix }
+
+          # Redirect text.cpluspatch.com to cpluspatch.com/text
+          acl is_text_site hdr(host) -i text.cpluspatch.com
+          http-request redirect code 301 location https://cpluspatch.com/text%[capture.req.uri] if is_text_site
 
           acl is_broken hdr(host) -i broken.cpluspatch.com
           use_backend broken if is_broken
@@ -316,5 +321,6 @@ in {
 
     security.acme.certs."${config.networking.hostName}.infra.cpluspatch.com" = {};
     security.acme.certs."broken.cpluspatch.com" = {};
+    security.acme.certs."text.cpluspatch.com" = {};
   };
 }

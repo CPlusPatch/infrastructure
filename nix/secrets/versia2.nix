@@ -26,13 +26,9 @@ in {
       sopsFile = secretsDir + /versia2.yaml;
       key = "vapid_private_key";
     };
-    "versia2/oidc_public_key" = {
+    "versia2/authentication_key" = {
       sopsFile = secretsDir + /versia2.yaml;
-      key = "oidc_public_key";
-    };
-    "versia2/oidc_private_key" = {
-      sopsFile = secretsDir + /versia2.yaml;
-      key = "oidc_private_key";
+      key = "authentication_key";
     };
   };
 }

@@ -25,8 +25,7 @@ in {
       "versia2/instance_private_key".owner = config.services.versia-server.user;
       "versia2/vapid_public_key".owner = config.services.versia-server.user;
       "versia2/vapid_private_key".owner = config.services.versia-server.user;
-      "versia2/oidc_public_key".owner = config.services.versia-server.user;
-      "versia2/oidc_private_key".owner = config.services.versia-server.user;
+      "versia2/authentication_key".owner = config.services.versia-server.user;
     };
 
     templates."sonic.env" = {
@@ -109,6 +108,7 @@ in {
         base_url = "https://vs.cpluspatch.com";
         bind = "127.0.0.1";
         bind_port = 9227;
+        proxy_ips = ["*"];
         banned_ips = [];
         banned_user_agents = [];
       };
@@ -267,14 +267,7 @@ in {
         log_level = "info";
       };
       authentication = {
-        forced_openid = true;
-        openid_registration = true;
-
-        keys = {
-          public = "PATH:${config.sops.secrets."versia2/oidc_public_key".path}";
-          private = "PATH:${config.sops.secrets."versia2/oidc_private_key".path}";
-        };
-
+        key = "PATH:${config.sops.secrets."versia2/authentication_key".path}";
         openid_providers = [
           {
             name = "CPlusPatch ID";
