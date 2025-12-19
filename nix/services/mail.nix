@@ -10,9 +10,7 @@
     stateVersion = 3;
 
     # Use Let's Encrypt certificates
-    certificateScheme = "manual";
-    certificateFile = "/var/lib/acme/${config.networking.hostName}.infra.cpluspatch.com/cert.pem";
-    keyFile = "/var/lib/acme/${config.networking.hostName}.infra.cpluspatch.com/key.pem";
+    x509.useACMEHost = config.mailserver.fqdn;
 
     loginAccounts = {
       "jesse.wierzbinski@cpluspatch.com" = {
