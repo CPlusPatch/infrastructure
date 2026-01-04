@@ -71,6 +71,9 @@
               versia-server.overlays.default
               versia-fe.overlays.default
               bitchbot.overlays.default
+              (final: prev: {
+                sharkey = final.callPackage ./nix/packages/sharkey.nix {};
+              })
             ];
           }
           lix-module.nixosModules.lixFromNixpkgs

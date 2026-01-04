@@ -54,7 +54,7 @@ in {
         contacts
         notes
         impersonate
-        #tasks
+        tasks
         user_oidc
         music
         twofactor_webauthn
