@@ -27,4 +27,6 @@
     ];
     extraSettingsFile = config.sops.templates."factorio.json".path;
   };
+
+  services.backups.jobs.factorio.source = "/var/lib/factorio";
 }
