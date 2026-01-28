@@ -44,6 +44,7 @@ in {
     ../../services/nexus.nix
     ../../services/static.nix
     ../../services/fitbit-prometheus.nix
+    ../../services/factorio.nix
   ];
 
   disko.devices.disk.main.device = "/dev/sda";

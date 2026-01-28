@@ -1,6 +1,7 @@
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    nixpkgs-influx.url = "github:NixOS/nixpkgs?rev=5f02c91314c8ba4afe83b256b023756412218535";
     lix = {
       url = "https://git.lix.systems/lix-project/lix/archive/main.tar.gz";
       flake = false;
@@ -50,6 +51,7 @@
 
   outputs = {
     nixpkgs,
+    nixpkgs-influx,
     lix-module,
     disko,
     sops-nix,
@@ -100,6 +102,13 @@
           lix-module.nixosModules.lixFromNixpkgs
           disko.nixosModules.disko
           sops-nix.nixosModules.sops
+          {
+            nixpkgs.overlays = [
+              (final: prev: {
+                inherit (nixpkgs-influx.legacyPackages.${prev.system}) influxdb;
+              })
+            ];
+          }
           ./nix/hosts/base
           ./nix/features/partitions/single-zfs.nix
           ./nix/hosts/freeman
@@ -118,7 +127,9 @@
           sops-nix.nixosModules.sops
           nix-minecraft.nixosModules.minecraft-servers
           {
-            nixpkgs.overlays = [nix-minecraft.overlay];
+            nixpkgs.overlays = [
+              nix-minecraft.overlay
+            ];
           }
           ./nix/hosts/base
           ./nix/features/partitions/single-zfs.nix
