@@ -1,7 +1,7 @@
 {...}: {
   services.influxdb = {
     enable = true;
-    extraConfig = {
+    settings = {
       index-version = "tsi1";
     };
   };

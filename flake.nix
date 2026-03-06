@@ -105,7 +105,7 @@
           {
             nixpkgs.overlays = [
               (final: prev: {
-                inherit (nixpkgs-influx.legacyPackages.${prev.system}) influxdb;
+                inherit (nixpkgs-influx.legacyPackages.${prev.stdenv.hostPlatform.system}) influxdb;
               })
             ];
           }
