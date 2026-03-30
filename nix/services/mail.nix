@@ -12,7 +12,7 @@
     # Use Let's Encrypt certificates
     x509.useACMEHost = config.mailserver.fqdn;
 
-    loginAccounts = {
+    accounts = {
       "jesse.wierzbinski@cpluspatch.com" = {
         # nix-shell -p mkpasswd --run 'mkpasswd -sm bcrypt'
         hashedPassword = "$2b$05$eugDzraTpV833FCaoJrZt.RJdeFrotOn7sSHkozw5vo8H6Hwp9z7K";
@@ -83,8 +83,8 @@
   security.acme.certs."rspamd.cpluspatch.com" = {};
 
   services.backups.jobs = {
-    mail.source = config.mailserver.mailDirectory;
+    mail.source = config.mailserver.storage.path;
     mail-sieve.source = config.mailserver.sieveDirectory;
-    mail-dkim.source = config.mailserver.dkimKeyDirectory;
+    mail-dkim.source = config.mailserver.dkim.keyDirectory;
   };
 }

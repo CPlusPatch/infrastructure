@@ -102,13 +102,6 @@
           lix-module.nixosModules.lixFromNixpkgs
           disko.nixosModules.disko
           sops-nix.nixosModules.sops
-          {
-            nixpkgs.overlays = [
-              (final: prev: {
-                inherit (nixpkgs-influx.legacyPackages.${prev.stdenv.hostPlatform.system}) influxdb;
-              })
-            ];
-          }
           ./nix/hosts/base
           ./nix/features/partitions/single-zfs.nix
           ./nix/hosts/freeman

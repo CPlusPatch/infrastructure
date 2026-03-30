@@ -21,6 +21,10 @@
 
   nixpkgs.config = {
     allowUnfree = true;
+    permittedInsecurePackages = [
+      "varnish-7.7.3"
+      "olm-3.2.16"
+    ];
   };
 
   boot = {

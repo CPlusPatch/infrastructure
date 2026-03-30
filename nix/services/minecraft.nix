@@ -26,7 +26,7 @@ in {
 
     servers.dumber-server = {
       enable = true;
-      autoStart = true;
+      autoStart = false;
 
       symlinks = removeAttrs (collectFilesAt modpack "mods") [
         # "mods/DistantHorizons-2.3.3-b-1.21.7-fabric-neoforge.jar"
