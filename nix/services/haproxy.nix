@@ -219,6 +219,11 @@ in {
           acl protected_backend hdr(host) -i shutup.cpluspatch.com
           acl is_challenge_req path_beg /_challenge
 
+          # Ban Applebot because it makes sharkey crash
+          acl applebot hdr_sub(User-Agent) Applebot
+
+          http-request return status 401 if applebot
+
           # Matches the default config of anubis of triggering on "Mozilla"
           acl protected_ua hdr(User-Agent) -m beg Mozilla/
           acl protected acl(protected_backend,protected_ua,!is_challenge_req)

@@ -1,18 +1,18 @@
 {
   pkgs,
   inputs,
+  lib,
   ...
 }: let
-  inherit (inputs.nix-minecraft.lib) collectFilesAt;
-  commit = "03166631d9f5efd4ca059a75a47297f364303015";
-  modpack = pkgs.fetchPackwizModpack {
-    url = "https://github.com/CPlusPatch/dumber-server/raw/${commit}/pack.toml";
-    packHash = "sha256-MhQal9WM8bjj/ehgqRDiyXcVarwDPXeub+uf6H9WGT8=";
+  modpack = pkgs.fetchModrinthModpack {
+    src = ../../assets/jerver21.mrpack;
+    packHash = "sha256-IBezBEWJ7XeaKyB5Ajd7FnGfm0N5ff/wrvhizl9oiqI=";
+    side = "server";
   };
-  serverIcon = pkgs.fetchurl {
-    url = "https://raw.githubusercontent.com/CPlusPatch/dumber-server/${commit}/icon.png";
-    sha256 = "sha256-9JQmsN6LxCibmrnWxRwntpa+AOBGkduqUkuUviYC+OI=";
-  };
+  excludedMods = [
+    "statuseffectbars-1.21.1-NeoForge-1.0.2.jar"
+    "createdeco-2.1.3.sync-conflict-20260420-102830-OIA532M.jar"
+  ];
 in {
   imports = [
     ../modules/backups.nix
@@ -24,29 +24,25 @@ in {
 
     managementSystem.systemd-socket.enable = true;
 
-    servers.dumber-server = {
+    servers.jerver2 = {
       enable = true;
-      autoStart = false;
+      autoStart = true;
 
-      symlinks = removeAttrs (collectFilesAt modpack "mods") [
-        # "mods/DistantHorizons-2.3.3-b-1.21.7-fabric-neoforge.jar"
-        "mods/Chunky-Fabric-1.4.40.jar"
-      ];
-      files =
-        /*
-           collectFilesAt modpack "config"
-        //
-        */
-        {
-          "server-icon.png" = serverIcon;
-        };
+      symlinks =
+        # Exclude mods that cause crashes on startup
+        lib.filterAttrs (name: path: !(lib.elem name (map (x: "mods/${x}") excludedMods))) (inputs.nix-minecraft.lib.collectFilesAt modpack "mods");
 
-      package = pkgs.fabricServers.fabric-1_21_8;
+      files = {
+        "config" = "${modpack}/config";
+        "server-icon.png" = "${../../assets/server-icon.png}";
+      };
+
+      package = pkgs.neoforgeServers.neoforge-1_21_1;
       jvmOpts = "-Djava.net.preferIPV4stack=false -Djava.net.preferIPv6Addresses=true -Xms6G -Xmx6G -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCMode=iu -XX:+UseNUMA -XX:+AlwaysPreTouch -XX:+DisableExplicitGC -Dfile.encoding=UTF-8";
       serverProperties = {
         server-port = 25565;
         allow-flight = true;
-        difficulty = "hard";
+        difficulty = "easy";
         enforce-secure-profile = true;
         enforce-whitelist = true;
         max-players = 100;
@@ -55,7 +51,7 @@ in {
         pvp = true;
         spawn-protection = 0;
         white-list = true;
-        level-seed = 878234104968078356;
+        level-seed = 6812872647578521762;
         enable-rcon = true;
         "rcon.port" = 10000;
         "rcon.password" = "test";
@@ -66,5 +62,5 @@ in {
     };
   };
 
-  services.backups.jobs.minecraft.source = "/srv/minecraft/dumber-server";
+  services.backups.jobs.minecraft.source = "/srv/minecraft/jerver2";
 }

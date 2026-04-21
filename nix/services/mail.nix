@@ -29,8 +29,9 @@
     virusScanning = true;
 
     fullTextSearch = {
-      enable = true;
-      autoIndexExclude = ["\\Trash" "\\Junk"];
+      enable = false;
+      # Index new emails as they arrive
+      autoIndex = true;
     };
 
     # Set hierarchy separator to / as recommended by dovecot
