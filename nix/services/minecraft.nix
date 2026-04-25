@@ -6,12 +6,12 @@
 }: let
   modpack = pkgs.fetchModrinthModpack {
     src = ../../assets/jerver21.mrpack;
-    packHash = "sha256-IBezBEWJ7XeaKyB5Ajd7FnGfm0N5ff/wrvhizl9oiqI=";
+    packHash = "sha256-nKH8P05hfzgUmCOcrREJ+B7ElAT0yEmfF6zqFb99W0Q=";
     side = "server";
   };
   excludedMods = [
     "statuseffectbars-1.21.1-NeoForge-1.0.2.jar"
-    "createdeco-2.1.3.sync-conflict-20260420-102830-OIA532M.jar"
+    "bocchud-0.4.1+mc1.21.1.jar"
   ];
 in {
   imports = [
