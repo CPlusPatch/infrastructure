@@ -5,8 +5,8 @@
   ...
 }: let
   modpack = pkgs.fetchModrinthModpack {
-    src = ../../assets/jerver21.mrpack;
-    packHash = "sha256-nKH8P05hfzgUmCOcrREJ+B7ElAT0yEmfF6zqFb99W0Q=";
+    src = ../../assets/Jerver2.1.mrpack;
+    packHash = "sha256-2KrxD6gU0JYtu3rOE9R7yYxU0lxkV6XwsTp8mKeDBXY=";
     side = "server";
   };
   excludedMods = [
@@ -58,6 +58,42 @@ in {
         broadcast-rcon-to-ops = true;
         pause-when-empty-seconds = 0;
         enable-command-block = true;
+      };
+    };
+
+    servers.jerver-creative = {
+      enable = true;
+      autoStart = false;
+
+      symlinks =
+        # Exclude mods that cause crashes on startup
+        lib.filterAttrs (name: path: !(lib.elem name (map (x: "mods/${x}") excludedMods))) (inputs.nix-minecraft.lib.collectFilesAt modpack "mods");
+
+      files = {
+        "config" = "${modpack}/config";
+        "server-icon.png" = "${../../assets/server-icon.png}";
+      };
+
+      package = pkgs.neoforgeServers.neoforge-1_21_1;
+      jvmOpts = "-Djava.net.preferIPV4stack=false -Djava.net.preferIPv6Addresses=true -Xms6G -Xmx6G -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCMode=iu -XX:+UseNUMA -XX:+AlwaysPreTouch -XX:+DisableExplicitGC -Dfile.encoding=UTF-8";
+      serverProperties = {
+        server-port = 25566;
+        allow-flight = true;
+        difficulty = "peaceful";
+        enforce-secure-profile = true;
+        enforce-whitelist = true;
+        max-players = 100;
+        motd = "ough ough im creating it";
+        online-mode = true;
+        pvp = true;
+        spawn-protection = 0;
+        white-list = true;
+        broadcast-rcon-to-ops = true;
+        pause-when-empty-seconds = 0;
+        enable-command-block = true;
+        level-type = "minecraft:flat";
+        generate-structures = false;
+        generator-settings = "{\"biome\":\"minecraft:plains\",\"layers\":[{\"block\":\"minecraft:bedrock\",\"height\":1},{\"block\":\"minecraft:stone\",\"height\":59},{\"block\":\"minecraft:dirt\",\"height\":3},{\"block\":\"minecraft:grass_block\",\"height\":1}]}";
       };
     };
   };

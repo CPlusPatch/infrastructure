@@ -10,6 +10,7 @@
 
   services.zfs.autoScrub.enable = true;
   services.zfs.trim.enable = true;
+  boot.zfs.forceImportRoot = false;
 
   disko.devices = {
     disk = {
