@@ -337,19 +337,19 @@
         "type": "github"
       }
     },
-    "nixpkgs-influx": {
+    "nixpkgs-sharkey": {
       "locked": {
-        "lastModified": 1767966113,
-        "narHash": "sha256-mSTsvXa4WveSRJexsmCbm9dY17B1fKp7NLpJxllpQw4=",
-        "owner": "NixOS",
+        "lastModified": 1779285403,
+        "narHash": "sha256-JMRUyF+R4qKsNhINRUuh3wcXL5b3K4+QPDp2MoKwDNE=",
+        "owner": "twoneis",
         "repo": "nixpkgs",
-        "rev": "5f02c91314c8ba4afe83b256b023756412218535",
+        "rev": "8d7c2731f94a4595bbfa4d8e44cf5f0536bfb543",
         "type": "github"
       },
       "original": {
-        "owner": "NixOS",
+        "owner": "twoneis",
+        "ref": "sharkey-2025.4.7",
         "repo": "nixpkgs",
-        "rev": "5f02c91314c8ba4afe83b256b023756412218535",
         "type": "github"
       }
     },
@@ -362,7 +362,7 @@
         "lix-module": "lix-module",
         "nix-minecraft": "nix-minecraft",
         "nixpkgs": "nixpkgs",
-        "nixpkgs-influx": "nixpkgs-influx",
+        "nixpkgs-sharkey": "nixpkgs-sharkey",
         "simple-nixos-mailserver": "simple-nixos-mailserver",
         "sops-nix": "sops-nix",
         "syncbot": "syncbot",
