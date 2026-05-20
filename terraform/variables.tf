@@ -22,12 +22,6 @@ variable "cpluspatch-dev-zone_id" {
   nullable    = false
 }
 
-variable "pissing-nexus-zone_id" {
-  type        = string
-  description = "Cloudflare Zone ID for pissing.nexus"
-  nullable    = false
-}
-
 variable "nixos_vars_file" {
   type        = string
   description = "Path to the NixOS vars file that will be generated"

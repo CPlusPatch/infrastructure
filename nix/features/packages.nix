@@ -19,6 +19,7 @@
     usbutils # For lsusb
     wget
     btop
+    dig
     curl
     eza
     which

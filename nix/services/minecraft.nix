@@ -88,6 +88,9 @@ in {
         pvp = true;
         spawn-protection = 0;
         white-list = true;
+        enable-rcon = true;
+        "rcon.port" = 10001;
+        "rcon.password" = "test";
         broadcast-rcon-to-ops = true;
         pause-when-empty-seconds = 0;
         enable-command-block = true;

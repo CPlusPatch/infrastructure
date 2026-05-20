@@ -76,7 +76,7 @@ in {
 
     modules.haproxy.backends.jellyfin2 = ''
       backend jellyfin2
-        server jellyfin2 kleiner:8096
+        server jellyfin2 100.113.206.105:8096
     '';
 
     modules.haproxy.acls.radarr = ''
@@ -86,7 +86,7 @@ in {
 
     modules.haproxy.backends.radarr = ''
       backend radarr
-        server radarr kleiner:7878
+        server radarr 100.113.206.105:7878
     '';
 
     modules.haproxy.acls.sonarr = ''
@@ -96,7 +96,7 @@ in {
 
     modules.haproxy.backends.sonarr = ''
       backend sonarr
-        server sonarr kleiner:8989
+        server sonarr 100.113.206.105:8989
     '';
 
     security.acme.certs."mc.cpluspatch.com" = {};

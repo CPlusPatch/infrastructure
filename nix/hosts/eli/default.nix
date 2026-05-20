@@ -38,6 +38,7 @@ in {
     firewall = {
       allowedTCPPorts = [
         25565 # Minecraft
+        25566 # Minecraft 2
       ];
       allowedUDPPorts = [
         24454 # Minecraft Simple Voice Chat
