@@ -9,6 +9,11 @@
     packHash = "sha256-2KrxD6gU0JYtu3rOE9R7yYxU0lxkV6XwsTp8mKeDBXY=";
     side = "server";
   };
+  creativeModpack = pkgs.fetchModrinthModpack {
+    src = ../../assets/Jerver2-creative.mrpack;
+    packHash = "sha256-t7N9vixk7TMljv1BN13Oq2EGkPEZ13whJ3f5LQP+t3A=";
+    side = "server";
+  };
   excludedMods = [
     "statuseffectbars-1.21.1-NeoForge-1.0.2.jar"
     "bocchud-0.4.1+mc1.21.1.jar"
@@ -67,10 +72,10 @@ in {
 
       symlinks =
         # Exclude mods that cause crashes on startup
-        lib.filterAttrs (name: path: !(lib.elem name (map (x: "mods/${x}") excludedMods))) (inputs.nix-minecraft.lib.collectFilesAt modpack "mods");
+        lib.filterAttrs (name: path: !(lib.elem name (map (x: "mods/${x}") excludedMods))) (inputs.nix-minecraft.lib.collectFilesAt creativeModpack "mods");
 
       files = {
-        "config" = "${modpack}/config";
+        "config" = "${creativeModpack}/config";
         "server-icon.png" = "${../../assets/server-icon.png}";
       };
 
