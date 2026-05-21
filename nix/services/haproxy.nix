@@ -138,6 +138,11 @@ in {
           tune.ssl.cachesize 50000
           tune.ssl.lifetime 300
 
+          # Prevent hangs during uploads
+          tune.bufsize        131072   # 128KB — covers most upload chunks
+          tune.maxrewrite     8192
+          tune.recv_enough    131072
+
         http-errors errors
           errorfile 503 ${pkgs.cpluspatch-pages}/503.http
           errorfile 502 ${pkgs.cpluspatch-pages}/502.http

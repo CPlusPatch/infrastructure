@@ -11,12 +11,13 @@
   };
   creativeModpack = pkgs.fetchModrinthModpack {
     src = ../../assets/Jerver2-creative.mrpack;
-    packHash = "sha256-t7N9vixk7TMljv1BN13Oq2EGkPEZ13whJ3f5LQP+t3A=";
+    packHash = "sha256-xF8tqXEqGhU6Rj9Mh3wtK6r/kGbBnW0OqYvc2L3PD+4=";
     side = "server";
   };
   excludedMods = [
     "statuseffectbars-1.21.1-NeoForge-1.0.2.jar"
     "bocchud-0.4.1+mc1.21.1.jar"
+    "colorwheel-neoforge-1.2.7+mc1.21.1.jar"
   ];
 in {
   imports = [
