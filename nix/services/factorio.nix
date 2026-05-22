@@ -4,8 +4,6 @@
   ];
 
   sops.templates."factorio.json" = {
-    owner = "factorio";
-    group = "nogroup";
     content = ''
       {
         "game_password": "${config.sops.placeholder."factorio/password"}"

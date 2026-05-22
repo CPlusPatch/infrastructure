@@ -20,9 +20,8 @@
           type = "gpt";
 
           partitions = {
-            # need to do this because of GRUB for some reason?
+            # For Hetzner, EFI is not supported natively, so we use a legacy boot partition
             boot = {
-              name = "boot";
               size = "1M";
               type = "EF02";
             };
@@ -41,6 +40,7 @@
             swap = {
               size = "4G";
               label = "swap";
+              type = "8200"; # Linux swap GUID, enables systemd-gpt-auto-generator discovery
               content = {
                 type = "swap";
                 discardPolicy = "both";
@@ -62,7 +62,6 @@
     zpool = {
       zroot = {
         type = "zpool";
-        name = "zroot";
 
         rootFsOptions = {
           compression = "zstd";
@@ -70,18 +69,18 @@
           # ACL data in the filesystem. Billions must enable it.
           acltype = "posixacl";
           xattr = "sa";
+          dnodesize = "auto"; # Required companion to xattr=sa
           # Disable access time updates
           # for performance reasons
           atime = "off";
+          # Don't try to mount the root filesystem
+          mountpoint = "none";
         };
 
-        # Set the ashift value to 12 for 4K sector drives
-        # since we use this on SSDs and NVMe drives
+        # 4K sector alignment for SSD/NVMe
         options.ashift = "12";
 
-        # Using legacy mountpoints everywhere because
-        # otherwise there are conflicts where systemd and zfs
-        # try to mount the same dataset
+
         datasets = {
           "home" = {
             type = "zfs_fs";
@@ -109,25 +108,17 @@
               "com.sun:auto-snapshot" = "false";
             };
             mountpoint = "/";
-            postCreateHook = ''
-              # List all snapshots of the dataset, filter out the one we're looking for
-              # and check if it exists. If it doesn't, create it.
-              if zfs list -t snapshot -H -o name | grep -E '^zroot/root@blank$' > /dev/null; then
-                echo "Snapshot already exists"
-              else
-                zfs snapshot zroot/root@blank
-              fi
-            '';
+            # Create a blank snapshot to avoid ZFS performance issues
+            postCreateHook = "zfs list -t snapshot zroot/root@blank 2>/dev/null || zfs snapshot zroot/root@blank";
           };
 
-          # Reserve ~10% of the pool to avoid ZFS performance issues
+          # Reserve a fixed 5G buffer to avoid ZFS performance issues
           "reserved" = {
             type = "zfs_fs";
             options = {
-              mountpoint = "legacy";
-              refreservation = "5G";
+              mountpoint = "none";
+              reservation = "5G";
             };
-            mountpoint = "/reserved";
           };
         };
       };
