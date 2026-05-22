@@ -6,11 +6,7 @@
   inherit (import ../lib/ips.nix) ips;
 in {
   imports = [
-    ../secrets/postgresql/synapse.nix
-    ../secrets/postgresql/mautrix-signal.nix
-    ../secrets/redis/synapse.nix
-    ../secrets/keycloak/synapse.nix
-    ../secrets/synapse.nix
+    ../lib/secrets.nix
 
     ../modules/backups.nix
   ];
@@ -27,7 +23,7 @@ in {
       "synapse/hs_token".owner = "mautrix-signal";
       "synapse/pickle_key".owner = "mautrix-signal";
       "redis/synapse".owner = "matrix-synapse";
-      "keycloak/synapse/client_secret".owner = "matrix-synapse";
+      "keycloak/synapse".owner = "matrix-synapse";
     };
 
     templates = {
@@ -142,7 +138,7 @@ in {
           discover = true;
           issuer = "https://id.cpluspatch.com/realms/default";
           client_id = "synapse";
-          client_secret_path = config.sops.secrets."keycloak/synapse/client_secret".path;
+          client_secret_path = config.sops.secrets."keycloak/synapse".path;
           scopes = ["openid" "profile"];
           user_mapping_provider.config = {
             localpart_template = "{{ user.preferred_username }}";

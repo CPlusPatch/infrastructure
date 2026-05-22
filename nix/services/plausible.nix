@@ -6,8 +6,7 @@
   inherit (import ../lib/ips.nix) ips;
 in {
   imports = [
-    ../secrets/postgresql/plausible.nix
-    ../secrets/plausible.nix
+    ../lib/secrets.nix
   ];
 
   sops.templates."plausible.env" = {

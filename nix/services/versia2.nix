@@ -6,31 +6,27 @@
   inherit (import ../lib/ips.nix) ips;
 in {
   imports = [
-    ../secrets/postgresql/versia2.nix
-    ../secrets/redis/versia2.nix
-    ../secrets/s3/versia2.nix
-    ../secrets/versia2.nix
-    ../secrets/keycloak/versia2.nix
+    ../lib/secrets.nix
   ];
 
   sops = {
     secrets = {
-      "postgresql/versia2".owner = config.services.versia-server.user;
-      "redis/versia2".owner = config.services.versia-server.user;
-      "s3/versia2/key_id".owner = config.services.versia-server.user;
-      "s3/versia2/secret_key".owner = config.services.versia-server.user;
-      "versia2/sonic".owner = config.services.versia-server.user;
-      "keycloak/versia2/client_secret".owner = config.services.versia-server.user;
-      "versia2/instance_public_key".owner = config.services.versia-server.user;
-      "versia2/instance_private_key".owner = config.services.versia-server.user;
-      "versia2/vapid_public_key".owner = config.services.versia-server.user;
-      "versia2/vapid_private_key".owner = config.services.versia-server.user;
-      "versia2/authentication_key".owner = config.services.versia-server.user;
+      "postgresql/versia".owner = config.services.versia-server.user;
+      "redis/versia".owner = config.services.versia-server.user;
+      "s3/versia/access_key_id".owner = config.services.versia-server.user;
+      "s3/versia/secret_key".owner = config.services.versia-server.user;
+      "versia/sonic_password".owner = config.services.versia-server.user;
+      "keycloak/versia".owner = config.services.versia-server.user;
+      "versia/instance_public_key".owner = config.services.versia-server.user;
+      "versia/instance_private_key".owner = config.services.versia-server.user;
+      "versia/vapid_public_key".owner = config.services.versia-server.user;
+      "versia/vapid_private_key".owner = config.services.versia-server.user;
+      "versia/authentication_key".owner = config.services.versia-server.user;
     };
 
     templates."sonic.env" = {
       content = ''
-        SONIC_PASSWORD=${config.sops.placeholder."versia2/sonic"}
+        SONIC_PASSWORD=${config.sops.placeholder."versia/sonic_password"}
       '';
       owner = config.services.versia-server.user;
     };
@@ -80,14 +76,14 @@ in {
         host = ips.freeman;
         port = 5432;
         username = "versia";
-        password = "PATH:${config.sops.secrets."postgresql/versia2".path}";
+        password = "PATH:${config.sops.secrets."postgresql/versia".path}";
         database = "versia";
       };
       redis = {
         queue = {
           host = ips.freeman;
           port = 6383;
-          password = "PATH:${config.sops.secrets."redis/versia2".path}";
+          password = "PATH:${config.sops.secrets."redis/versia".path}";
           database = 0;
         };
       };
@@ -96,7 +92,7 @@ in {
         sonic = {
           host = "localhost";
           port = 1491;
-          password = "PATH:${config.sops.secrets."versia2/sonic".path}";
+          password = "PATH:${config.sops.secrets."versia/sonic_password".path}";
         };
       };
       registration = {
@@ -134,8 +130,8 @@ in {
       };
       s3 = {
         endpoint = "https://eu-central.object.fastlystorage.app";
-        access_key = "PATH:${config.sops.secrets."s3/versia2/key_id".path}";
-        secret_access_key = "PATH:${config.sops.secrets."s3/versia2/secret_key".path}";
+        access_key = "PATH:${config.sops.secrets."s3/versia/access_key_id".path}";
+        secret_access_key = "PATH:${config.sops.secrets."s3/versia/secret_key".path}";
         region = "eu-central";
         bucket_name = "versia-cpp";
         public_url = "https://cdn.cpluspatch.com";
@@ -192,8 +188,8 @@ in {
         push = {
           subject = "mailto:admin+versia@cpluspatch.com";
           vapid_keys = {
-            public = "PATH:${config.sops.secrets."versia2/vapid_public_key".path}";
-            private = "PATH:${config.sops.secrets."versia2/vapid_private_key".path}";
+            public = "PATH:${config.sops.secrets."versia/vapid_public_key".path}";
+            private = "PATH:${config.sops.secrets."versia/vapid_private_key".path}";
           };
         };
       };
@@ -257,8 +253,8 @@ in {
           }
         ];
         keys = {
-          public = "PATH:${config.sops.secrets."versia2/instance_public_key".path}";
-          private = "PATH:${config.sops.secrets."versia2/instance_private_key".path}";
+          public = "PATH:${config.sops.secrets."versia/instance_public_key".path}";
+          private = "PATH:${config.sops.secrets."versia/instance_private_key".path}";
         };
       };
       permissions = {
@@ -267,14 +263,14 @@ in {
         log_level = "info";
       };
       authentication = {
-        key = "PATH:${config.sops.secrets."versia2/authentication_key".path}";
+        key = "PATH:${config.sops.secrets."versia/authentication_key".path}";
         openid_providers = [
           {
             name = "CPlusPatch ID";
             id = "cpluspatch-id";
             url = "https://id.cpluspatch.com/realms/default";
             client_id = "versia";
-            client_secret = "PATH:${config.sops.secrets."keycloak/versia2/client_secret".path}";
+            client_secret = "PATH:${config.sops.secrets."keycloak/versia".path}";
             icon = "https://cpluspatch.com/images/icons/logo.svg";
           }
         ];

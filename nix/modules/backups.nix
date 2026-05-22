@@ -7,8 +7,7 @@ with lib; let
   cfg = config.services.backups;
 in {
   imports = [
-    ../secrets/s3/backups.nix
-    ../secrets/backups.nix
+    ../lib/secrets.nix
 
     ./s3fs.nix
   ];
@@ -30,7 +29,7 @@ in {
     != 0) {
     sops.templates."s3fs-passwd" = {
       content = ''
-        ${config.sops.placeholder."s3/backups/key_id"}:${config.sops.placeholder."s3/backups/secret_key"}
+        ${config.sops.placeholder."s3/backups/access_key_id"}:${config.sops.placeholder."s3/backups/secret_key"}
       '';
     };
 

@@ -34,7 +34,6 @@ in {
     ../../services/vaultwarden.nix
     ../../services/plausible.nix
     ../../services/mail.nix
-    ../../services/transmission.nix
     ../../services/grafana.nix
     ../../services/nextcloud.nix
     ../../services/sharkey.nix

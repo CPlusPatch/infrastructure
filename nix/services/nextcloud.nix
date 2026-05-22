@@ -6,10 +6,7 @@
   inherit (import ../lib/ips.nix) ips;
 in {
   imports = [
-    ../secrets/nextcloud.nix
-    ../secrets/postgresql/nextcloud.nix
-    ../secrets/s3/nextcloud.nix
-    ../secrets/keycloak/nextcloud.nix
+    ../lib/secrets.nix
   ];
 
   sops = {
@@ -22,8 +19,7 @@ in {
 
     secrets."postgresql/nextcloud".owner = "nextcloud";
     secrets."s3/nextcloud/secret_key".owner = "nextcloud";
-    secrets."keycloak/nextcloud/client_secret".owner = "nextcloud";
-    secrets."nextcloud/exporter_password".owner = "nextcloud-exporter";
+    secrets."keycloak/nextcloud".owner = "nextcloud";
   };
 
   services.nextcloud = {
@@ -100,14 +96,6 @@ in {
 
       maintenance_window_start = 1;
     };
-  };
-
-  services.prometheus.exporters.nextcloud = {
-    enable = true;
-    port = 9205;
-    url = "https://cloud.cpluspatch.com";
-    passwordFile = config.sops.secrets."nextcloud/exporter_password".path;
-    username = "admin";
   };
 
   modules.haproxy.acls.nextcloud = ''

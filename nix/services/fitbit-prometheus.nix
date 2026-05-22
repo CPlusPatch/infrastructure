@@ -7,19 +7,19 @@
   inherit (import ../lib/ips.nix) ips;
 in {
   imports = [
-    ../secrets/fitbit-fetch.nix
+    ../lib/secrets.nix
   ];
 
   sops.templates.fitbit-fetch-data-env = {
     content = ''
       AUTO_DATE_RANGE=True
-      CLIENT_ID=${config.sops.placeholder."fitbit-fetch/client_id"}
-      CLIENT_SECRET=${config.sops.placeholder."fitbit-fetch/client_secret"}
+      CLIENT_ID=${config.sops.placeholder."fitbit/client_id"}
+      CLIENT_SECRET=${config.sops.placeholder."fitbit/client_secret"}
       DEVICENAME=Pixel Watch 3
       FITBIT_LOG_FILE_PATH=/app/logs/fitbit.log
       INFLUXDB_DATABASE=FitbitHealthStats
       INFLUXDB_HOST=${ips.freeman}
-      INFLUXDB_PASSWORD=${config.sops.placeholder."fitbit-fetch/influxdb_password"}
+      INFLUXDB_PASSWORD=${config.sops.placeholder."fitbit/influxdb_password"}
       INFLUXDB_PORT=8086
       INFLUXDB_USERNAME=fitbit
       INFLUXDB_VERSION=1

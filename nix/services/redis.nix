@@ -2,11 +2,7 @@
   inherit (import ../lib/ips.nix) ips;
 in {
   imports = [
-    ../secrets/redis/sharkey.nix
-    ../secrets/redis/immich.nix
-    ../secrets/redis/bitchbot.nix
-    ../secrets/redis/versia2.nix
-    ../secrets/redis/synapse.nix
+    ../lib/secrets.nix
 
     ../modules/backups.nix
   ];
@@ -40,7 +36,7 @@ in {
         enable = true;
         port = 6383;
         bind = ips.freeman;
-        requirePassFile = config.sops.secrets."redis/versia2".path;
+        requirePassFile = config.sops.secrets."redis/versia".path;
       };
 
       synapse = {

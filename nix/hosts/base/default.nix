@@ -4,7 +4,10 @@
   config,
   ...
 }: {
-  imports = [../../features/home-manager ../../features/service-fail-notify.nix];
+  imports = [
+    ../../features/home-manager
+    ../../features/service-fail-notify.nix
+  ];
 
   nix = {
     settings = {

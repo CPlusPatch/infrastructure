@@ -6,9 +6,7 @@
   inherit (import ../lib/ips.nix) ips;
 in {
   imports = [
-    ../secrets/postgresql/immich.nix
-    ../secrets/redis/immich.nix
-    ../secrets/keycloak/immich.nix
+    ../lib/secrets.nix
   ];
 
   sops = {

@@ -4,13 +4,13 @@
   ...
 }: {
   imports = [
-    ../secrets/fs-01b.nix
+    ../lib/secrets.nix
   ];
 
   sops.templates."smb-secrets" = {
     content = ''
       username=u397505
-      password=${config.sops.placeholder."fs-01b/password"}
+      password=${config.sops.placeholder."disks/fs-01b"}
     '';
   };
 

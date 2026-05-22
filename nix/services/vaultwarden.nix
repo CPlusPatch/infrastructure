@@ -2,7 +2,7 @@
   inherit (import ../lib/ips.nix) ips;
 in {
   imports = [
-    ../secrets/postgresql/vaultwarden.nix
+    ../lib/secrets.nix
 
     ../modules/backups.nix
   ];

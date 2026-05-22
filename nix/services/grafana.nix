@@ -2,16 +2,13 @@
   inherit (import ../lib/ips.nix) ips;
 in {
   imports = [
-    ../secrets/grafana.nix
-    ../secrets/postgresql/grafana.nix
-    ../secrets/keycloak/grafana.nix
+    ../lib/secrets.nix
   ];
 
   sops = {
     secrets."grafana/secret_key".owner = "grafana";
     secrets."postgresql/grafana".owner = "grafana";
-    secrets."keycloak/grafana/client_secret".owner = "grafana";
-    secrets."keycloak/grafana/client_id".owner = "grafana";
+    secrets."keycloak/grafana".owner = "grafana";
   };
 
   services.grafana = {
@@ -50,8 +47,8 @@ in {
         name = "CPlusPatch ID";
         allow_sign_up = true;
         skip_org_role_sync = true;
-        client_id = "$__file{${config.sops.secrets."keycloak/grafana/client_id".path}}";
-        client_secret = "$__file{${config.sops.secrets."keycloak/grafana/client_secret".path}}";
+        client_id = "grafana";
+        client_secret = "$__file{${config.sops.secrets."keycloak/grafana".path}}";
         scopes = "openid email profile offline_access";
         email_attribute_path = "email";
         login_attribute_path = "username";

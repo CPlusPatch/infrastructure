@@ -7,7 +7,7 @@
   inherit (import ../lib/ips.nix) ips;
 in {
   imports = [
-    ../secrets/redis/bitchbot.nix
+    ../lib/secrets.nix
   ];
 
   sops.templates."bitchbot.env" = {
