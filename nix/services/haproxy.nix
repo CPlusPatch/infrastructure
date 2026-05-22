@@ -128,6 +128,8 @@ in {
           stats timeout 30s
           daemon
           limited-quic
+          maxconn 50000
+          h2-workaround-bogus-websocket-clients # TEMPORARY: REMOVE AFTER HAPROXY 3.3.10
 
           # Don't use SSLv3 or TLSv1.0/1.1
           ssl-default-bind-ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384
@@ -155,6 +157,7 @@ in {
           timeout connect 5s
           timeout client  50s
           timeout server  5m
+          timeout tunnel  1h   # for tunneled (WebSockets) connections
 
           # Compression config
           compression algo gzip

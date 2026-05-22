@@ -21,6 +21,7 @@
     btop
     dig
     curl
+    socat
     eza
     which
   ];
