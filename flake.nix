@@ -85,7 +85,7 @@
           lix-module.nixosModules.lixFromNixpkgs
           disko.nixosModules.disko
           sops-nix.nixosModules.sops
-          simple-nixos-mailserver.nixosModule
+          simple-nixos-mailserver.nixosModules.default
           nix-minecraft.nixosModules.minecraft-servers
           syncbot.nixosModules.${system}.syncbot
           ./nix/hosts/base

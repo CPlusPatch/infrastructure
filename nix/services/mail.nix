@@ -7,7 +7,7 @@
     enable = true;
     fqdn = "${config.networking.hostName}.infra.cpluspatch.com";
     domains = ["cpluspatch.com" "cpluspatch.dev"];
-    stateVersion = 3;
+    stateVersion = 5;
 
     # Use Let's Encrypt certificates
     x509.useACMEHost = config.mailserver.fqdn;
@@ -85,7 +85,6 @@
 
   services.backups.jobs = {
     mail.source = config.mailserver.storage.path;
-    mail-sieve.source = config.mailserver.sieveDirectory;
     mail-dkim.source = config.mailserver.dkim.keyDirectory;
   };
 }
