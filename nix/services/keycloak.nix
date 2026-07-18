@@ -7,8 +7,6 @@
 in {
   imports = [
     ../lib/secrets.nix
-
-    ./keycloak-themes
   ];
 
   services.keycloak = {
@@ -23,10 +21,6 @@ in {
       host = ips.freeman;
       useSSL = false;
       createLocally = false;
-    };
-
-    themes = with pkgs; {
-      keywind = custom_keycloak_themes.keywind;
     };
 
     settings = {
