@@ -31,8 +31,8 @@ in {
     managementSystem.systemd-socket.enable = true;
 
     servers.jerver2 = {
-      enable = true;
-      autoStart = true;
+      enable = false;
+      autoStart = false;
 
       symlinks =
         # Exclude mods that cause crashes on startup
@@ -68,7 +68,7 @@ in {
     };
 
     servers.jerver-creative = {
-      enable = true;
+      enable = false;
       autoStart = false;
 
       symlinks =
