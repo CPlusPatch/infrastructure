@@ -1,7 +1,6 @@
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-    nixpkgs-sharkey.url = "github:twoneis/nixpkgs/sharkey-2025.4.7";
     lix = {
       url = "https://git.lix.systems/lix-project/lix/archive/main.tar.gz";
       flake = false;
@@ -51,7 +50,6 @@
 
   outputs = {
     nixpkgs,
-    nixpkgs-sharkey,
     lix-module,
     disko,
     sops-nix,
@@ -73,13 +71,6 @@
               versia-server.overlays.default
               versia-fe.overlays.default
               bitchbot.overlays.default
-              (final: prev: {
-                # Inherit the changes into the overlay
-                inherit
-                  (nixpkgs-sharkey.legacyPackages.${prev.stdenv.hostPlatform.system})
-                  sharkey
-                  ;
-              })
             ];
           }
           lix-module.nixosModules.lixFromNixpkgs
