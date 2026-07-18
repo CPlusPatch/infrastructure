@@ -1,5 +1,4 @@
-{lib, ...}:
-let
+{lib, ...}: let
   genSecret = key: name: {
     "${key}/${name}" = {};
   };

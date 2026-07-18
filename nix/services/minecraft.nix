@@ -30,6 +30,48 @@ in {
 
     managementSystem.systemd-socket.enable = true;
 
+    servers.wiki = {
+      enable = true;
+      autoStart = false;
+
+      files = {
+        "server-icon.png" = "${../../assets/server-icon-wiki.png}";
+      };
+
+      symlinks = let
+        modpack = pkgs.fetchzip {
+          url = "https://mediafilez.forgecdn.net/files/8247/304/Aoc_Aeronautics_v2.0_serverpack.zip";
+          hash = "sha256-K3P4oqh5xNrfjJJkq/QNtujUxA0IKco87BEa1AOiZK8=";
+          stripRoot = false;
+        };
+      in {
+        "mods" = "${modpack}/mods";
+      };
+
+      package = pkgs.neoforgeServers.neoforge-1_21_1;
+      jvmOpts = "-Djava.net.preferIPV4stack=false -Djava.net.preferIPv6Addresses=true -Xms6G -Xmx6G -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCMode=iu -XX:+UseNUMA -XX:+AlwaysPreTouch -XX:+DisableExplicitGC -Dfile.encoding=UTF-8";
+
+      serverProperties = {
+        server-port = 25565;
+        allow-flight = true;
+        difficulty = "easy";
+        enforce-secure-profile = false;
+        enforce-whitelist = true;
+        max-players = 64;
+        motd = "\\u00a7dJeffrey Epstein's favourite server\\u00a7r\n\\u00a75Now with road rage!";
+        online-mode = true;
+        pvp = true;
+        spawn-protection = 0;
+        white-list = true;
+        enable-rcon = true;
+        "rcon.port" = 10003;
+        "rcon.password" = "test";
+        broadcast-rcon-to-ops = true;
+        pause-when-empty-seconds = 0;
+        enable-command-block = true;
+      };
+    };
+
     servers.jerver2 = {
       enable = false;
       autoStart = false;

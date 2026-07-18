@@ -80,7 +80,6 @@
         # 4K sector alignment for SSD/NVMe
         options.ashift = "12";
 
-
         datasets = {
           "home" = {
             type = "zfs_fs";
