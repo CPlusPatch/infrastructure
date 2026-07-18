@@ -14,11 +14,19 @@
     packHash = "sha256-xF8tqXEqGhU6Rj9Mh3wtK6r/kGbBnW0OqYvc2L3PD+4=";
     side = "server";
   };
+  wikiModpack = pkgs.fetchModrinthModpack {
+    src = ../../assets/Yuri-Aero.mrpack;
+    packHash = "sha256-D3ianA7/veIkLeTlt9NOTCl5KM7AAkUVw3l/+hnEHW4=";
+    side = "server";
+  };
+  collectFilesAt = inputs.nix-minecraft.lib.collectFilesAt;
   excludedMods = [
     "statuseffectbars-1.21.1-NeoForge-1.0.2.jar"
     "bocchud-0.4.1+mc1.21.1.jar"
     "colorwheel-neoforge-1.2.7+mc1.21.1.jar"
+    "continuity-3.0.0+0.0.1+1.21.1.neoforge-all.jar"
   ];
+  filterOutMods = (mods: lib.filterAttrs (name: path: !(lib.elem name (map (x: "mods/${x}") excludedMods))) mods);
 in {
   imports = [
     ../modules/backups.nix
@@ -38,18 +46,14 @@ in {
         "server-icon.png" = "${../../assets/server-icon-wiki.png}";
       };
 
-      symlinks = let
-        modpack = pkgs.fetchzip {
-          url = "https://mediafilez.forgecdn.net/files/8247/304/Aoc_Aeronautics_v2.0_serverpack.zip";
-          hash = "sha256-K3P4oqh5xNrfjJJkq/QNtujUxA0IKco87BEa1AOiZK8=";
-          stripRoot = false;
-        };
-      in {
-        "mods" = "${modpack}/mods";
-      };
+      # Using collectFilesAt prevents an issue with mods that try to edit the mods folder
+      # # e.g. Sinytra Connector
+      symlinks = filterOutMods (collectFilesAt wikiModpack "mods");
 
-      package = pkgs.neoforgeServers.neoforge-1_21_1;
-      jvmOpts = "-Djava.net.preferIPV4stack=false -Djava.net.preferIPv6Addresses=true -Xms6G -Xmx6G -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCMode=iu -XX:+UseNUMA -XX:+AlwaysPreTouch -XX:+DisableExplicitGC -Dfile.encoding=UTF-8";
+      package = pkgs.neoforgeServers.neoforge-1_21_1.override {
+        jre_headless = pkgs.temurin-jre-bin-25;
+      };
+      jvmOpts = "-Djava.net.preferIPV4stack=false -Djava.net.preferIPv6Addresses=true -Xms4G -Xmx4G -XX:+UseZGC -XX:TrimNativeHeapInterval=5000 -XX:+UseStringDeduplication -XX:+UseCompactObjectHeaders";
 
       serverProperties = {
         server-port = 25565;
@@ -78,7 +82,7 @@ in {
 
       symlinks =
         # Exclude mods that cause crashes on startup
-        lib.filterAttrs (name: path: !(lib.elem name (map (x: "mods/${x}") excludedMods))) (inputs.nix-minecraft.lib.collectFilesAt modpack "mods");
+       filterOutMods (collectFilesAt modpack "mods");
 
       files = {
         "config" = "${modpack}/config";
@@ -115,7 +119,7 @@ in {
 
       symlinks =
         # Exclude mods that cause crashes on startup
-        lib.filterAttrs (name: path: !(lib.elem name (map (x: "mods/${x}") excludedMods))) (inputs.nix-minecraft.lib.collectFilesAt creativeModpack "mods");
+        filterOutMods (collectFilesAt creativeModpack "mods");
 
       files = {
         "config" = "${creativeModpack}/config";
