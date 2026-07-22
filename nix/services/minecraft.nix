@@ -16,7 +16,7 @@
   };
   wikiModpack = pkgs.fetchModrinthModpack {
     src = ../../assets/Yuri-Aero.mrpack;
-    packHash = "sha256-D3ianA7/veIkLeTlt9NOTCl5KM7AAkUVw3l/+hnEHW4=";
+    packHash = "sha256-GRtCYhhpB19L6oGQgHTjeqK6C7c55jTLOvonixIp+JI=";
     side = "server";
   };
   collectFilesAt = inputs.nix-minecraft.lib.collectFilesAt;
@@ -25,6 +25,8 @@
     "bocchud-0.4.1+mc1.21.1.jar"
     "colorwheel-neoforge-1.2.7+mc1.21.1.jar"
     "continuity-3.0.0+0.0.1+1.21.1.neoforge-all.jar"
+    "soundsbegone-neoforge-1.5.2+mc1.21.jar"
+    "screenshotgallery-neoforge-2.0.jar"
   ];
   filterOutMods = (mods: lib.filterAttrs (name: path: !(lib.elem name (map (x: "mods/${x}") excludedMods))) mods);
 in {
@@ -40,7 +42,7 @@ in {
 
     servers.wiki = {
       enable = true;
-      autoStart = false;
+      autoStart = true;
 
       files = {
         "server-icon.png" = "${../../assets/server-icon-wiki.png}";
@@ -50,10 +52,8 @@ in {
       # # e.g. Sinytra Connector
       symlinks = filterOutMods (collectFilesAt wikiModpack "mods");
 
-      package = pkgs.neoforgeServers.neoforge-1_21_1.override {
-        jre_headless = pkgs.temurin-jre-bin-25;
-      };
-      jvmOpts = "-Djava.net.preferIPV4stack=false -Djava.net.preferIPv6Addresses=true -Xms4G -Xmx4G -XX:+UseZGC -XX:TrimNativeHeapInterval=5000 -XX:+UseStringDeduplication -XX:+UseCompactObjectHeaders";
+      package = pkgs.neoforgeServers.neoforge-1_21_1;
+      jvmOpts = "-Djava.net.preferIPV4stack=false -Djava.net.preferIPv6Addresses=true -Xms6G -Xmx6G -XX:+UseZGC";
 
       serverProperties = {
         server-port = 25565;
