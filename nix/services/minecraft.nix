@@ -28,7 +28,7 @@
     "soundsbegone-neoforge-1.5.2+mc1.21.jar"
     "screenshotgallery-neoforge-2.0.jar"
   ];
-  filterOutMods = (mods: lib.filterAttrs (name: path: !(lib.elem name (map (x: "mods/${x}") excludedMods))) mods);
+  filterOutMods = mods: lib.filterAttrs (name: path: !(lib.elem name (map (x: "mods/${x}") excludedMods))) mods;
 in {
   imports = [
     ../modules/backups.nix
@@ -82,7 +82,7 @@ in {
 
       symlinks =
         # Exclude mods that cause crashes on startup
-       filterOutMods (collectFilesAt modpack "mods");
+        filterOutMods (collectFilesAt modpack "mods");
 
       files = {
         "config" = "${modpack}/config";
