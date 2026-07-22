@@ -108,6 +108,7 @@
   };
 
   programs.zsh.enable = true;
+  programs.fish.enable = true;
 
   users.users = {
     root = {
@@ -120,7 +121,7 @@
       isNormalUser = true;
       extraGroups = ["networkmanager" "wheel"];
       description = "Jesse Wierzbinski";
-      shell = pkgs.zsh;
+      shell = pkgs.fish;
       openssh.authorizedKeys.keys = [
         "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEoDpeLv3ZiLr4T0RTFtpKtE66qEzMxuzk/BHA97YUEX contact@cpluspatch.com"
       ];
