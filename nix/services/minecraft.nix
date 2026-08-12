@@ -16,7 +16,7 @@
   };
   wikiModpack = pkgs.fetchModrinthModpack {
     src = ../../assets/Yuri-Aero.mrpack;
-    packHash = "sha256-GRtCYhhpB19L6oGQgHTjeqK6C7c55jTLOvonixIp+JI=";
+    packHash = "sha256-qaUcmu3cGHIcTtsr3M1ptiP2F+x4fsLPNjhu7RrmXp8=";
     side = "server";
   };
   collectFilesAt = inputs.nix-minecraft.lib.collectFilesAt;
@@ -27,6 +27,8 @@
     "continuity-3.0.0+0.0.1+1.21.1.neoforge-all.jar"
     "soundsbegone-neoforge-1.5.2+mc1.21.jar"
     "screenshotgallery-neoforge-2.0.jar"
+    "createframed-1.21.1-1.8.2.jar"
+    "bits_n_bobs-2.1.13-beta.jar"
   ];
   filterOutMods = mods: lib.filterAttrs (name: path: !(lib.elem name (map (x: "mods/${x}") excludedMods))) mods;
 in {
