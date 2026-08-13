@@ -13,9 +13,17 @@
 
 ## Overview
 
+Three [Hetzner Cloud](https://www.hetzner.com/cloud) servers managed as a NixOS fleet:
+
+| Host | Type | Role |
+|------|------|------|
+| **Faithplate** | cx33 | Primary services host (web, applications, proxying) |
+| **Freeman** | cx23 | Backend services (databases, monitoring) |
+| **Eli** | cx33 | Minecraft server host |
+
 ## Tools
 
-This project is largely centered around [**Nix**](https://nixos.org/), as well as [**Terraform**](https://www.terraform.io/).
+This project is largely centered around [**Nix**](https://nixos.org/), [**Terraform**](https://www.terraform.io/), and [**Colmena**](https://colmena.cli.rs/).
 
 Nix is used for:
 - Partitioning hosts' disks
@@ -26,7 +34,10 @@ Terraform is used for:
 - Provisioning cloud infrastructure (primarily from [**Hetzner Cloud**](https://www.hetzner.com/cloud))
 - Bootstrapping NixOS on newly created hosts
 - Managing DNS records (via [**Cloudflare**](https://www.cloudflare.com/))
-- Deploying NixOS configuration changes to hosts
+- Generating `nixos-vars.json` with host IP/network data consumed by Nix
+
+Colmena is used for:
+- Deploying NixOS configuration changes to running hosts
 
 > [!NOTE]
 > This project is fully IPv4/IPv6 dual stack. All DNS records, server configurations, and services are set up to support both protocols when interfacing with the public internet.
@@ -129,11 +140,27 @@ This file is used to pass variables from Terraform to NixOS during the bootstrap
 
 ## Deployment
 
-NixOS configuration changes are deployed to hosts using [`nixos-anywhere`'s Terraform module](https://github.com/numtide/nixos-anywhere/terraform/all-in-one).
+### Provisioning new hosts
 
-The command to deploy changes is:
+New hosts are provisioned with Terraform/OpenTofu, which also bootstraps NixOS via `nixos-anywhere`:
 
 ```bash
-# Using OpenTofu :)
 tofu -chdir=terraform apply
 ```
+
+### Deploying configuration changes
+
+NixOS configuration changes are deployed to running hosts using [**Colmena**](https://colmena.cli.rs/):
+
+```bash
+# Deploy to all hosts
+colmena apply
+
+# Deploy to a specific host
+colmena apply --on faithplate
+
+# Deploy to hosts with a specific tag
+colmena apply --on @infra
+```
+
+Colmena reads the `colmenaHive` output from `flake.nix`, which defines each host's deployment target (`targetHost`) and tags.

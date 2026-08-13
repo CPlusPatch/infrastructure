@@ -11,7 +11,7 @@
   <strong><code>infra</code></strong>
 </h2>
 
-My infra's [`OpenTofu`](https://opentofu.org) and [`NixOS`](https://nixos.org) configuration files.
+My infra's [`OpenTofu`](https://opentofu.org), [`NixOS`](https://nixos.org), and [`Colmena`](https://colmena.cli.rs/) configuration files.
 
 ## Documentation
 
