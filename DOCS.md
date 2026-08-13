@@ -10,6 +10,11 @@
   - [📂 `secrets/`](#-secrets)
   - [📂 `terraform/`](#-terraform)
 - [Deployment](#deployment)
+- [Backups](#backups)
+  - [General services (restic)](#general-services-restic)
+  - [PostgreSQL (pgbackrest)](#postgresql-pgbackrest)
+  - [Restoring from a restic backup](#restoring-from-a-restic-backup)
+  - [Restoring from a pgbackrest backup](#restoring-from-a-pgbackrest-backup)
 
 ## Overview
 
@@ -164,3 +169,91 @@ colmena apply --on @infra
 ```
 
 Colmena reads the `colmenaHive` output from `flake.nix`, which defines each host's deployment target (`targetHost`) and tags.
+
+## Backups
+
+All backup configuration lives in `nix/modules/backups.nix` (general services) and `nix/modules/postgresql.nix` (PostgreSQL). Every backup is written to two independent targets:
+
+| Target | Technology | Location |
+|--------|-----------|----------|
+| **Primary** | S3 (Fastly) | `eu-central.object.fastlystorage.app` / bucket `backups` |
+| **Secondary** | SFTP | `kleiner:/mnt/HDD1/Backups/Infra` |
+
+### General services (restic)
+
+Most services declare a backup job via `services.backups.jobs.<name>.source = "<path>"` in their service file (e.g. `nix/services/vaultwarden.nix`). The `backups` module translates each job into two `services.restic.backups` entries — `s3-<name>` and `sftp-<name>` — running daily with a randomised up-to-3-hour delay.
+
+**Retention policy:** 7 daily · 5 weekly · 12 monthly
+
+The wrapper scripts created by the NixOS module allow manual operations:
+
+```bash
+# List snapshots for a job
+restic-s3-vaultwarden snapshots
+restic-sftp-vaultwarden snapshots
+
+# Check repository integrity
+restic-s3-mail check
+```
+
+### PostgreSQL (pgbackrest)
+
+PostgreSQL uses [pgbackrest](https://pgbackrest.org/) rather than restic, as pgbackrest performs continuous WAL archiving in addition to scheduled full backups.
+
+**Repositories:**
+
+| Index | Type | Location |
+|-------|------|----------|
+| 1 | S3 | `eu-central.object.fastlystorage.app/backups/postgresql` |
+| 2 | SFTP | `kleiner:/mnt/HDD1/Backups/Infra/postgresql` |
+
+**Schedule:** full backup daily, WAL continuously archived to both repos.
+
+**Retention:** 10 full backups kept.
+
+### Restoring from a restic backup
+
+The NixOS restic module generates a wrapper script per backup job that pre-loads all required environment variables.
+
+```bash
+# 1. List available snapshots
+restic-s3-<name> snapshots         # from S3
+restic-sftp-<name> snapshots       # from SFTP fallback
+
+# 2. Restore the latest snapshot to a target directory
+restic-s3-<name> restore latest --target /tmp/restore-<name>
+
+# 3. Restore a specific snapshot
+restic-s3-<name> restore <snapshot-id> --target /tmp/restore-<name>
+
+# 4. Restore only specific paths within a snapshot
+restic-s3-<name> restore latest --target / --include /var/lib/<service>
+```
+
+Replace `<name>` with the job name (e.g. `vaultwarden`, `synapse`, `mail`, `clickhouse`).
+
+### Restoring from a pgbackrest backup
+
+pgbackrest restores require PostgreSQL to be stopped first.
+
+```bash
+# 1. Stop PostgreSQL
+systemctl stop postgresql
+
+# 2. Check available backups
+sudo -u postgres pgbackrest --stanza=main info
+
+# 3a. Restore the latest backup (from the fastest available repo)
+sudo -u postgres pgbackrest --stanza=main restore
+
+# 3b. Restore from a specific repo (1 = S3, 2 = SFTP)
+sudo -u postgres pgbackrest --stanza=main restore --repo=1
+
+# 3c. Point-in-time recovery to a specific timestamp
+sudo -u postgres pgbackrest --stanza=main restore \
+  --target="2026-01-15 10:30:00" \
+  --target-action=promote
+
+# 4. Start PostgreSQL
+systemctl start postgresql
+```

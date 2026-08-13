@@ -61,6 +61,14 @@ in {
       (genSecret "s3" "nextcloud/secret_key")
       (genSecret "s3" "versia/access_key_id")
       (genSecret "s3" "versia/secret_key")
+      # Dedicated SSH key for backup SFTP access (restic + pgbackrest → kleiner).
+      # Owner defaults to root (restic); postgresql.nix overrides to pgbackrest.
+      {
+        "sftp/backup_private_key" = {
+          owner = lib.mkDefault "root";
+          mode = lib.mkDefault "0400";
+        };
+      }
     ];
   };
 }

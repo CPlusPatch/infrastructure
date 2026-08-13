@@ -5,11 +5,11 @@
 }:
 with lib; let
   cfg = config.services.backups;
+  s3Endpoint = "https://eu-central.object.fastlystorage.app";
+  bucket = "backups";
 in {
   imports = [
     ../lib/secrets.nix
-
-    ./s3fs.nix
   ];
 
   options.services.backups = {
@@ -25,67 +25,54 @@ in {
     };
   };
 
-  config = mkIf (builtins.length (builtins.attrNames cfg.jobs)
-    != 0) {
-    sops.templates."s3fs-passwd" = {
+  config = mkIf (builtins.length (builtins.attrNames cfg.jobs) != 0) {
+    sops.templates."restic-env" = {
       content = ''
-        ${config.sops.placeholder."s3/backups/access_key_id"}:${config.sops.placeholder."s3/backups/secret_key"}
+        AWS_ACCESS_KEY_ID=${config.sops.placeholder."s3/backups/access_key_id"}
+        AWS_SECRET_ACCESS_KEY=${config.sops.placeholder."s3/backups/secret_key"}
+        RESTIC_PASSWORD=${config.sops.placeholder."backups/passphrase"}
+        AWS_DEFAULT_REGION=eu-central
       '';
     };
 
-    services.s3fs = {
-      enable = true;
-      keyPath = config.sops.templates."s3fs-passwd".path;
-      mountPath = "/mnt/backups";
-      bucket = "backups";
-      region = "eu-central";
-      url = "https://eu-central.object.fastlystorage.app";
-    };
-
-    services.borgbackup = {
-      jobs =
-        mapAttrs (name: job: {
+    services.restic.backups =
+      let
+        commonSettings = name: job: {
           paths = [job.source];
-          startAt = "daily";
-          repo = "${config.services.s3fs.mountPath}/directories/${name}";
-          failOnWarnings = false; # Don't fail if file changes during backup
-          prune.keep = {
-            within = "1d";
-            daily = 7;
-            weekly = 4;
-            monthly = -1;
+          initialize = true;
+          timerConfig = {
+            OnCalendar = "daily";
+            RandomizedDelaySec = "3h";
+            Persistent = true;
           };
-          removableDevice = true;
-          encryption = {
-            passCommand = "cat ${config.sops.secrets."backups/passphrase".path}";
-            mode = "repokey";
-          };
-          compression = "auto,zstd,7";
-        })
-        cfg.jobs;
-
-      repos =
-        mapAttrs (name: job: {
-          path = "${config.services.s3fs.mountPath}/directories/${name}";
-          authorizedKeys = config.users.users.jessew.openssh.authorizedKeys.keys;
-        })
-        cfg.jobs;
-    };
-
-    # For each borg backup job foo at systemd.services.borgbackup-job-foo
-    # override and dependency on s3fs.mount
-    systemd.services =
-      mapAttrs' (name: job:
-        lib.nameValuePair "borgbackup-job-${name}" {
-          after = ["s3fs.service"];
-          wants = ["s3fs.service"];
-        })
-      cfg.jobs
-      // mapAttrs' (name: job:
-        lib.nameValuePair "borgbackup-repo-${name}" {
-          after = ["s3fs.service"];
-          wants = ["s3fs.service"];
-        })
-      cfg.jobs;
+          pruneOpts = [
+            "--keep-daily 7"
+            "--keep-weekly 5"
+            "--keep-monthly 12"
+          ];
+          extraBackupArgs = [
+            "--compression=auto"
+            "--cleanup-cache"
+          ];
+        };
+        s3Jobs = mapAttrs' (name: job:
+          nameValuePair "s3-${name}" (commonSettings name job // {
+            repository = "s3:${s3Endpoint}/${bucket}/directories/${name}";
+            environmentFile = config.sops.templates."restic-env".path;
+            initialize = true;
+          })
+        ) cfg.jobs;
+        sftpJobs = mapAttrs' (name: job:
+          nameValuePair "sftp-${name}" (commonSettings name job // {
+            repository = "sftp:jessew@kleiner:/mnt/HDD1/Backups/Infra/${name}";
+            environmentFile = config.sops.templates."restic-env".path;
+            initialize = true;
+            extraOptions = [
+              "sftp.args='-i ${config.sops.secrets."sftp/backup_private_key".path}'"
+            ];
+          })
+        ) cfg.jobs;
+      in
+        s3Jobs // sftpJobs;
   };
 }

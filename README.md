@@ -1,5 +1,5 @@
 <div align="center">
-    <a href="https://versia.pub">
+    <a href="https://cpluspatch.com">
         <picture>
             <img src="https://raw.githubusercontent.com/CPlusPatch/CPlusPatch/main/assets/minecraft_title.png" alt="CPlusPatch Logo" height="110" />
         </picture>
