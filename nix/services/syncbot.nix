@@ -1,5 +1,0 @@
-{
-  services.syncbot = {
-    enable = true;
-  };
-}

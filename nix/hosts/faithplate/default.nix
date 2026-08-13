@@ -37,7 +37,6 @@ in {
     ../../services/nextcloud.nix
     ../../services/sharkey.nix
     ../../services/immich.nix
-    ../../services/syncbot.nix
     ../../services/versia2.nix
     ../../services/static.nix
     ../../services/fitbit-prometheus.nix

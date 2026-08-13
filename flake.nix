@@ -10,6 +10,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.lix.follows = "lix";
     };
+    colmena.url = "github:zhaofengli/colmena";
     disko = {
       url = "github:nix-community/disko";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -28,10 +29,6 @@
     };
     bitchbot = {
       url = "github:CPlusPatch/jesses-vengeance";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-    syncbot = {
-      url = "github:CPlusPatch/syncbot";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     nix-minecraft = {
@@ -55,81 +52,92 @@
     sops-nix,
     simple-nixos-mailserver,
     bitchbot,
-    syncbot,
     versia-server,
+    home-manager,
     nix-minecraft,
     versia-fe,
+    colmena,
     ...
   } @ inputs: {
-    nixosConfigurations = {
-      faithplate = nixpkgs.lib.nixosSystem rec {
-        system = "x86_64-linux";
-        modules = [
-          {
-            nixpkgs.overlays = [
-              nix-minecraft.overlay
-              versia-server.overlays.default
-              versia-fe.overlays.default
-              bitchbot.overlays.default
-            ];
-          }
+    colmenaHive = colmena.lib.makeHive {
+      meta = {
+        nixpkgs = import nixpkgs {
+          system = "x86_64-linux";
+          overlays = [
+            nix-minecraft.overlay
+            versia-server.overlays.default
+            versia-fe.overlays.default
+            bitchbot.overlays.default
+          ];
+        };
+
+        specialArgs = {inherit inputs;};
+      };
+
+      faithplate = {
+        deployment = {
+          targetHost = "faithplate.infra.cpluspatch.com";
+          tags = ["infra"];
+        };
+
+        imports = [
           lix-module.nixosModules.lixFromNixpkgs
           disko.nixosModules.disko
           sops-nix.nixosModules.sops
           simple-nixos-mailserver.nixosModules.default
           nix-minecraft.nixosModules.minecraft-servers
-          syncbot.nixosModules.${system}.syncbot
+          versia-server.nixosModules.versia-server
+          home-manager.nixosModules.home-manager
           ./nix/hosts/base
           ./nix/features/partitions/single-zfs.nix
           ./nix/hosts/faithplate
-          versia-server.nixosModules.versia-server
-          bitchbot.nixosModules.bitchbot
         ];
-
-        # This is needed otherwise you get recursion errors
-        # because the nixosConfigurations attribute set is
-        # being used in the nixosSystem function
-        specialArgs = {
-          inherit inputs;
-        };
       };
 
-      freeman = nixpkgs.lib.nixosSystem {
-        system = "x86_64-linux";
-        modules = [
+      freeman = {
+        deployment = {
+          targetHost = "freeman.infra.cpluspatch.com";
+          tags = ["infra"];
+        };
+
+        imports = [
           lix-module.nixosModules.lixFromNixpkgs
           disko.nixosModules.disko
           sops-nix.nixosModules.sops
+          home-manager.nixosModules.home-manager
           ./nix/hosts/base
           ./nix/features/partitions/single-zfs.nix
           ./nix/hosts/freeman
         ];
-
-        specialArgs = {
-          inherit inputs;
-        };
       };
 
-      eli = nixpkgs.lib.nixosSystem {
-        system = "x86_64-linux";
-        modules = [
+      eli = {
+        deployment = {
+          targetHost = "eli.infra.cpluspatch.com";
+          tags = ["infra"];
+        };
+
+        imports = [
           lix-module.nixosModules.lixFromNixpkgs
           disko.nixosModules.disko
           sops-nix.nixosModules.sops
           nix-minecraft.nixosModules.minecraft-servers
-          {
-            nixpkgs.overlays = [
-              nix-minecraft.overlay
-            ];
-          }
+          home-manager.nixosModules.home-manager
           ./nix/hosts/base
           ./nix/features/partitions/single-zfs.nix
           ./nix/hosts/eli
         ];
+      };
+    };
 
-        specialArgs = {
-          inherit inputs;
-        };
+    devShells = let
+      pkgs = import nixpkgs { inherit system; };
+      system = "x86_64-linux";
+    in {
+      x86_64-linux.default = pkgs.mkShell {
+        buildInputs = [
+          colmena.packages.x86_64-linux.colmena
+        ];
       };
     };
   };

@@ -1,6 +1,5 @@
 {
   config,
-  pkgs,
   ...
 }: let
   inherit (import ../lib/ips.nix) ips;

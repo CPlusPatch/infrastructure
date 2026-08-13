@@ -57,18 +57,6 @@ in {
         server minecraft-eli-voicechat ${ips.eli}:24454
     '';
 
-    /*
-       modules.haproxy.acls.minecraft-cpluscraft = ''
-      acl is_cpluscraft hdr(host) -i mc.cpluspatch.com
-      use_backend minecraft-cpluscraft-bluemap if is_cpluscraft
-    '';
-
-    modules.haproxy.backends.minecraft-cpluscraft-bluemap = ''
-      backend minecraft-cpluscraft-bluemap
-        server minecraft-cpluscraft-bluemap ${ips.eli}:8100
-    '';
-    */
-
     modules.haproxy.acls.jellyfin2 = ''
       acl is_jellyfin2 hdr(host) -i tv.cpluspatch.com
       use_backend jellyfin2 if is_jellyfin2
@@ -88,7 +76,6 @@ in {
       backend seer
         server seer 100.113.206.105:5055
     '';
-
 
     modules.haproxy.acls.radarr = ''
       acl is_radarr hdr(host) -i radarr.lgs.cpluspatch.com

@@ -162,25 +162,3 @@ resource "local_file" "nixos_vars" {
     command     = "git add -f '${var.nixos_vars_file}'"
   }
 }
-
-# Call nixos-anywhere module for each server
-module "nixos_install" {
-  source = "github.com/numtide/nixos-anywhere/terraform/all-in-one"
-
-  for_each = { for s in local.servers : s.server.name => s }
-  # Warning: IPv6 will not work until the first rebuild
-  # (which will configure the network interfaces), which
-  # means an IPv4 address has to be used here
-  target_host                = coalesce(each.value.server.ipv4_address, each.value.server.ipv6_address)
-  nixos_system_attr          = "..#nixosConfigurations.${each.key}.config.system.build.toplevel"
-  nixos_partitioner_attr     = "..#nixosConfigurations.${each.key}.config.system.build.diskoScriptNoDeps"
-  nixos_generate_config_path = "${path.module}/../nix/hosts/${each.key}/hardware-configuration.nix"
-  instance_id                = each.value.server.id
-  debug_logging              = true
-
-  # Extract the age key from the SOPS file
-  extra_files_script = "${path.module}/decrypt-age-keys.sh"
-  extra_environment = {
-    SOPS_FILE = var.sops_file
-  }
-}

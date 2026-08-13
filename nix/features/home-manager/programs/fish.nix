@@ -3,7 +3,10 @@
     enable = true;
 
     plugins = with pkgs.fishPlugins; [
-      { name = "tide"; src = tide.src; }
+      {
+        name = "tide";
+        src = tide.src;
+      }
     ];
 
     shellAliases = {
