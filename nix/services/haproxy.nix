@@ -79,6 +79,17 @@ in {
         server jellyfin2 100.113.206.105:8096
     '';
 
+    modules.haproxy.acls.seer = ''
+      acl is_seer hdr(host) -i seer.cpluspatch.com
+      use_backend seer if is_seer
+    '';
+    
+    modules.haproxy.backends.seer = ''
+      backend seer
+        server seer 100.113.206.105:5055
+    '';
+    
+
     modules.haproxy.acls.radarr = ''
       acl is_radarr hdr(host) -i radarr.lgs.cpluspatch.com
       use_backend radarr if is_radarr
@@ -101,6 +112,7 @@ in {
 
     security.acme.certs."mc.cpluspatch.com" = {};
     security.acme.certs."tv.cpluspatch.com" = {};
+    security.acme.certs."seer.cpluspatch.com" = {};
     security.acme.certs."radarr.lgs.cpluspatch.com" = {};
     security.acme.certs."sonarr.lgs.cpluspatch.com" = {};
 

@@ -108,6 +108,7 @@ locals {
     "proxy.cpluspatch.com"              = hcloud_server.faithplate
     "text.cpluspatch.com"               = hcloud_server.faithplate
     "tv.cpluspatch.com"                 = hcloud_server.faithplate
+    "seer.cpluspatch.com"                 = hcloud_server.faithplate
   }
 
   domain_zone_mappings = {
