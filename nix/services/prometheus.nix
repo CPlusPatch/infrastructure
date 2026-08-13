@@ -56,12 +56,6 @@ in {
           {targets = ["${ips.faithplate}:${toString config.services.prometheus.exporters.nextcloud.port}"];}
         ];
       }
-      {
-        job_name = "varnish";
-        static_configs = [
-          {targets = ["${ips.faithplate}:${toString config.services.prometheus.exporters.varnish.port}"];}
-        ];
-      }
     ];
 
     exporters = {

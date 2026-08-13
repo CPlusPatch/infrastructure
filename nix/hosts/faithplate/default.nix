@@ -26,7 +26,6 @@ in {
     ../../features/fs-01b.nix
 
     ../../services/haproxy.nix
-    ../../services/varnish.nix
     ../../services/keycloak.nix
     ../../services/servarr.nix
     ../../services/uptime-kuma.nix

@@ -83,12 +83,12 @@ in {
       acl is_seer hdr(host) -i seer.cpluspatch.com
       use_backend seer if is_seer
     '';
-    
+
     modules.haproxy.backends.seer = ''
       backend seer
         server seer 100.113.206.105:5055
     '';
-    
+
 
     modules.haproxy.acls.radarr = ''
       acl is_radarr hdr(host) -i radarr.lgs.cpluspatch.com
@@ -201,18 +201,6 @@ in {
 
           errorfiles errors
 
-        # Used by Varnish when updating its cache
-        frontend varnish_cache
-          mode http
-          bind :::19872 v4v6
-          # TODO: Make this actually fail on errors
-          monitor-uri /healthcheck
-
-          # Preserve X-Forwarded-For header, set by Varnish
-          option forwardfor if-none
-
-          default_backend default
-
         ${separateModule (lib.mapAttrsToList (name: value: padString "  " value) config.modules.haproxy.acls)}
 
         frontend https
@@ -260,16 +248,7 @@ in {
           acl is_activitypub_req hdr(Accept) -i ld+json application/activity+json
           acl is_activitypub_payload hdr(Content-Type) -i application/ld+json application/activity+json
 
-          # Static content detection
-          acl static_content path_end .jpg .gif .png .css .js .htm .html .ico .svg .webp
-          acl pseudo_static path_end .php ! path_beg /dynamic/
-          acl varnish_available nbsrv(varnish) ge 1
-
           acl is_servarr hdr(host) -i -m end lgs.cpluspatch.com
-
-          # Caches health detection + routing decision
-          use_backend varnish if varnish_available static_content !is_servarr
-          use_backend varnish if varnish_available pseudo_static !is_servarr
 
           # Redirect cpluspatch.dev to cpluspatch.com
           acl is_old_site hdr(host) -i cpluspatch.dev
@@ -323,16 +302,6 @@ in {
           http-request sc-set-gpt(1,0) 1 if challenge_req timestamp_recent hash_good
           http-request return status 200 if challenge_req hash_good
           http-request return status 400 content-type "text/html; charset=UTF-8" hdr "Cache-control" "max-age=0" string "Bad request" if !challenge_req OR !hash_good
-
-        # Varnish backend
-        backend varnish
-          mode http
-          # Varnish must tell it's ready to accept traffic
-          option httpchk HEAD /healthcheck
-          http-check expect status 200
-          option forwardfor
-          hash-type consistent
-          server varnish1 127.0.0.1:6081
 
         ${separateModule (lib.mapAttrsToList (name: value: value) config.modules.haproxy.backends)}
       '';
