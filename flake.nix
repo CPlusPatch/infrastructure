@@ -130,17 +130,14 @@
       };
     };
 
-    devShells = let
-      pkgs = import nixpkgs { inherit system; };
-      system = "x86_64-linux";
-    in {
-      x86_64-linux.default = pkgs.mkShell {
+    devShells = builtins.mapAttrs (system: pkgs: {
+      default = pkgs.mkShell {
         buildInputs = [
           colmena.packages.x86_64-linux.colmena
           pkgs.nixd
           pkgs.sops
         ];
       };
-    };
+    }) nixpkgs.legacyPackages;
   };
 }
