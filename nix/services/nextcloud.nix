@@ -99,17 +99,12 @@ in {
     };
   };
 
-  modules.haproxy.acls.nextcloud = ''
-    acl is_nextcloud hdr(host) -i cloud.cpluspatch.com
-    acl is_dav_url_discovery path /.well-known/caldav /.well-known/carddav
-    use_backend nextcloud if is_nextcloud
-    http-request redirect location /remote.php/dav/ code 301 if is_nextcloud is_dav_url_discovery
-  '';
-
-  modules.haproxy.backends.nextcloud = ''
-    backend nextcloud
-      server nextcloud 127.0.0.1:${toString config.services.nginx.defaultHTTPListenPort}
-  '';
-
-  security.acme.certs."cloud.cpluspatch.com" = {};
+  modules.haproxy.vhosts.nextcloud = {
+    domain = "cloud.cpluspatch.com";
+    server = "127.0.0.1:${toString config.services.nginx.defaultHTTPListenPort}";
+    extraRules = ''
+      acl is_dav_url_discovery path /.well-known/caldav /.well-known/carddav
+      http-request redirect location /remote.php/dav/ code 301 if is_nextcloud is_dav_url_discovery
+    '';
+  };
 }

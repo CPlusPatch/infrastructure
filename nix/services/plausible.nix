@@ -52,15 +52,8 @@ in {
     };
   };
 
-  modules.haproxy.acls.plausible = ''
-    acl is_plausible hdr(host) -i logs.cpluspatch.com
-    use_backend plausible if is_plausible
-  '';
-
-  modules.haproxy.backends.plausible = ''
-    backend plausible
-      server plausible 127.0.0.1:${toString config.services.plausible.server.port}
-  '';
-
-  security.acme.certs."logs.cpluspatch.com" = {};
+  modules.haproxy.vhosts.plausible = {
+    domain = "logs.cpluspatch.com";
+    server = "127.0.0.1:${toString config.services.plausible.server.port}";
+  };
 }

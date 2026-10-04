@@ -37,16 +37,11 @@ in {
     TimeoutSec = 60;
   };
 
-  modules.haproxy.acls.keycloak = ''
-    acl is_keycloak hdr(host) -i id.cpluspatch.com
-    use_backend keycloak if is_keycloak
-    http-request redirect location /realms/default/account/ if { hdr(host) -i id.cpluspatch.com } { path / }
-  '';
-
-  modules.haproxy.backends.keycloak = ''
-    backend keycloak
-      server keycloak 127.0.0.1:${toString config.services.keycloak.settings.http-port}
-  '';
-
-  security.acme.certs."id.cpluspatch.com" = {};
+  modules.haproxy.vhosts.keycloak = {
+    domain = "id.cpluspatch.com";
+    server = "127.0.0.1:${toString config.services.keycloak.settings.http-port}";
+    extraRules = ''
+      http-request redirect location /realms/default/account/ if { hdr(host) -i id.cpluspatch.com } { path / }
+    '';
+  };
 }

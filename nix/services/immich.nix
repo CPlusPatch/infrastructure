@@ -79,15 +79,8 @@ in {
     CapabilityBoundingSet = lib.mkForce "CAP_FOWNER";
   };
 
-  modules.haproxy.acls.immich = ''
-    acl is_immich hdr(host) -i photos.cpluspatch.com
-    use_backend immich if is_immich
-  '';
-
-  modules.haproxy.backends.immich = ''
-    backend immich
-      server immich localhost:${toString config.services.immich.port}
-  '';
-
-  security.acme.certs."photos.cpluspatch.com" = {};
+  modules.haproxy.vhosts.immich = {
+    domain = "photos.cpluspatch.com";
+    server = "localhost:${toString config.services.immich.port}";
+  };
 }

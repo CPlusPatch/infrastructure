@@ -1,0 +1,33 @@
+{
+  "faithplate": [
+    "api.sl.cpluspatch.dev",
+    "broken.cpluspatch.com",
+    "cloud.cpluspatch.com",
+    "cpluspatch.dev",
+    "dl.lgs.cpluspatch.com",
+    "glance.cpluspatch.com",
+    "id.cpluspatch.com",
+    "logs.cpluspatch.com",
+    "mail.cpluspatch.com",
+    "matrix.cpluspatch.dev",
+    "mc.cpluspatch.com",
+    "mindtorio.factorio.cpluspatch.com",
+    "mk.cpluspatch.com",
+    "nzb.cpluspatch.com",
+    "photos.cpluspatch.com",
+    "prowlarr.lgs.cpluspatch.com",
+    "proxy.cpluspatch.com",
+    "radarr.lgs.cpluspatch.com",
+    "rspamd.cpluspatch.com",
+    "seer.cpluspatch.com",
+    "sonarr.lgs.cpluspatch.com",
+    "static.cpluspatch.com",
+    "stats.cpluspatch.com",
+    "status.cpluspatch.com",
+    "stream.cpluspatch.com",
+    "text.cpluspatch.com",
+    "tv.cpluspatch.com",
+    "vault.cpluspatch.com",
+    "vs.cpluspatch.com"
+  ]
+}

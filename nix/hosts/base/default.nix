@@ -16,6 +16,7 @@ in {
     ../../features/ssh.nix
     ../../features/tailscale.nix
     ../../modules/backups.nix
+    ../../modules/dns.nix
   ];
 
   nix = {

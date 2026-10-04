@@ -21,15 +21,8 @@
     };
   };
 
-  modules.haproxy.acls.static = ''
-    acl is_static hdr(host) -i static.cpluspatch.com
-    use_backend static if is_static
-  '';
-
-  modules.haproxy.backends.static = ''
-    backend static
-      server static 127.0.0.1:${toString config.services.nginx.defaultHTTPListenPort}
-  '';
-
-  security.acme.certs."static.cpluspatch.com" = {};
+  modules.haproxy.vhosts.static = {
+    domain = "static.cpluspatch.com";
+    server = "127.0.0.1:${toString config.services.nginx.defaultHTTPListenPort}";
+  };
 }

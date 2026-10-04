@@ -24,6 +24,18 @@
 
   disko.devices.disk.main.device = "/dev/sda";
 
+  # Records without a certificate on this host
+  modules.dns.extraDomains = [
+    "api.sl.cpluspatch.dev"
+    "dl.lgs.cpluspatch.com"
+    "glance.cpluspatch.com"
+    "mail.cpluspatch.com"
+    "mindtorio.factorio.cpluspatch.com"
+    "nzb.cpluspatch.com"
+    "proxy.cpluspatch.com"
+    "stream.cpluspatch.com"
+  ];
+
   networking = {
     # Generate with:
     # head -c4 /dev/urandom | od -A none -t x4

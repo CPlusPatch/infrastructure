@@ -88,15 +88,8 @@ in {
     };
   };
 
-  modules.haproxy.acls.grafana = ''
-    acl is_grafana hdr(host) -i stats.cpluspatch.com
-    use_backend grafana if is_grafana
-  '';
-
-  modules.haproxy.backends.grafana = ''
-    backend grafana
-      server grafana 127.0.0.1:${toString config.services.grafana.settings.server.http_port}
-  '';
-
-  security.acme.certs."stats.cpluspatch.com" = {};
+  modules.haproxy.vhosts.grafana = {
+    domain = "stats.cpluspatch.com";
+    server = "127.0.0.1:${toString config.services.grafana.settings.server.http_port}";
+  };
 }

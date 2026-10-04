@@ -28,17 +28,10 @@ in {
     };
   };
 
-  modules.haproxy.acls.vaultwarden = ''
-    acl is_vaultwarden hdr(host) -i vault.cpluspatch.com
-    use_backend vaultwarden if is_vaultwarden
-  '';
-
-  modules.haproxy.backends.vaultwarden = ''
-    backend vaultwarden
-      server vaultwarden 127.0.0.1:${toString config.services.vaultwarden.config.ROCKET_PORT}
-  '';
-
-  security.acme.certs."vault.cpluspatch.com" = {};
-
   services.backups.jobs.vaultwarden.source = "/var/lib/vaultwarden";
+
+  modules.haproxy.vhosts.vaultwarden = {
+    domain = "vault.cpluspatch.com";
+    server = "127.0.0.1:${toString config.services.vaultwarden.config.ROCKET_PORT}";
+  };
 }

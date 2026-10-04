@@ -305,15 +305,8 @@ in {
     };
   });
 
-  modules.haproxy.acls.versia2 = ''
-    acl is_versia2 hdr_sub(host) vs.cpluspatch.com
-    use_backend versia2 if is_versia2
-  '';
-
-  modules.haproxy.backends.versia2 = ''
-    backend versia2
-      server versia2 127.0.0.1:${toString config.services.versia-server.config.http.bind_port}
-  '';
-
-  security.acme.certs."vs.cpluspatch.com" = {};
+  modules.haproxy.vhosts.versia2 = {
+    domain = "vs.cpluspatch.com";
+    server = "127.0.0.1:${toString config.services.versia-server.config.http.bind_port}";
+  };
 }

@@ -106,8 +106,27 @@
       ];
     };
 
-    # Builds every host's system closure, e.g. with `nix flake check`
-    checks.x86_64-linux = self.colmenaHive.toplevel;
+    # Domains pointing to each host, read by Terraform from terraform/domains.json.
+    # Regenerate with: nix eval --json .#domains | jq -S . > terraform/domains.json
+    domains = nixpkgs.lib.filterAttrs (host: domains: domains != []) (
+      builtins.mapAttrs (host: node: node.config.modules.dns.domains) self.colmenaHive.nodes
+    );
+
+    checks.x86_64-linux =
+      # Builds every host's system closure, e.g. with `nix flake check`
+      self.colmenaHive.toplevel
+      // {
+        domains = let
+          pkgs = nixpkgs.legacyPackages.x86_64-linux;
+        in
+          pkgs.runCommand "check-terraform-domains" {nativeBuildInputs = [pkgs.jq];} ''
+            if ! diff <(jq -S . ${pkgs.writeText "domains.json" (builtins.toJSON self.domains)}) <(jq -S . ${./terraform/domains.json}); then
+              echo "terraform/domains.json is outdated, regenerate it (see flake.nix)" >&2
+              exit 1
+            fi
+            touch $out
+          '';
+      };
 
     devShells = forAllSystems (system: pkgs: {
       default = pkgs.mkShell {

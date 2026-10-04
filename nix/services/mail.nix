@@ -67,24 +67,19 @@
     '';
   };
 
-  modules.haproxy.acls.rspamd = ''
-    acl is_rspamd hdr(host) -i rspamd.cpluspatch.com
-    http-request auth if is_rspamd !{ http_auth(credentials) }
-    use_backend rspamd if is_rspamd
-  '';
-
-  modules.haproxy.backends.rspamd = ''
-    backend rspamd
-      server rspamd unix@/run/rspamd/worker-controller.sock
-  '';
-
   # HAProxy needs access to the controller socket
   users.users.${config.services.haproxy.user}.extraGroups = [config.services.rspamd.group];
-
-  security.acme.certs."rspamd.cpluspatch.com" = {};
 
   services.backups.jobs = {
     mail.source = config.mailserver.storage.path;
     mail-dkim.source = config.mailserver.dkim.keyDirectory;
+  };
+
+  modules.haproxy.vhosts.rspamd = {
+    domain = "rspamd.cpluspatch.com";
+    server = "unix@/run/rspamd/worker-controller.sock";
+    extraRules = ''
+      http-request auth if is_rspamd !{ http_auth(credentials) }
+    '';
   };
 }
