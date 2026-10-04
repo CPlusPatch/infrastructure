@@ -1,12 +1,9 @@
 {
-  imports = [./fish.nix ./zsh.nix];
+  imports = [./fish.nix];
 
   programs = {
     home-manager.enable = true;
-    eza = {
-      enable = true;
-      enableZshIntegration = true;
-    };
+    eza.enable = true;
     gh.enable = true;
     micro.enable = true;
   };

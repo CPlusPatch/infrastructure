@@ -109,11 +109,6 @@ in {
     };
   };
 
-  environment = {
-    pathsToLink = ["/share/zsh"];
-  };
-
-  programs.zsh.enable = true;
   programs.fish.enable = true;
 
   users.users = {
