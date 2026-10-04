@@ -18,6 +18,30 @@ in {
   services.grafana = {
     enable = true;
 
+    # Updates the datasource created in the UI, matched by name. Keeps its uid so dashboards
+    # still find it
+    provision = {
+      enable = true;
+      datasources.settings = {
+        apiVersion = 1;
+        datasources = [
+          {
+            name = "prometheus";
+            uid = "eegmzxgejop34d";
+            type = "prometheus";
+            access = "proxy";
+            url = "http://${ips.freeman}:9090";
+            isDefault = true;
+            jsonData = {
+              httpMethod = "POST";
+              prometheusType = "Prometheus";
+              prometheusVersion = "2.50.1";
+            };
+          }
+        ];
+      };
+    };
+
     settings = {
       users = {
         allow_sign_up = false;
