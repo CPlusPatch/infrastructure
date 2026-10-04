@@ -2,9 +2,10 @@
   pkgs,
   lib,
   config,
+  infra,
   ...
 }: let
-  inherit (import ../lib/ips.nix) ips;
+  inherit (infra) ips;
 in {
   imports = [
     ../lib/secrets.nix

@@ -32,10 +32,6 @@
   ];
   filterOutMods = mods: lib.filterAttrs (name: path: !(lib.elem name (map (x: "mods/${x}") excludedMods))) mods;
 in {
-  imports = [
-    ../modules/backups.nix
-  ];
-
   services.minecraft-servers = {
     enable = true;
     eula = true;

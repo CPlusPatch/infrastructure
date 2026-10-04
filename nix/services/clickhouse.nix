@@ -1,10 +1,6 @@
-{...}: let
-  inherit (import ../lib/ips.nix) ips;
+{infra, ...}: let
+  inherit (infra) ips;
 in {
-  imports = [
-    ../modules/backups.nix
-  ];
-
   services.clickhouse = {
     enable = true;
   };

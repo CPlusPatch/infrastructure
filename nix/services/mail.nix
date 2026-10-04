@@ -1,8 +1,4 @@
 {config, ...}: {
-  imports = [
-    ../modules/backups.nix
-  ];
-
   mailserver = {
     enable = true;
     fqdn = "${config.networking.hostName}.infra.cpluspatch.com";

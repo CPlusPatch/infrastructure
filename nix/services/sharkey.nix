@@ -1,5 +1,9 @@
-{config, ...}: let
-  inherit (import ../lib/ips.nix) ips;
+{
+  config,
+  infra,
+  ...
+}: let
+  inherit (infra) ips;
 in {
   imports = [
     ../lib/secrets.nix

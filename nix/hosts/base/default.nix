@@ -3,10 +3,19 @@
   lib,
   config,
   ...
-}: {
+}: let
+  zfsKernel = import ../../lib/zfs-kernel.nix {
+    inherit lib pkgs config;
+  };
+in {
   imports = [
+    ../../features/hetzner-network.nix
     ../../features/home-manager
+    ../../features/packages.nix
     ../../features/service-fail-notify.nix
+    ../../features/ssh.nix
+    ../../features/tailscale.nix
+    ../../features/zerotier.nix
     ../../modules/backups.nix
   ];
 
@@ -38,7 +47,8 @@
   };
 
   boot = {
-    kernelPackages = lib.mkDefault pkgs.linuxPackages_latest;
+    # Latest kernel that ZFS supports
+    kernelPackages = zfsKernel.getLatestZfsKernelPackage zfsKernel.getZfsCompatibleKernelPackages;
 
     loader = {
       # Don't enable EFI, Hetzner still uses legacy boot
@@ -58,18 +68,6 @@
   };
 
   networking = {
-    # Interfaces are configured per-host with systemd-networkd
-    useNetworkd = true;
-    useDHCP = false;
-
-    # Hetzner recursive resolvers
-    nameservers = [
-      "185.12.64.1"
-      "185.12.64.2"
-      "2a01:4ff:ff00::add:1"
-      "2a01:4ff:ff00::add:2"
-    ];
-
     firewall = {
       enable = true;
       allowedTCPPorts = [
@@ -109,9 +107,6 @@
     };
   };
 
-  # Don't block boot on every interface being configured
-  systemd.network.wait-online.anyInterface = true;
-
   environment = {
     pathsToLink = ["/share/zsh"];
   };
@@ -149,9 +144,6 @@
   };
 
   virtualisation.oci-containers.backend = "docker";
-
-  # Trust the LAN interface
-  networking.firewall.trustedInterfaces = ["enp7s0"];
 
   system = {
     # This value determines the NixOS release from which the default

@@ -1,8 +1,4 @@
 {config, ...}: {
-  imports = [
-    ../modules/backups.nix
-  ];
-
   services.uptime-kuma = {
     enable = true;
     settings = {

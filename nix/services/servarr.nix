@@ -1,8 +1,4 @@
 {
-  imports = [
-    ../modules/backups.nix
-  ];
-
   services.prowlarr = {
     enable = true;
   };

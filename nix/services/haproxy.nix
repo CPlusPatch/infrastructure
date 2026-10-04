@@ -2,12 +2,13 @@
   config,
   lib,
   pkgs,
+  infra,
   ...
 }: let
   # Pad a string, adding a prefix to each line
   padString = prefix: str: lib.concatStringsSep "\n" (lib.map (line: "${prefix}${line}") (lib.splitString "\n" str));
   separateModule = modules: lib.concatStringsSep "\n\n" modules;
-  inherit (import ../lib/ips.nix) ips;
+  inherit (infra) ips;
 in {
   options.modules.haproxy = {
     backends = lib.mkOption {
