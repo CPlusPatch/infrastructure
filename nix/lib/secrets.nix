@@ -1,75 +1,113 @@
-{lib, ...}: let
-  genSecret = key: name: {
-    "${key}/${name}" = {};
+{
+  config,
+  lib,
+  ...
+}: let
+  # Secrets by sops file. Each file is only encrypted for the hosts listed here (see
+  # .sops.yaml), and each host only declares the secrets it can decrypt
+  files = {
+    # Backups
+    common = {
+      hosts = ["eli" "faithplate" "freeman"];
+      secrets = [
+        "backups/passphrase"
+        "s3/backups/access_key_id"
+        "s3/backups/secret_key"
+        "sftp/backup_private_key"
+      ];
+    };
+
+    # Used by services on faithplate and the databases they connect to on freeman
+    faithplate-freeman = {
+      hosts = ["faithplate" "freeman"];
+      secrets = [
+        "clickhouse/plausible_password"
+        "redis/immich"
+        "redis/sharkey"
+        "redis/synapse"
+        "redis/versia"
+      ];
+    };
+
+    faithplate = {
+      hosts = ["faithplate"];
+      secrets = [
+        "disks/fs-01b"
+        "factorio/password"
+        "fitbit/client_id"
+        "fitbit/client_secret"
+        "fitbit/influxdb_password"
+        "grafana/secret_key"
+        "keycloak/grafana"
+        "keycloak/nextcloud"
+        "keycloak/synapse"
+        "keycloak/versia"
+        "nextcloud/secret"
+        "plausible/secret_key_base"
+        "postgresql/grafana"
+        "postgresql/immich"
+        "postgresql/keycloak"
+        "postgresql/mautrix-signal"
+        "postgresql/nextcloud"
+        "postgresql/plausible"
+        "postgresql/sharkey"
+        "postgresql/synapse"
+        "postgresql/vaultwarden"
+        "postgresql/versia"
+        "s3/nextcloud/secret_key"
+        "s3/versia/access_key_id"
+        "s3/versia/secret_key"
+        "synapse/as_token"
+        "synapse/form_secret"
+        "synapse/hs_token"
+        "synapse/macaroon_secret_key"
+        "synapse/pickle_key"
+        "synapse/registration_shared_secret"
+        "synapse/signing_key"
+        "synapse/ssap_secret"
+        "versia/authentication_key"
+        "versia/instance_private_key"
+        "versia/instance_public_key"
+        "versia/sonic_password"
+        "versia/vapid_private_key"
+        "versia/vapid_public_key"
+      ];
+    };
+
+    freeman = {
+      hosts = ["freeman"];
+      secrets = ["postgresql/root"];
+    };
+
+    eli = {
+      hosts = ["eli"];
+      secrets = ["minecraft/rcon_password"];
+    };
   };
+
+  hostFiles = lib.filterAttrs (name: file: lib.elem config.networking.hostName file.hosts) files;
 in {
-  # Set by the Terraform deployment
   sops = {
-    # If Sops is asking for this, it means that you misspelled or forgot to import
-    # one of the secrets configurations
-    # defaultSopsFile = ../../secrets/docker.yaml;
-    age.keyFile = "/var/lib/secrets/age";
-    defaultSopsFile = ../../secrets/secrets.yaml;
-    secrets = lib.mkMerge [
-      (genSecret "backups" "passphrase")
-      (genSecret "clickhouse" "plausible_password")
-      (genSecret "docker" "ghcr_password")
-      (genSecret "factorio" "password")
-      (genSecret "fitbit" "client_id")
-      (genSecret "fitbit" "client_secret")
-      (genSecret "fitbit" "influxdb_password")
-      (genSecret "disks" "fs-01b")
-      (genSecret "grafana" "secret_key")
-      (genSecret "nextcloud" "secret")
-      (genSecret "plausible" "secret_key_base")
-      (genSecret "postgresql" "root")
-      (genSecret "postgresql" "grafana")
-      (genSecret "postgresql" "immich")
-      (genSecret "postgresql" "keycloak")
-      (genSecret "postgresql" "mautrix-signal")
-      (genSecret "postgresql" "nextcloud")
-      (genSecret "postgresql" "plausible")
-      (genSecret "postgresql" "sharkey")
-      (genSecret "postgresql" "synapse")
-      (genSecret "postgresql" "vaultwarden")
-      (genSecret "postgresql" "versia")
-      (genSecret "prowlarr" "key")
-      (genSecret "synapse" "registration_shared_secret")
-      (genSecret "synapse" "macaroon_secret_key")
-      (genSecret "synapse" "form_secret")
-      (genSecret "synapse" "ssap_secret")
-      (genSecret "synapse" "signing_key")
-      (genSecret "synapse" "hs_token")
-      (genSecret "synapse" "as_token")
-      (genSecret "synapse" "pickle_key")
-      (genSecret "versia" "sonic_password")
-      (genSecret "versia" "instance_public_key")
-      (genSecret "versia" "instance_private_key")
-      (genSecret "versia" "vapid_public_key")
-      (genSecret "versia" "vapid_private_key")
-      (genSecret "versia" "authentication_key")
-      (genSecret "keycloak" "grafana")
-      (genSecret "keycloak" "nextcloud")
-      (genSecret "keycloak" "synapse")
-      (genSecret "keycloak" "versia")
-      (genSecret "minecraft" "rcon_password")
-      (genSecret "redis" "immich")
-      (genSecret "redis" "sharkey")
-      (genSecret "redis" "synapse")
-      (genSecret "redis" "versia")
-      (genSecret "s3" "backups/access_key_id")
-      (genSecret "s3" "backups/secret_key")
-      (genSecret "s3" "nextcloud/secret_key")
-      (genSecret "s3" "versia/access_key_id")
-      (genSecret "s3" "versia/secret_key")
-      # Dedicated SSH key for backup SFTP access (restic + pgbackrest → kleiner).
-      # Owner defaults to root (restic); postgresql.nix overrides to pgbackrest.
-      {
-        "sftp/backup_private_key" = {
-          owner = lib.mkDefault "root";
-          mode = lib.mkDefault "0400";
-        };
-      }
-    ];
+    # Hosts decrypt with their SSH host key, converted to an age key
+    age.sshKeyPaths = ["/etc/ssh/ssh_host_ed25519_key"];
+
+    # No defaultSopsFile: a secret that isn't declared above for this host fails to evaluate
+    secrets = lib.mkMerge (
+      lib.mapAttrsToList (name: file:
+        lib.genAttrs file.secrets (secret: {
+          sopsFile = ../../secrets/${name}.yaml;
+        }))
+      hostFiles
+      ++ [
+        # Dedicated SSH key for backup SFTP access (restic + pgbackrest → kleiner).
+        # Owner defaults to root (restic); postgresql.nix overrides to pgbackrest.
+        {
+          "sftp/backup_private_key" = {
+            owner = lib.mkDefault "root";
+            mode = lib.mkDefault "0400";
+          };
+        }
+      ]
+    );
   };
 }

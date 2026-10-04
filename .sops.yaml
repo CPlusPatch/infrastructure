@@ -1,8 +1,46 @@
 # Uses YAML anchors which allows reuse of multiple keys
 # without having to repeat ourselves.
+#
+# Hosts decrypt with their SSH host key. Get a host's age key with:
+# ssh root@<host> cat /etc/ssh/ssh_host_ed25519_key.pub | ssh-to-age
+# After changing recipients, run: sops updatekeys secrets/<file>.yaml
 keys:
   - &admin_jesse age10g05a9d60sanccdlemye55tpnsw4yuezkps0ve4xte6hy37kvgtsr9l55p
+  - &eli age1n745aspf6myaa6alxcy8xjudcf0p6x5wnz27pzs8uy9e4265lqqsglzkgf
+  - &faithplate age19a3jn7m8khnvknzf30486knwqlzvhxxjnsmvxpfmz044rnxy6qps4tzdy3
+  - &freeman age1de3kgt7dy9a45r8dajztrs34lqe8cn9d3nl6v7vt02nlkd8z7pfsz2a3v7
 creation_rules:
+  # Used by every host (backups)
+  - path_regex: secrets/common\.yaml$
+    key_groups:
+      - age:
+          - *admin_jesse
+          - *eli
+          - *faithplate
+          - *freeman
+  # Shared between services on faithplate and the databases on freeman
+  - path_regex: secrets/faithplate-freeman\.yaml$
+    key_groups:
+      - age:
+          - *admin_jesse
+          - *faithplate
+          - *freeman
+  - path_regex: secrets/faithplate\.yaml$
+    key_groups:
+      - age:
+          - *admin_jesse
+          - *faithplate
+  - path_regex: secrets/freeman\.yaml$
+    key_groups:
+      - age:
+          - *admin_jesse
+          - *freeman
+  - path_regex: secrets/eli\.yaml$
+    key_groups:
+      - age:
+          - *admin_jesse
+          - *eli
+  # Any other file is only readable by admins
   - path_regex: secrets/[^/]+\.(yaml|json|env|ini)$
     key_groups:
       - age:
