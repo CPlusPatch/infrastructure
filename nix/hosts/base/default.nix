@@ -7,6 +7,7 @@
   imports = [
     ../../features/home-manager
     ../../features/service-fail-notify.nix
+    ../../modules/backups.nix
   ];
 
   nix = {
@@ -14,6 +15,12 @@
       auto-optimise-store = true;
       experimental-features = ["flakes" "nix-command"];
       allowed-users = ["@wheel"];
+    };
+
+    gc = {
+      automatic = true;
+      dates = "weekly";
+      options = "--delete-older-than 14d";
     };
   };
 
@@ -42,7 +49,6 @@
         # No need to set devices, disko will do it for us
         # since we have an EF02 partition
       };
-      efi.canTouchEfiVariables = true;
     };
 
     tmp = {
@@ -52,7 +58,17 @@
   };
 
   networking = {
-    networkmanager.enable = true;
+    # Interfaces are configured per-host with systemd-networkd
+    useNetworkd = true;
+    useDHCP = false;
+
+    # Hetzner recursive resolvers
+    nameservers = [
+      "185.12.64.1"
+      "185.12.64.2"
+      "2a01:4ff:ff00::add:1"
+      "2a01:4ff:ff00::add:2"
+    ];
 
     firewall = {
       enable = true;
@@ -85,11 +101,6 @@
   # yo dawg, I heard you like RAM, so I put some RAM in your RAM so you can RAM while you RAM
   zramSwap = {enable = false;};
 
-  hardware = {
-    enableRedistributableFirmware = true;
-  };
-
-  security.rtkit.enable = true;
   services = {
     fstrim.enable = true;
     earlyoom = {
@@ -98,9 +109,8 @@
     };
   };
 
-  systemd.settings.Manager = {
-    DefaultTimeoutStopSec = "10s";
-  };
+  # Don't block boot on every interface being configured
+  systemd.network.wait-online.anyInterface = true;
 
   environment = {
     pathsToLink = ["/share/zsh"];
@@ -118,7 +128,7 @@
 
     jessew = {
       isNormalUser = true;
-      extraGroups = ["networkmanager" "wheel"];
+      extraGroups = ["wheel"];
       description = "Jesse Wierzbinski";
       shell = pkgs.fish;
       openssh.authorizedKeys.keys = [
@@ -139,12 +149,6 @@
   };
 
   virtualisation.oci-containers.backend = "docker";
-
-  # Ban all the things!
-  services.fail2ban = {
-    enable = true;
-    maxretry = 5;
-  };
 
   # Trust the LAN interface
   networking.firewall.trustedInterfaces = ["enp7s0"];

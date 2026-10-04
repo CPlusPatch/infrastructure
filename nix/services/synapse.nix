@@ -186,7 +186,7 @@ in {
         command_prefix = "!signal";
         permissions = {
           "*" = "relay";
-          config.services.matrix-synapse.settings.server_name = "relay";
+          "${config.services.matrix-synapse.settings.server_name}" = "relay";
           "@jesse:${config.services.matrix-synapse.settings.server_name}" = "admin";
         };
         relay = {

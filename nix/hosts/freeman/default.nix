@@ -38,6 +38,12 @@ in {
     # Generate with:
     # head -c4 /dev/urandom | od -A none -t x4
     hostId = "24d142e4";
+
+    # IPv6-only host, so the IPv4 Hetzner resolvers are unreachable
+    nameservers = lib.mkForce [
+      "2a01:4ff:ff00::add:1"
+      "2a01:4ff:ff00::add:2"
+    ];
   };
 
   systemd.network = {

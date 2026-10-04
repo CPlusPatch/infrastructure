@@ -28,7 +28,7 @@ with lib; {
           -H "Title: $1 failed" \
           -H "Tags: warning,skull" \
           -T - \
-          https://ntfy.sh/ServiceFailures 2&>1
+          https://ntfy.sh/ServiceFailures 2>&1
 
       '';
     };

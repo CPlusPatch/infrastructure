@@ -38,23 +38,15 @@ in {
         mode tcp
         bind :::25565 v4v6
         default_backend minecraft-eli
-
-      frontend minecraft-eli-voicechat-fe
-        bind :::24454 v4v6
-        default_backend minecraft-eli-voicechat
     '';
 
     # Allow Minecraft traffic
     networking.firewall.allowedTCPPorts = [25565];
-    networking.firewall.allowedUDPPorts = [24454];
 
     modules.haproxy.backends.minecraft-eli = ''
       backend minecraft-eli
         mode tcp
         server minecraft-eli ${ips.eli}:25565
-
-      backend minecraft-eli-voicechat
-        server minecraft-eli-voicechat ${ips.eli}:24454
     '';
 
     modules.haproxy.acls.jellyfin2 = ''
