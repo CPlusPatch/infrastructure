@@ -3,7 +3,8 @@
     enable = true;
   };
 
-  services.backups.jobs.prowlarr.source = "/var/lib/prowlarr";
+  # /var/lib/prowlarr is a symlink (DynamicUser), which restic would store as-is
+  services.backups.jobs.prowlarr.source = "/var/lib/private/prowlarr";
 
   modules.haproxy.vhosts.prowlarr = {
     domain = "prowlarr.lgs.cpluspatch.com";

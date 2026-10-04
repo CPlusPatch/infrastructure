@@ -6,7 +6,8 @@
     };
   };
 
-  services.backups.jobs.uptime_kuma.source = "/var/lib/uptime-kuma";
+  # /var/lib/uptime-kuma is a symlink (DynamicUser), which restic would store as-is
+  services.backups.jobs.uptime_kuma.source = "/var/lib/private/uptime-kuma";
 
   modules.haproxy.vhosts.uptime_kuma = {
     domain = "status.cpluspatch.com";
