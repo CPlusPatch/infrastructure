@@ -57,9 +57,9 @@ in {
         email_attribute_path = "email";
         login_attribute_path = "username";
         name_attribute_path = "full_name";
-        auth_url = "https://id.cpluspatch.com/realms/master/protocol/openid-connect/auth";
-        token_url = "https://id.cpluspatch.com/realms/master/protocol/openid-connect/token";
-        api_url = "https://id.cpluspatch.com/realms/master/protocol/openid-connect/userinfo";
+        auth_url = "https://id.cpluspatch.com/realms/default/protocol/openid-connect/auth";
+        token_url = "https://id.cpluspatch.com/realms/default/protocol/openid-connect/token";
+        api_url = "https://id.cpluspatch.com/realms/default/protocol/openid-connect/userinfo";
       };
     };
   };

@@ -55,26 +55,6 @@ in {
     };
   };
 
-  services.postgresql.settings.listen_addresses = lib.mkForce "*";
-  services.postgresql.authentication = lib.mkForce ''
-    local   all             postgres                                peer
-
-    # TYPE  DATABASE        USER            ADDRESS                 METHOD
-
-    # "local" is for Unix domain socket connections only
-    local   all             all                                     peer
-    # IPv4 local connections:
-    host    all             all             127.0.0.1/32            md5
-    # IPv6 local connections:
-    host    all             all             ::1/128                 md5
-    # Allow replication connections from localhost, by a user with the
-    # replication privilege.
-    local   replication     all                                     peer
-    host    replication     all             127.0.0.1/32            md5
-    host    replication     all             ::1/128                 md5
-    host    all             all             10.0.0.0/8             scram-sha-256
-  '';
-
   # The local database isn't covered by pgbackrest (which only runs on freeman),
   # so dump it daily and let restic pick up the dumps
   services.postgresqlBackup = {

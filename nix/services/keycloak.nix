@@ -29,7 +29,6 @@ in {
       http-port = 6000;
       http-enabled = true;
       proxy-headers = "xforwarded";
-      log-level = "INFO,org.keycloak.protocol.oidc.endpoints:TRACE"; # Debug auth failures
     };
   };
 
