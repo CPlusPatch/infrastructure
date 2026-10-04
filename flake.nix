@@ -1,6 +1,6 @@
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     colmena.url = "github:zhaofengli/colmena";
     disko = {
       url = "github:nix-community/disko";
@@ -33,6 +33,7 @@
   };
 
   outputs = {
+    self,
     nixpkgs,
     disko,
     sops-nix,
@@ -51,6 +52,11 @@
       # Private network addresses, used for inter-host traffic
       ips = builtins.mapAttrs (name: host: host.network_ipv4) hosts;
     };
+
+    forAllSystems = f:
+      nixpkgs.lib.genAttrs ["x86_64-linux" "aarch64-linux" "aarch64-darwin"] (
+        system: f system nixpkgs.legacyPackages.${system}
+      );
   in {
     colmenaHive = colmena.lib.makeHive {
       meta = {
@@ -100,16 +106,20 @@
       ];
     };
 
-    devShells =
-      builtins.mapAttrs (system: pkgs: {
-        default = pkgs.mkShell {
-          buildInputs = [
-            colmena.packages.x86_64-linux.colmena
-            pkgs.nixd
-            pkgs.sops
-          ];
-        };
-      })
-      nixpkgs.legacyPackages;
+    # Builds every host's system closure, e.g. with `nix flake check`
+    checks.x86_64-linux = self.colmenaHive.toplevel;
+
+    devShells = forAllSystems (system: pkgs: {
+      default = pkgs.mkShell {
+        buildInputs = [
+          colmena.packages.${system}.colmena
+          pkgs.alejandra
+          pkgs.nixd
+          pkgs.sops
+        ];
+      };
+    });
+
+    formatter = forAllSystems (system: pkgs: pkgs.alejandra);
   };
 }
