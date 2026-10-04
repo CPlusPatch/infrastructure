@@ -31,7 +31,7 @@ in {
       redis = true;
     };
 
-    package = pkgs.nextcloud34;
+    package = pkgs.nextcloud35;
 
     configureRedis = true;
     enableImagemagick = true;
@@ -45,7 +45,7 @@ in {
 
     extraApps = {
       inherit
-        (pkgs.nextcloud34Packages.apps)
+        (pkgs.nextcloud35Packages.apps)
         mail
         calendar
         contacts
