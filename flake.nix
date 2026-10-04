@@ -130,14 +130,16 @@
       };
     };
 
-    devShells = builtins.mapAttrs (system: pkgs: {
-      default = pkgs.mkShell {
-        buildInputs = [
-          colmena.packages.x86_64-linux.colmena
-          pkgs.nixd
-          pkgs.sops
-        ];
-      };
-    }) nixpkgs.legacyPackages;
+    devShells =
+      builtins.mapAttrs (system: pkgs: {
+        default = pkgs.mkShell {
+          buildInputs = [
+            colmena.packages.x86_64-linux.colmena
+            pkgs.nixd
+            pkgs.sops
+          ];
+        };
+      })
+      nixpkgs.legacyPackages;
   };
 }

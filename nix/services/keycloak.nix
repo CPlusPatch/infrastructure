@@ -1,7 +1,4 @@
-{
-  config,
-  ...
-}: let
+{config, ...}: let
   inherit (import ../lib/ips.nix) ips;
 in {
   imports = [

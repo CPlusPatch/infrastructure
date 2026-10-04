@@ -35,44 +35,51 @@ in {
       '';
     };
 
-    services.restic.backups =
-      let
-        commonSettings = name: job: {
-          paths = [job.source];
-          initialize = true;
-          timerConfig = {
-            OnCalendar = "daily";
-            RandomizedDelaySec = "3h";
-            Persistent = true;
-          };
-          pruneOpts = [
-            "--keep-daily 7"
-            "--keep-weekly 5"
-            "--keep-monthly 12"
-          ];
-          extraBackupArgs = [
-            "--compression=auto"
-            "--cleanup-cache"
-          ];
+    services.restic.backups = let
+      commonSettings = name: job: {
+        paths = [job.source];
+        initialize = true;
+        timerConfig = {
+          OnCalendar = "daily";
+          RandomizedDelaySec = "3h";
+          Persistent = true;
         };
-        s3Jobs = mapAttrs' (name: job:
-          nameValuePair "s3-${name}" (commonSettings name job // {
-            repository = "s3:${s3Endpoint}/${bucket}/directories/${name}";
-            environmentFile = config.sops.templates."restic-env".path;
-            initialize = true;
-          })
-        ) cfg.jobs;
-        sftpJobs = mapAttrs' (name: job:
-          nameValuePair "sftp-${name}" (commonSettings name job // {
-            repository = "sftp:jessew@kleiner:/mnt/HDD1/Backups/Infra/${name}";
-            environmentFile = config.sops.templates."restic-env".path;
-            initialize = true;
-            extraOptions = [
-              "sftp.args='-i ${config.sops.secrets."sftp/backup_private_key".path}'"
-            ];
-          })
-        ) cfg.jobs;
-      in
-        s3Jobs // sftpJobs;
+        pruneOpts = [
+          "--keep-daily 7"
+          "--keep-weekly 5"
+          "--keep-monthly 12"
+        ];
+        extraBackupArgs = [
+          "--compression=auto"
+          "--cleanup-cache"
+        ];
+      };
+      s3Jobs =
+        mapAttrs' (
+          name: job:
+            nameValuePair "s3-${name}" (commonSettings name job
+              // {
+                repository = "s3:${s3Endpoint}/${bucket}/directories/${name}";
+                environmentFile = config.sops.templates."restic-env".path;
+                initialize = true;
+              })
+        )
+        cfg.jobs;
+      sftpJobs =
+        mapAttrs' (
+          name: job:
+            nameValuePair "sftp-${name}" (commonSettings name job
+              // {
+                repository = "sftp:jessew@kleiner:/mnt/HDD1/Backups/Infra/${name}";
+                environmentFile = config.sops.templates."restic-env".path;
+                initialize = true;
+                extraOptions = [
+                  "sftp.args='-i ${config.sops.secrets."sftp/backup_private_key".path}'"
+                ];
+              })
+        )
+        cfg.jobs;
+    in
+      s3Jobs // sftpJobs;
   };
 }

@@ -1,3 +1,6 @@
 {
-	"nix.formatterPath": "alejandra"
+    "nix.formatterPath": "alejandra",
+    "nixEnvSelector.nixFile": "${workspaceFolder}/flake.nix",
+    "nixEnvSelector.useFlakes": true,
+    "nixEnvSelector.flakeShell": "default"
 }

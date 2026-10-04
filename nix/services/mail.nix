@@ -81,7 +81,7 @@
       server rspamd unix@/run/rspamd/worker-controller.sock
   '';
 
-  security.acme.certs."rspamd.cpluspatch.com" = {};
+  #security.acme.certs."rspamd.cpluspatch.com" = {};
 
   services.backups.jobs = {
     mail.source = config.mailserver.storage.path;

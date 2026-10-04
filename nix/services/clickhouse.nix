@@ -70,7 +70,7 @@ in {
             https://clickhouse.com/docs/en/operations/server-configuration-parameters/settings#mark_cache_size -->
             <mark_cache_size>524288000</mark_cache_size>
 
-            <profile>
+            <profiles>
                 <default>
                     <!-- https://clickhouse.com/docs/en/operations/settings/settings#max_threads -->
                     <max_threads>1</max_threads>
@@ -85,7 +85,7 @@ in {
                     https://clickhouse.com/docs/en/operations/settings/settings#output_format_parallel_formatting -->
                     <output_format_parallel_formatting>0</output_format_parallel_formatting>
                 </default>
-            </profile>
+            </profiles>
         </clickhouse>
       '';
     };
