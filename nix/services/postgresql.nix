@@ -120,8 +120,8 @@ in {
       host  all       all      ::1/128          scram-sha-256
       # LAN network
       host  all       all      10.0.0.0/8        scram-sha-256
-      host  all       all      10.147.19.243/32  scram-sha-256
-      host  all       all      100.0.0.0/8  scram-sha-256
+      # Tailscale
+      host  all       all      100.64.0.0/10     scram-sha-256
     '';
 
     settings = {
@@ -132,8 +132,8 @@ in {
       archive_mode = "on";
       archive_timeout = "300";
 
-      # 10.147.19.243 is the zerotier IP; 100.111.130.114 is the tailscale IP
-      listen_addresses = lib.mkForce "localhost,${ips.freeman},10.147.19.243,100.111.130.114";
+      # 100.111.130.114 is the tailscale IP
+      listen_addresses = lib.mkForce "localhost,${ips.freeman},100.111.130.114";
 
       # pgtune: 4 GB RAM, 2 CPUs, 100 connections, web workload, SSD
       max_connections = "100";
@@ -151,6 +151,9 @@ in {
       max_wal_size = "4GB";
     };
   };
+
+  # PostgreSQL starts before tailscale0 has its address, and fails to bind it otherwise
+  boot.kernel.sysctl."net.ipv4.ip_nonlocal_bind" = 1;
 
   systemd.tmpfiles.rules = [
     # Lock directory shared between the pgbackrest (backup) and postgres (archive-push) users.

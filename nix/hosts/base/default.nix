@@ -15,7 +15,6 @@ in {
     ../../features/service-fail-notify.nix
     ../../features/ssh.nix
     ../../features/tailscale.nix
-    ../../features/zerotier.nix
     ../../modules/backups.nix
   ];
 
