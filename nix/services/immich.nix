@@ -74,6 +74,16 @@ in {
     host    all             all             10.0.0.0/8             scram-sha-256
   '';
 
+  # The local database isn't covered by pgbackrest (which only runs on freeman),
+  # so dump it daily and let restic pick up the dumps
+  services.postgresqlBackup = {
+    enable = true;
+    databases = [config.services.immich.database.name];
+    compression = "zstd";
+  };
+
+  services.backups.jobs.immich-db.source = config.services.postgresqlBackup.location;
+
   # Add CAP_FOWNER to immich to prevent permission errors
   # with a CIFS drive mounted by the user jessew
   systemd.services.immich-server.serviceConfig = {

@@ -155,5 +155,5 @@ in {
     };
   };
 
-  services.backups.jobs.minecraft.source = "/srv/minecraft/jerver2";
+  services.backups.jobs.minecraft.source = "/srv/minecraft";
 }

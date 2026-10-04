@@ -7,6 +7,8 @@ with lib; let
   cfg = config.services.backups;
   s3Endpoint = "https://eu-central.object.fastlystorage.app";
   bucket = "backups";
+  zfsDataset = "zroot/root";
+  zfs = "${config.boot.zfs.package}/bin/zfs";
 in {
   imports = [
     ../lib/secrets.nix
@@ -18,6 +20,16 @@ in {
         options = {
           source = mkOption {
             type = types.str;
+          };
+
+          zfsSnapshot = mkOption {
+            type = types.bool;
+            default = true;
+            description = ''
+              Back up from an atomic ZFS snapshot of ${zfsDataset} instead of the live
+              directory, so databases and game saves are captured in a consistent state.
+              The source must live on ${zfsDataset} (mounted at /).
+            '';
           };
         };
       });
@@ -36,43 +48,64 @@ in {
     };
 
     services.restic.backups = let
-      commonSettings = name: job: {
-        paths = [job.source];
-        initialize = true;
-        timerConfig = {
-          OnCalendar = "daily";
-          RandomizedDelaySec = "3h";
-          Persistent = true;
+      # `name` is the full restic job name (s3-*, sftp-*), so each job gets its own
+      # snapshot and the two targets can run concurrently
+      commonSettings = name: job: let
+        snapshot = "${zfsDataset}@restic-${name}";
+      in
+        {
+          paths = [
+            (
+              if job.zfsSnapshot
+              then "/.zfs/snapshot/restic-${name}${job.source}"
+              else job.source
+            )
+          ];
+          initialize = true;
+          environmentFile = config.sops.templates."restic-env".path;
+          timerConfig = {
+            OnCalendar = "daily";
+            RandomizedDelaySec = "3h";
+            Persistent = true;
+          };
+          pruneOpts = [
+            "--keep-daily 7"
+            "--keep-weekly 5"
+            "--keep-monthly 12"
+          ];
+          # Verify repository integrity, reading a random sample of pack data each run
+          checkOpts = [
+            "--read-data-subset=2%"
+          ];
+          extraBackupArgs = [
+            "--compression=auto"
+            "--cleanup-cache"
+          ];
+        }
+        // optionalAttrs job.zfsSnapshot {
+          backupPrepareCommand = ''
+            ${zfs} destroy ${snapshot} 2>/dev/null || true
+            ${zfs} snapshot ${snapshot}
+          '';
+          backupCleanupCommand = ''
+            ${zfs} destroy ${snapshot}
+          '';
         };
-        pruneOpts = [
-          "--keep-daily 7"
-          "--keep-weekly 5"
-          "--keep-monthly 12"
-        ];
-        extraBackupArgs = [
-          "--compression=auto"
-          "--cleanup-cache"
-        ];
-      };
       s3Jobs =
         mapAttrs' (
           name: job:
-            nameValuePair "s3-${name}" (commonSettings name job
+            nameValuePair "s3-${name}" (commonSettings "s3-${name}" job
               // {
                 repository = "s3:${s3Endpoint}/${bucket}/directories/${name}";
-                environmentFile = config.sops.templates."restic-env".path;
-                initialize = true;
               })
         )
         cfg.jobs;
       sftpJobs =
         mapAttrs' (
           name: job:
-            nameValuePair "sftp-${name}" (commonSettings name job
+            nameValuePair "sftp-${name}" (commonSettings "sftp-${name}" job
               // {
                 repository = "sftp:jessew@kleiner:/mnt/HDD1/Backups/Infra/${name}";
-                environmentFile = config.sops.templates."restic-env".path;
-                initialize = true;
                 extraOptions = [
                   "sftp.args='-i ${config.sops.secrets."sftp/backup_private_key".path}'"
                 ];

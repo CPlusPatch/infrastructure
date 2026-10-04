@@ -69,8 +69,16 @@ in {
         user = "postgres";
       };
 
+      # pgbackrest backs up to a single repo per run (repo1 unless --repo is given),
+      # so each repo needs its own job. Repos are numbered alphabetically: fastly=1, kleiner=2
       jobs.full = {
         schedule = "daily";
+        type = "full";
+      };
+
+      # Offset from the fastly job, as only one backup per stanza can run at a time
+      jobs.full-kleiner = {
+        schedule = "*-*-* 03:00:00";
         type = "full";
       };
 
@@ -87,9 +95,14 @@ in {
     };
   };
 
-  # Inject S3 credentials into the scheduled backup service (runs as pgbackrest user).
+  # Inject S3 credentials into the scheduled backup services (run as pgbackrest user).
   systemd.services.pgbackrest-main-full.serviceConfig.EnvironmentFile =
     config.sops.templates."pgbackrest-s3-env".path;
+
+  systemd.services.pgbackrest-main-full-kleiner.serviceConfig = {
+    EnvironmentFile = config.sops.templates."pgbackrest-s3-env".path;
+    ExecStart = lib.mkForce "${lib.getExe pkgs.pgbackrest} --stanza=main --repo=2 backup --type=full";
+  };
 
   # Inject S3 credentials into the postgresql service for archive-push via archive_command.
   systemd.services.postgresql.serviceConfig.EnvironmentFile =
