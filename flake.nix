@@ -1,15 +1,6 @@
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-    lix = {
-      url = "https://git.lix.systems/lix-project/lix/archive/main.tar.gz";
-      flake = false;
-    };
-    lix-module = {
-      url = "https://git.lix.systems/lix-project/nixos-module/archive/main.tar.gz";
-      inputs.nixpkgs.follows = "nixpkgs";
-      inputs.lix.follows = "lix";
-    };
     colmena.url = "github:zhaofengli/colmena";
     disko = {
       url = "github:nix-community/disko";
@@ -43,7 +34,6 @@
 
   outputs = {
     nixpkgs,
-    lix-module,
     disko,
     sops-nix,
     simple-nixos-mailserver,
@@ -85,7 +75,6 @@
         networking.hostName = name;
 
         imports = [
-          lix-module.nixosModules.lixFromNixpkgs
           disko.nixosModules.disko
           sops-nix.nixosModules.sops
           home-manager.nixosModules.home-manager

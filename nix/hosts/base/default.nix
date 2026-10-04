@@ -20,6 +20,9 @@ in {
   ];
 
   nix = {
+    # nixpkgs' native Lix support is enabled by using it as the Nix package
+    package = pkgs.lix;
+
     settings = {
       auto-optimise-store = true;
       experimental-features = ["flakes" "nix-command"];
