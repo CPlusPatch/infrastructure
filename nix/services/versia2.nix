@@ -1,10 +1,25 @@
 {
   pkgs,
   config,
+  lib,
   infra,
   ...
 }: let
   inherit (infra) ips;
+  cfg = config.services.versia-server.config;
+
+  # Versia hangs instead of exiting when its databases are unreachable at startup
+  # (e.g. while freeman reboots), so wait for them before starting
+  waitForDatabases = pkgs.writeShellScript "versia-wait-for-databases" ''
+    for target in ${cfg.postgres.host}/${toString cfg.postgres.port} ${cfg.redis.queue.host}/${toString cfg.redis.queue.port}; do
+      for attempt in {1..30}; do
+        (exec 3<>/dev/tcp/$target) 2>/dev/null && continue 2
+        ${pkgs.coreutils}/bin/sleep 2
+      done
+      echo "$target is unreachable" >&2
+      exit 1
+    done
+  '';
 in {
   imports = [
     ../lib/secrets.nix
@@ -278,6 +293,17 @@ in {
       };
     };
   };
+
+  systemd.services = lib.genAttrs ["versia-server-api-main" "versia-server-worker-1"] (name: {
+    wants = ["network-online.target"];
+    after = ["network-online.target"];
+    # Keep retrying while the databases are down
+    startLimitIntervalSec = 0;
+    serviceConfig = {
+      ExecStartPre = waitForDatabases;
+      RestartSec = "10s";
+    };
+  });
 
   modules.haproxy.acls.versia2 = ''
     acl is_versia2 hdr_sub(host) vs.cpluspatch.com
