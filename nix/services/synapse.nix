@@ -173,7 +173,7 @@ in {
           displayname = "Signal Bridge Bot";
           username = "signalbot";
         };
-        hostname = "[::]";
+        hostname = "127.0.0.1";
         hs_token = "$MAUTRIX_SIGNAL_BRIDGE_HS_TOKEN";
         as_token = "$MAUTRIX_SIGNAL_BRIDGE_AS_TOKEN";
         id = "signal";

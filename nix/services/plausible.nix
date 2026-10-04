@@ -13,6 +13,7 @@ in {
   sops.templates."plausible.env" = {
     content = ''
       DATABASE_URL=postgres://plausible:${config.sops.placeholder."postgresql/plausible"}@${ips.freeman}:5432/plausible
+      CLICKHOUSE_DATABASE_URL=http://plausible:${config.sops.placeholder."clickhouse/plausible_password"}@${ips.freeman}:8123/plausible_events_db
     '';
   };
 
@@ -32,17 +33,20 @@ in {
       };
 
       clickhouse = {
+        # The real URL, with credentials, is set in plausible.env
         url = "http://${ips.freeman}:8123/plausible_events_db";
         setup = false;
       };
     };
   };
 
-  # HACK: Inject the database URL, because the service config doesn't have an option for it.
+  # HACK: Inject the database URLs, because the service config doesn't have an option for them.
   # SECRET_KEY_BASE is already loaded by the module from server.secretKeybaseFile
   systemd.services.plausible = {
     # Remove the default NixOS DATABASE_URL that just points to a local socket for some reason
     environment.DATABASE_URL = lib.mkForce null;
+    # Credentials can't go in the Nix store
+    environment.CLICKHOUSE_DATABASE_URL = lib.mkForce null;
     serviceConfig = {
       EnvironmentFile = config.sops.templates."plausible.env".path;
     };

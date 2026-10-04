@@ -12,6 +12,7 @@ in {
     defaultSopsFile = ../../secrets/secrets.yaml;
     secrets = lib.mkMerge [
       (genSecret "backups" "passphrase")
+      (genSecret "clickhouse" "plausible_password")
       (genSecret "docker" "ghcr_password")
       (genSecret "factorio" "password")
       (genSecret "fitbit" "client_id")

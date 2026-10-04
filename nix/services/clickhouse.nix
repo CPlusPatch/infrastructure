@@ -1,8 +1,43 @@
-{infra, ...}: let
+{
+  config,
+  infra,
+  ...
+}: let
   inherit (infra) ips;
 in {
+  imports = [
+    ../lib/secrets.nix
+  ];
+
   services.clickhouse = {
     enable = true;
+  };
+
+  # Plausible gets its own password-protected user, and the passwordless default user
+  # is only usable locally (e.g. clickhouse-client on freeman)
+  sops.templates."clickhouse-users.xml" = {
+    path = "/etc/clickhouse-server/users.d/users.xml";
+    owner = "clickhouse";
+    content = ''
+      <clickhouse>
+        <users>
+          <default>
+            <networks replace="replace">
+              <ip>::1</ip>
+              <ip>127.0.0.1</ip>
+            </networks>
+          </default>
+          <plausible>
+            <password>${config.sops.placeholder."clickhouse/plausible_password"}</password>
+            <networks>
+              <ip>${ips.faithplate}</ip>
+            </networks>
+            <profile>default</profile>
+            <quota>default</quota>
+          </plausible>
+        </users>
+      </clickhouse>
+    '';
   };
 
   environment.etc = {
