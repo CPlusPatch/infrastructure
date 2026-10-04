@@ -63,7 +63,14 @@ in {
     compression = "zstd";
   };
 
-  services.backups.jobs.immich-db.source = config.services.postgresqlBackup.location;
+  services.backups.jobs = {
+    immich-db.source = config.services.postgresqlBackup.location;
+    # Photos are only stored on the storage box otherwise. It's a CIFS mount, not ZFS
+    immich-media = {
+      source = config.services.immich.mediaLocation;
+      zfsSnapshot = false;
+    };
+  };
 
   # Add CAP_FOWNER to immich to prevent permission errors
   # with a CIFS drive mounted by the user jessew
