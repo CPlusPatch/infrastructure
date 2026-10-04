@@ -26,14 +26,8 @@
 
   # Records without a certificate on this host
   modules.dns.extraDomains = [
-    "api.sl.cpluspatch.dev"
-    "dl.lgs.cpluspatch.com"
-    "glance.cpluspatch.com"
-    "mail.cpluspatch.com"
+    # Factorio server
     "mindtorio.factorio.cpluspatch.com"
-    "nzb.cpluspatch.com"
-    "proxy.cpluspatch.com"
-    "stream.cpluspatch.com"
   ];
 
   networking = {
