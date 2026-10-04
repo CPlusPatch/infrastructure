@@ -51,7 +51,6 @@ in {
       (genSecret "keycloak" "nextcloud")
       (genSecret "keycloak" "synapse")
       (genSecret "keycloak" "versia")
-      (genSecret "redis" "bitchbot")
       (genSecret "redis" "immich")
       (genSecret "redis" "sharkey")
       (genSecret "redis" "synapse")

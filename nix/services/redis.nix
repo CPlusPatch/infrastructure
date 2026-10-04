@@ -27,13 +27,6 @@ in {
         requirePassFile = config.sops.secrets."redis/immich".path;
       };
 
-      bitchbot = {
-        enable = true;
-        port = 6382;
-        bind = ips.freeman;
-        requirePassFile = config.sops.secrets."redis/bitchbot".path;
-      };
-
       versia = {
         enable = true;
         port = 6383;
@@ -53,7 +46,6 @@ in {
   services.backups.jobs = {
     redis-sharkey.source = "/var/lib/redis-sharkey";
     redis-immich.source = "/var/lib/redis-immich";
-    redis-bitchbot.source = "/var/lib/redis-bitchbot";
     redis-versia.source = "/var/lib/redis-versia";
     redis-synapse.source = "/var/lib/redis-synapse";
   };

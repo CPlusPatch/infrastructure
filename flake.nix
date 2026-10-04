@@ -27,10 +27,6 @@
       url = "gitlab:simple-nixos-mailserver/nixos-mailserver";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    bitchbot = {
-      url = "github:CPlusPatch/jesses-vengeance";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
     nix-minecraft = {
       url = "github:Infinidoge/nix-minecraft";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -51,7 +47,6 @@
     disko,
     sops-nix,
     simple-nixos-mailserver,
-    bitchbot,
     versia-server,
     home-manager,
     nix-minecraft,
@@ -75,7 +70,6 @@
             nix-minecraft.overlay
             versia-server.overlays.default
             versia-fe.overlays.default
-            bitchbot.overlays.default
           ];
         };
 
