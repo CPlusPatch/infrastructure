@@ -5,10 +5,25 @@
   infra,
   ...
 }: let
-  # Pad a string, adding a prefix to each line
-  padString = prefix: str: lib.concatStringsSep "\n" (lib.map (line: "${prefix}${line}") (lib.splitString "\n" str));
   separateModule = modules: lib.concatStringsSep "\n\n" modules;
   inherit (infra) ips;
+  cfg = config.modules.haproxy;
+
+  # PC at home, reached over Tailscale
+  kleiner = "100.113.206.105";
+
+  # Service rules for the https frontend, as a list of lines
+  aclLines = lib.filter (line: lib.trim line != "") (
+    lib.concatMap (lib.splitString "\n") (lib.attrValues cfg.acls)
+  );
+  directives = ["acl " "http-request " "use_backend "];
+  # HAProxy evaluates all http-request rules before any use_backend rule whatever their
+  # order, so grouping lines by directive keeps behaviour and avoids ordering warnings
+  aclLinesOf = directive:
+    lib.concatMapStringsSep "\n" (line: "  ${line}") (
+      lib.filter (lib.hasPrefix directive) (map lib.trim aclLines)
+    );
+  unsupportedAclLines = lib.filter (line: !(lib.any (d: lib.hasPrefix d (lib.trim line)) directives)) aclLines;
 in {
   options.modules.haproxy = {
     backends = lib.mkOption {
@@ -28,8 +43,8 @@ in {
 
     enableConfigCheck = lib.mkOption {
       type = lib.types.bool;
-      default = false;
-      description = "Enable syntax checking of the HAProxy configuration";
+      default = true;
+      description = "Check the HAProxy configuration at build time, failing on errors and warnings";
     };
   };
 
@@ -57,7 +72,7 @@ in {
 
     modules.haproxy.backends.jellyfin2 = ''
       backend jellyfin2
-        server jellyfin2 100.113.206.105:8096
+        server jellyfin2 ${kleiner}:8096
     '';
 
     modules.haproxy.acls.seer = ''
@@ -67,7 +82,7 @@ in {
 
     modules.haproxy.backends.seer = ''
       backend seer
-        server seer 100.113.206.105:5055
+        server seer ${kleiner}:5055
     '';
 
     modules.haproxy.acls.radarr = ''
@@ -77,7 +92,7 @@ in {
 
     modules.haproxy.backends.radarr = ''
       backend radarr
-        server radarr 100.113.206.105:7878
+        server radarr ${kleiner}:7878
     '';
 
     modules.haproxy.acls.sonarr = ''
@@ -87,7 +102,7 @@ in {
 
     modules.haproxy.backends.sonarr = ''
       backend sonarr
-        server sonarr 100.113.206.105:8989
+        server sonarr ${kleiner}:8989
     '';
 
     security.acme.certs."mc.cpluspatch.com" = {};
@@ -106,10 +121,33 @@ in {
       text = "${lib.concatStringsSep "\n" (lib.mapAttrsToList (name: value: "${value.directory}/full.pem") config.security.acme.certs)}\n";
     };
 
-    system.checks = lib.mkIf config.modules.haproxy.enableConfigCheck [
-      (pkgs.runCommand "check-haproxy-syntax" {} ''
-        ${pkgs.haproxy}/bin/haproxy -c -f ${config.environment.etc."haproxy.cfg".source} 2> $out || (cat $out; exit 1)
-      '')
+    assertions = [
+      {
+        assertion = unsupportedAclLines == [];
+        message = "modules.haproxy.acls only supports acl, http-request and use_backend lines, got: ${lib.concatStringsSep ", " unsupportedAclLines}";
+      }
+    ];
+
+    system.checks = lib.mkIf cfg.enableConfigCheck [
+      (pkgs.runCommand "check-haproxy-config" {
+          nativeBuildInputs = [config.services.haproxy.package pkgs.openssl];
+        } ''
+          # The real certificates only exist at runtime, so check against a self-signed one
+          openssl req -x509 -newkey ec -pkeyopt ec_paramgen_curve:prime256v1 -nodes \
+            -subj /CN=check -days 1 -keyout key.pem -out cert.pem 2>/dev/null
+          cat cert.pem key.pem > full.pem
+          echo "$PWD/full.pem" > certlist
+          sed "s|/etc/tls.certlist|$PWD/certlist|g" ${config.environment.etc."haproxy.cfg".source} > haproxy.cfg
+
+          # -dW makes warnings fatal
+          haproxy -dW -c -f haproxy.cfg > $out 2>&1 || { cat $out; exit 1; }
+        '')
+    ];
+
+    # The module doesn't reload HAProxy when its configuration or certificate list change
+    systemd.services.haproxy.reloadTriggers = [
+      config.environment.etc."haproxy.cfg".source
+      config.environment.etc."tls.certlist".source
     ];
 
     services.haproxy = {
@@ -121,7 +159,6 @@ in {
           daemon
           limited-quic
           maxconn 50000
-          h2-workaround-bogus-websocket-clients # TEMPORARY: REMOVE AFTER HAPROXY 3.3.10
 
           # Don't use SSLv3 or TLSv1.0/1.1
           ssl-default-bind-ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384
@@ -174,14 +211,13 @@ in {
           # Don't redirect ACME requests
           acl is_acme path -i -m beg /.well-known/acme-challenge
           http-request redirect scheme https unless { ssl_fc } || is_acme
-          use_backend acme if is_acme
 
           http-request capture req.hdr(Host) len 20
           log-format "%ci:%cp [%tr] %ft %b/%s %ST %ac/%fc/%bc/%sc/%rc %[capture.req.hdr(0)] %HM %{+Q}HU"
 
           errorfiles errors
 
-        ${separateModule (lib.mapAttrsToList (name: value: padString "  " value) config.modules.haproxy.acls)}
+          use_backend acme if is_acme
 
         frontend https
           mode http
@@ -220,7 +256,6 @@ in {
 
           acl accepted sc_get_gpt(1,0) gt 0
           http-request return status 200 content-type "text/html; charset=UTF-8" hdr "Cache-control" "max-age=0, no-cache" lf-file ${pkgs.cpluspatch-pages}/challenge.html if protected !accepted
-          use_backend challenge if is_challenge_req
 
           errorfiles errors
 
@@ -239,9 +274,15 @@ in {
           http-request redirect code 301 location https://cpluspatch.com/text%[capture.req.uri] if is_text_site
 
           acl is_broken hdr(host) -i broken.cpluspatch.com
-          use_backend broken if is_broken
 
-        ${separateModule (lib.mapAttrsToList (name: value: padString "  " value) config.modules.haproxy.acls)}
+          # Service rules
+        ${aclLinesOf "acl "}
+
+        ${aclLinesOf "http-request "}
+
+          use_backend challenge if is_challenge_req
+          use_backend broken if is_broken
+        ${aclLinesOf "use_backend "}
 
         ${separateModule (lib.mapAttrsToList (name: value: value) config.modules.haproxy.frontends)}
 

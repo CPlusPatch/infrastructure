@@ -52,7 +52,8 @@
       bindSockets = [
         {
           socket = "/run/rspamd/worker-controller.sock";
-          mode = "0666";
+          # Owned by the rspamd user and group, HAProxy reaches it through group membership
+          mode = "0660";
         }
       ];
     };
@@ -77,7 +78,10 @@
       server rspamd unix@/run/rspamd/worker-controller.sock
   '';
 
-  #security.acme.certs."rspamd.cpluspatch.com" = {};
+  # HAProxy needs access to the controller socket
+  users.users.${config.services.haproxy.user}.extraGroups = [config.services.rspamd.group];
+
+  security.acme.certs."rspamd.cpluspatch.com" = {};
 
   services.backups.jobs = {
     mail.source = config.mailserver.storage.path;
