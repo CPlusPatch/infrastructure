@@ -135,18 +135,6 @@ in {
     };
   };
 
-  virtualisation.docker = {
-    enable = true;
-    autoPrune.enable = true;
-    # Enable IPv6 :)
-    daemon.settings = {
-      fixed-cidr-v6 = "fd00::/80";
-      ipv6 = true;
-    };
-  };
-
-  virtualisation.oci-containers.backend = "docker";
-
   system = {
     # This value determines the NixOS release from which the default
     # settings for stateful data, like file locations and database versions

@@ -29,6 +29,18 @@ in {
     '';
   };
 
+  virtualisation.docker = {
+    enable = true;
+    autoPrune.enable = true;
+    # Enable IPv6 :)
+    daemon.settings = {
+      fixed-cidr-v6 = "fd00::/80";
+      ipv6 = true;
+    };
+  };
+
+  virtualisation.oci-containers.backend = "docker";
+
   virtualisation.oci-containers.containers."fitbit-fetch-data" = {
     image = "thisisarpanghosh/fitbit-fetch-data:latest";
     environmentFiles = [
