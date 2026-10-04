@@ -27,9 +27,3 @@ variable "nixos_vars_file" {
   description = "Path to the NixOS vars file that will be generated"
   default     = "nixos-vars.json"
 }
-
-variable "sops_file" {
-  type        = string
-  description = "Path to the SOPS secrets file containing the age key, relative to the module root"
-  default     = "../secrets/age.yaml"
-}

@@ -135,6 +135,7 @@
           pkgs.alejandra
           pkgs.nixd
           pkgs.sops
+          pkgs.ssh-to-age
         ];
       };
     });
