@@ -4,8 +4,8 @@ resource "hcloud_server" "faithplate" {
   server_type              = "cx33"
   location                 = "fsn1"
   ssh_keys                 = [hcloud_ssh_key.jesse.id]
-  delete_protection        = false
-  rebuild_protection       = false
+  delete_protection        = true
+  rebuild_protection       = true
   shutdown_before_deletion = true
 
   public_net {
@@ -24,8 +24,8 @@ resource "hcloud_server" "freeman" {
   server_type              = "cx23"
   location                 = "fsn1"
   ssh_keys                 = [hcloud_ssh_key.jesse.id]
-  delete_protection        = false
-  rebuild_protection       = false
+  delete_protection        = true
+  rebuild_protection       = true
   shutdown_before_deletion = true
 
   public_net {
@@ -44,8 +44,8 @@ resource "hcloud_server" "eli" {
   server_type              = "cx33"
   location                 = "fsn1"
   ssh_keys                 = [hcloud_ssh_key.jesse.id]
-  delete_protection        = false
-  rebuild_protection       = false
+  delete_protection        = true
+  rebuild_protection       = true
   shutdown_before_deletion = true
 
   public_net {
