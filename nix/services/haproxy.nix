@@ -166,7 +166,7 @@ in {
           stats enable
           stats uri /
           stats refresh 10s
-          stats auth admin:admin
+          stats http-request auth unless { http_auth(credentials) }
 
         frontend http
           mode http

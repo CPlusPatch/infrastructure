@@ -1,4 +1,5 @@
 {
+  config,
   pkgs,
   inputs,
   lib,
@@ -32,9 +33,19 @@
   ];
   filterOutMods = mods: lib.filterAttrs (name: path: !(lib.elem name (map (x: "mods/${x}") excludedMods))) mods;
 in {
+  # Substituted into server files (@VARNAME@) by nix-minecraft
+  sops.templates."minecraft.env" = {
+    content = ''
+      RCON_PASSWORD=${config.sops.placeholder."minecraft/rcon_password"}
+    '';
+    owner = config.services.minecraft-servers.user;
+  };
+
   services.minecraft-servers = {
     enable = true;
     eula = true;
+
+    environmentFile = config.sops.templates."minecraft.env".path;
 
     managementSystem.systemd-socket.enable = true;
 
@@ -67,7 +78,7 @@ in {
         white-list = true;
         enable-rcon = true;
         "rcon.port" = 10003;
-        "rcon.password" = "test";
+        "rcon.password" = "@RCON_PASSWORD@";
         broadcast-rcon-to-ops = true;
         pause-when-empty-seconds = 0;
         enable-command-block = true;
@@ -104,7 +115,7 @@ in {
         level-seed = 6812872647578521762;
         enable-rcon = true;
         "rcon.port" = 10000;
-        "rcon.password" = "test";
+        "rcon.password" = "@RCON_PASSWORD@";
         broadcast-rcon-to-ops = true;
         pause-when-empty-seconds = 0;
         enable-command-block = true;
@@ -140,7 +151,7 @@ in {
         white-list = true;
         enable-rcon = true;
         "rcon.port" = 10001;
-        "rcon.password" = "test";
+        "rcon.password" = "@RCON_PASSWORD@";
         broadcast-rcon-to-ops = true;
         pause-when-empty-seconds = 0;
         enable-command-block = true;

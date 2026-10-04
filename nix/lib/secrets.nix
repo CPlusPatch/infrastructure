@@ -51,6 +51,7 @@ in {
       (genSecret "keycloak" "nextcloud")
       (genSecret "keycloak" "synapse")
       (genSecret "keycloak" "versia")
+      (genSecret "minecraft" "rcon_password")
       (genSecret "redis" "immich")
       (genSecret "redis" "sharkey")
       (genSecret "redis" "synapse")
