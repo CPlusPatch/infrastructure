@@ -329,6 +329,19 @@ in {
       # VectorChord has to be loaded at startup
       shared_preload_libraries = ["vchord"];
 
+      # ZFS never writes part of a record, so pages can't be torn and full-page images in the
+      # WAL (~98% of it) are useless. Requires a recordsize of at least 8K (zroot/postgresql's is
+      # 32K), and PostgreSQL still writes them during backups. Being copy-on-write, ZFS also
+      # gains nothing from zero-filled or recycled WAL segments
+      full_page_writes = false;
+      wal_init_zero = false;
+      wal_recycle = false;
+
+      # Vacuum after 5% of a table changes rather than 20%, which for Misskey's notes means
+      # 400k instead of 1.5M dead rows
+      autovacuum_vacuum_scale_factor = 0.05;
+      autovacuum_vacuum_insert_scale_factor = 0.05;
+
       # Override stanza name to main for legacy compat with old backup scripts
       archive_command = lib.mkForce ''${lib.getExe pkgs.pgbackrest} --stanza=main archive-push "%p"'';
       archive_mode = "on";
