@@ -131,8 +131,9 @@
       archive_mode = "on";
       archive_timeout = "300";
 
-      # 100.111.130.114 is the tailscale IP
-      listen_addresses = lib.mkForce "localhost,${infra.ips.freeman},100.111.130.114";
+      # Every address, including Tailscale's whenever it comes up. The firewall only lets in
+      # the private network and Tailscale, and the rules above only accept those too
+      listen_addresses = lib.mkForce "*";
 
       # pgtune: 4 GB RAM, 2 CPUs, 100 connections, web workload, SSD
       max_connections = "100";
@@ -150,9 +151,6 @@
       max_wal_size = "4GB";
     };
   };
-
-  # PostgreSQL starts before tailscale0 has its address, and fails to bind it otherwise
-  boot.kernel.sysctl."net.ipv4.ip_nonlocal_bind" = 1;
 
   systemd.tmpfiles.rules = [
     # Lock directory shared between the pgbackrest (backup) and postgres (archive-push) users.
