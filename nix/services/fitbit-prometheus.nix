@@ -24,22 +24,19 @@
     '';
   };
 
-  virtualisation.docker = {
+  # Podman runs containers without a daemon, unlike Docker's dockerd and containerd
+  virtualisation.podman = {
     enable = true;
     autoPrune.enable = true;
-    # Enable IPv6 :)
-    daemon.settings = {
-      fixed-cidr-v6 = "fd00::/80";
-      ipv6 = true;
-    };
   };
 
   virtualisation.oci-containers = {
-    backend = "docker";
+    backend = "podman";
 
     containers.fitbit-fetch-data = {
-      # Pinned, so updates only happen on purpose. The tag was "latest"
-      image = "thisisarpanghosh/fitbit-fetch-data@sha256:893ba4fe1ace9a97d6a85ca5ae14d7dcb11b7e53c0edff5958e344b9a5706ccf";
+      # Pinned, so updates only happen on purpose. The tag was "latest". Podman needs the
+      # registry, it doesn't assume Docker Hub
+      image = "docker.io/thisisarpanghosh/fitbit-fetch-data@sha256:893ba4fe1ace9a97d6a85ca5ae14d7dcb11b7e53c0edff5958e344b9a5706ccf";
       environmentFiles = [config.sops.templates.fitbit-fetch-data-env.path];
       volumes = [
         "/etc/timezone:/etc/timezone:ro"
@@ -51,7 +48,7 @@
   };
 
   # Restart even after a clean exit, as the container is meant to run forever
-  systemd.services.docker-fitbit-fetch-data.serviceConfig = {
+  systemd.services.podman-fitbit-fetch-data.serviceConfig = {
     Restart = lib.mkForce "always";
     RestartSec = "1m";
   };

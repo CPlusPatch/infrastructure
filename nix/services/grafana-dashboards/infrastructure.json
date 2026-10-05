@@ -1218,7 +1218,7 @@
             "type": "prometheus",
             "uid": "eegmzxgejop34d"
           },
-          "expr": "sum by (instance) (rate(node_network_receive_bytes_total{device!~\"lo|veth.*|docker.*|br-.*|tailscale.*|zt.*\",instance=~\"$host\"}[$__rate_interval]))",
+          "expr": "sum by (instance) (rate(node_network_receive_bytes_total{device!~\"lo|veth.*|docker.*|podman.*|br-.*|tailscale.*|zt.*\",instance=~\"$host\"}[$__rate_interval]))",
           "legendFormat": "{{instance}} in",
           "refId": "A"
         },
@@ -1227,7 +1227,7 @@
             "type": "prometheus",
             "uid": "eegmzxgejop34d"
           },
-          "expr": "sum by (instance) (rate(node_network_transmit_bytes_total{device!~\"lo|veth.*|docker.*|br-.*|tailscale.*|zt.*\",instance=~\"$host\"}[$__rate_interval]))",
+          "expr": "sum by (instance) (rate(node_network_transmit_bytes_total{device!~\"lo|veth.*|docker.*|podman.*|br-.*|tailscale.*|zt.*\",instance=~\"$host\"}[$__rate_interval]))",
           "legendFormat": "{{instance}} out",
           "refId": "B"
         }
