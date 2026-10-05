@@ -76,7 +76,10 @@
 
     freeman = {
       hosts = ["freeman"];
-      secrets = ["postgresql/root"];
+      secrets = [
+        "ntfy/topic"
+        "postgresql/root"
+      ];
     };
 
     eli = {

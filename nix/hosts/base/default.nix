@@ -13,7 +13,6 @@ in {
     ../../features/home-manager
     ../../features/monitoring-agent.nix
     ../../features/packages.nix
-    ../../features/service-fail-notify.nix
     ../../features/ssh.nix
     ../../features/tailscale.nix
     ../../modules/backups.nix
