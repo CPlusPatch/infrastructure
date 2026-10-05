@@ -3,8 +3,11 @@
   config,
   lib,
   infra,
+  nodes,
   ...
 }: let
+  # Databases on freeman
+  db = nodes.freeman.config.services;
   cfg = config.services.versia-server.config;
 
   # Versia hangs instead of exiting when its databases are unreachable at startup
@@ -85,15 +88,15 @@ in {
     config = {
       postgres = {
         host = infra.ips.freeman;
-        port = 5432;
+        port = db.postgresql.settings.port;
         username = "versia";
         password = "PATH:${config.sops.secrets."postgresql/versia".path}";
         database = "versia";
       };
       redis = {
         queue = {
-          host = infra.ips.freeman;
-          port = 6383;
+          host = db.redis.servers.versia.bind;
+          port = db.redis.servers.versia.port;
           password = "PATH:${config.sops.secrets."redis/versia".path}";
           database = 0;
         };

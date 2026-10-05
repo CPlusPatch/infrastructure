@@ -2,12 +2,17 @@
   config,
   lib,
   infra,
+  nodes,
   ...
-}: {
+}: let
+  # Databases on freeman
+  db = nodes.freeman.config.services;
+  clickhouseUrl = "${infra.ips.freeman}:${toString db.clickhouse.serverConfig.http_port}/plausible_events_db";
+in {
   sops.templates."plausible.env" = {
     content = ''
-      DATABASE_URL=postgres://plausible:${config.sops.placeholder."postgresql/plausible"}@${infra.ips.freeman}:5432/plausible
-      CLICKHOUSE_DATABASE_URL=http://plausible:${config.sops.placeholder."clickhouse/plausible_password"}@${infra.ips.freeman}:8123/plausible_events_db
+      DATABASE_URL=postgres://plausible:${config.sops.placeholder."postgresql/plausible"}@${infra.ips.freeman}:${toString db.postgresql.settings.port}/plausible
+      CLICKHOUSE_DATABASE_URL=http://plausible:${config.sops.placeholder."clickhouse/plausible_password"}@${clickhouseUrl}
     '';
   };
 
@@ -28,7 +33,7 @@
 
       clickhouse = {
         # The real URL, with credentials, is set in plausible.env
-        url = "http://${infra.ips.freeman}:8123/plausible_events_db";
+        url = "http://${clickhouseUrl}";
         setup = false;
       };
     };

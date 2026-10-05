@@ -2,6 +2,7 @@
   config,
   lib,
   infra,
+  nodes,
   ...
 }: {
   # Make secrets accessible to Synapse
@@ -62,8 +63,8 @@
 
       redis = {
         enabled = true;
-        host = infra.ips.freeman;
-        port = 6384;
+        host = nodes.freeman.config.services.redis.servers.synapse.bind;
+        inherit (nodes.freeman.config.services.redis.servers.synapse) port;
         password_path = config.sops.secrets."redis/synapse".path;
       };
 

@@ -1,7 +1,7 @@
 {
   config,
   lib,
-  infra,
+  nodes,
   ...
 }: {
   sops = {
@@ -44,8 +44,8 @@
 
     redis = {
       enable = false;
-      host = infra.ips.freeman;
-      port = 6381;
+      inherit (nodes.freeman.config.services.redis.servers.immich) port;
+      host = nodes.freeman.config.services.redis.servers.immich.bind;
     };
   };
 

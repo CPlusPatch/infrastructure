@@ -8,10 +8,13 @@
 }: let
   inherit (infra) ips;
   cfg = config.services.prometheus;
+  faithplate = nodes.faithplate.config;
+  minecraftPort = nodes.eli.config.services.minecraft-servers.servers.wiki.serverProperties.server-port;
+  synapseMetricsPort = (lib.findFirst (listener: listener.type == "metrics") null faithplate.services.matrix-synapse.settings.listeners).port;
 
   # HTTPS services on faithplate, from its HAProxy vhosts
   probedDomains = lib.sort lib.lessThan (
-    lib.mapAttrsToList (name: vhost: vhost.domain) nodes.faithplate.config.modules.haproxy.vhosts
+    lib.mapAttrsToList (name: vhost: vhost.domain) faithplate.modules.haproxy.vhosts
     ++ ["matrix.cpluspatch.dev"]
   );
 
@@ -192,7 +195,7 @@ in {
         job_name = "haproxy";
         static_configs = [
           {
-            targets = ["${ips.faithplate}:8899"];
+            targets = ["${ips.faithplate}:${toString faithplate.modules.haproxy.metrics.port}"];
             labels.instance = "faithplate";
           }
         ];
@@ -211,7 +214,7 @@ in {
         job_name = "synapse";
         static_configs = [
           {
-            targets = ["${ips.faithplate}:9000"];
+            targets = ["${ips.faithplate}:${toString synapseMetricsPort}"];
             labels = {
               instance = "cpluspatch.dev";
               job = "master";
@@ -245,7 +248,7 @@ in {
         job_name = "blackbox-tcp";
         metrics_path = "/probe";
         params.module = ["tcp"];
-        static_configs = [{targets = ["mc.cpluspatch.com:25565"];}];
+        static_configs = [{targets = ["mc.cpluspatch.com:${toString minecraftPort}"];}];
         relabel_configs = [
           {
             source_labels = ["__address__"];

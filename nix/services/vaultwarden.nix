@@ -1,11 +1,12 @@
 {
   config,
   infra,
+  nodes,
   ...
 }: {
   sops.templates."vaultwarden.env" = {
     content = ''
-      DATABASE_URL=postgresql://vaultwarden:${config.sops.placeholder."postgresql/vaultwarden"}@${infra.ips.freeman}/vaultwarden
+      DATABASE_URL=postgresql://vaultwarden:${config.sops.placeholder."postgresql/vaultwarden"}@${infra.ips.freeman}:${toString nodes.freeman.config.services.postgresql.settings.port}/vaultwarden
     '';
     owner = "vaultwarden";
   };

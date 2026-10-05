@@ -1,8 +1,12 @@
 {
   config,
   infra,
+  nodes,
   ...
-}: {
+}: let
+  # Databases on freeman
+  db = nodes.freeman.config.services;
+in {
   sops = {
     templates."sharkey.env".content = ''
       MK_CONFIG_DB_PASS=${config.sops.placeholder."postgresql/sharkey"}
@@ -27,14 +31,14 @@
 
       db = {
         host = infra.ips.freeman;
-        port = 5432;
+        port = db.postgresql.settings.port;
         user = "misskey";
         db = "misskey";
       };
 
       redis = {
-        host = infra.ips.freeman;
-        port = 6380;
+        host = db.redis.servers.sharkey.bind;
+        port = db.redis.servers.sharkey.port;
       };
 
       maxNoteLength = 100000;

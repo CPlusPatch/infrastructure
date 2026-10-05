@@ -3,6 +3,7 @@
   lib,
   config,
   infra,
+  nodes,
   ...
 }: {
   sops.templates.fitbit-fetch-data-env = {
@@ -15,7 +16,7 @@
       INFLUXDB_DATABASE=FitbitHealthStats
       INFLUXDB_HOST=${infra.ips.freeman}
       INFLUXDB_PASSWORD=${config.sops.placeholder."fitbit/influxdb_password"}
-      INFLUXDB_PORT=8086
+      INFLUXDB_PORT=${lib.last (lib.splitString ":" nodes.freeman.config.services.influxdb.settings.http.bind-address)}
       INFLUXDB_USERNAME=fitbit
       INFLUXDB_VERSION=1
       LOCAL_TIMEZONE=Automatic

@@ -1,8 +1,12 @@
 {
   config,
   infra,
+  nodes,
   ...
-}: {
+}: let
+  # Databases on freeman
+  db = nodes.freeman.config.services;
+in {
   sops = {
     secrets."grafana/secret_key".owner = "grafana";
     secrets."postgresql/grafana".owner = "grafana";
@@ -41,7 +45,7 @@
             uid = "eegmzxgejop34d";
             type = "prometheus";
             access = "proxy";
-            url = "http://${infra.ips.freeman}:9090";
+            url = "http://${infra.ips.freeman}:${toString db.prometheus.port}";
             isDefault = true;
             jsonData = {
               httpMethod = "POST";
@@ -69,7 +73,7 @@
 
       database = {
         type = "postgres";
-        host = "${infra.ips.freeman}:5432";
+        host = "${infra.ips.freeman}:${toString db.postgresql.settings.port}";
         user = "grafana";
         password = "$__file{${config.sops.secrets."postgresql/grafana".path}}";
         name = "grafana";

@@ -5,6 +5,12 @@
 }: {
   services.clickhouse = {
     enable = true;
+
+    serverConfig = {
+      listen_host = infra.ips.freeman;
+      # The default, set here so plausible.nix can read it
+      http_port = 8123;
+    };
   };
 
   # Plausible gets its own password-protected user, and the passwordless default user
@@ -35,13 +41,6 @@
   };
 
   environment.etc = {
-    "clickhouse-server/config.d/listen.xml" = {
-      text = ''
-        <clickhouse>
-          <listen_host>${infra.ips.freeman}</listen_host>
-        </clickhouse>
-      '';
-    };
     "clickhouse-server/config.d/logs.xml" = {
       text = ''
         <clickhouse>
