@@ -7,7 +7,6 @@
     ../../services/haproxy.nix
     ../../services/keycloak.nix
     ../../services/servarr.nix
-    ../../services/uptime-kuma.nix
     ../../services/synapse.nix
     ../../services/vaultwarden.nix
     ../../services/plausible.nix
