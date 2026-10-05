@@ -11,6 +11,7 @@
 - [Monitoring and alerts](#monitoring-and-alerts)
 - [Backups](#backups)
 - [Restoring](#restoring)
+- [Upgrading PostgreSQL](#upgrading-postgresql)
 - [Minecraft](#minecraft)
 - [Routine maintenance](#routine-maintenance)
 - [Setting up a new host](#setting-up-a-new-host)
@@ -320,6 +321,36 @@ pgbackrest --stanza=main restore --delta --type=time \
 and `systemctl start postgresql` afterwards.
 
 `--delta` reuses files that haven't changed instead of needing an empty data directory. Restoring rolls back every database on `freeman` at once. To recover a single database, restore to a scratch data directory with `--pg1-path`, start a temporary instance on another port, and `pg_dump` what you need from it.
+
+## Upgrading PostgreSQL
+
+Major versions of PostgreSQL on `freeman` change the on-disk format, so they go through `pg_upgrade`, wrapped in `upgrade-postgresql` (`nix/services/postgresql.nix`). Every service on `faithplate` that uses the database is down meanwhile, usually 10 to 20 minutes.
+
+> [!WARNING]
+> Never deploy the new `services.postgresql.package` before running the script: PostgreSQL would start on an empty data directory, and the services would create fresh databases in it.
+
+1. Set `upgradeTo` to the next version and deploy. This only installs the script and the new binaries.
+2. Check the clusters are compatible, without stopping anything: `upgrade-postgresql --check`
+3. Take a full backup to both repositories (`systemctl start pgbackrest-main-full`, then `pgbackrest-main-full-kleiner`).
+4. Stop the services on `faithplate` that use the database, then on `freeman`:
+
+   ```bash
+   systemctl stop postgresql
+   zfs snapshot zroot/root@pre-pg-upgrade      # the old data directory, for rolling back
+   upgrade-postgresql                         # pg_upgrade --link into /var/lib/postgresql/<new>
+   ```
+
+5. Set `services.postgresql.package` to the new version and deploy `freeman`. PostgreSQL starts on the upgraded directory.
+6. Follow what `pg_upgrade` printed at the end (`vacuumdb --all --analyze-in-stages --missing-stats-only`), then move the backups to the new version, with the S3 credentials loaded as in [Restoring](#restoring):
+
+   ```bash
+   pgbackrest --stanza=main stanza-upgrade
+   systemctl start pgbackrest-main-full pgbackrest-main-full-kleiner
+   ```
+
+7. Start the services on `faithplate` again.
+
+To roll back before step 6, stop PostgreSQL, clone the snapshot (`zfs clone zroot/root@pre-pg-upgrade zroot/pg-rollback`), copy the old data directory back from it, and deploy the previous package. Once everything works, delete the snapshot and the old data directory.
 
 ## Minecraft
 

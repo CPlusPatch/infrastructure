@@ -45,6 +45,71 @@
       type = "incr";
     };
   };
+
+  # Major upgrades go through upgrade-postgresql (see DOCS.md): set `upgradeTo` to the next
+  # version and deploy, run the script, then set services.postgresql.package to the same
+  # version and deploy again. The script refuses to run once both match
+  upgradeTo = pkgs.postgresql_18;
+  upgradeExtensions = ps: [ps.vectorchord ps.pgvector];
+
+  upgradePostgresql = let
+    cfg = config.services.postgresql;
+    # Built like the module's finalPackage, so the upgraded cluster runs the same binaries
+    new = upgradeTo.withoutJIT.withPackages upgradeExtensions;
+  in
+    pkgs.writeShellApplication {
+      name = "upgrade-postgresql";
+      runtimeInputs = [pkgs.util-linux pkgs.systemd pkgs.coreutils];
+      text = ''
+        # upgrade-postgresql --check: dry run against the live cluster, changes nothing
+        # upgrade-postgresql:         stops PostgreSQL and upgrades it with pg_upgrade --link
+        old_data=${cfg.dataDir}
+        old_bin=${cfg.finalPackage}/bin
+        new_data=/var/lib/postgresql/${upgradeTo.psqlSchema}
+        new_bin=${new}/bin
+
+        if [ "$old_data" = "$new_data" ]; then
+          echo "Already running PostgreSQL ${upgradeTo.psqlSchema}" >&2
+          exit 1
+        fi
+
+        check=false
+        if [ "''${1:-}" = --check ]; then
+          check=true
+          new_data=$(mktemp -d /var/lib/postgresql/upgrade-check.XXXXXX)
+          trap 'rm -rf "$new_data"' EXIT
+        else
+          if [ -e "$new_data" ]; then
+            echo "$new_data already exists" >&2
+            exit 1
+          fi
+          systemctl stop postgresql.service
+          mkdir "$new_data"
+        fi
+        chown postgres:postgres "$new_data"
+        chmod 0750 "$new_data"
+
+        as_postgres() {
+          runuser -u postgres -- env LOCALE_ARCHIVE=/run/current-system/sw/lib/locale/locale-archive "$@"
+        }
+
+        # pg_upgrade needs the new cluster to match the old one's encoding, locale and
+        # checksums (off here, while PostgreSQL 18 turns them on by default)
+        as_postgres "$new_bin/initdb" -D "$new_data" -U ${cfg.superUser} \
+          --encoding=UTF8 --locale=en_GB.UTF-8 --locale-provider=libc \
+          --no-data-checksums ${lib.escapeShellArgs cfg.initdbArgs}
+
+        cd "$new_data"
+        if $check; then
+          as_postgres "$new_bin/pg_upgrade" --check \
+            -d "$old_data" -D "$new_data" -b "$old_bin" -B "$new_bin" \
+            -p ${toString cfg.settings.port} -s /run/postgresql -U ${cfg.superUser}
+        else
+          as_postgres "$new_bin/pg_upgrade" --link \
+            -d "$old_data" -D "$new_data" -b "$old_bin" -B "$new_bin" -U ${cfg.superUser}
+        fi
+      '';
+    };
 in {
   sops.templates."init-db.sql" = {
     content = ''
@@ -241,6 +306,8 @@ in {
       max_wal_size = "4GB";
     };
   };
+
+  environment.systemPackages = [upgradePostgresql];
 
   systemd.tmpfiles.rules = [
     # Lock directory for the backup jobs. PostgreSQL has a private /tmp, so archive-push uses
