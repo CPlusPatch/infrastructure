@@ -61,17 +61,17 @@ resource "hcloud_network_subnet" "main_network_subnet" {
 }
 
 resource "hcloud_server_network" "main_network_server" {
-  for_each  = hcloud_server.servers
-  server_id = each.value.id
+  for_each  = local.servers
+  server_id = hcloud_server.servers[each.key].id
   subnet_id = hcloud_network_subnet.main_network_subnet.id
 }
 
 # Save JSON file to be imported in the NixOS installation
 resource "local_file" "nixos_vars" {
   content = jsonencode({
-    for name, server in hcloud_server.servers : name => {
-      ipv4         = server.ipv4_address
-      ipv6         = server.ipv6_address
+    for name, server in local.servers : name => {
+      ipv4         = hcloud_server.servers[name].ipv4_address
+      ipv6         = hcloud_server.servers[name].ipv6_address
       hostname     = name
       network_ipv4 = hcloud_server_network.main_network_server[name].ip
     }

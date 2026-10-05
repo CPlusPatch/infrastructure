@@ -5,18 +5,18 @@ locals {
 
 # Minecraft records
 resource "cloudflare_dns_record" "cpluscraft_srv" {
-  zone_id = var.cpluspatch-com-zone_id
-  comment = "SRV record for cpluscraft"
-  name    = "_minecraft._tcp.mc.cpluspatch.com"
-  type    = "SRV"
+  zone_id  = var.cpluspatch-com-zone_id
+  comment  = "SRV record for cpluscraft"
+  name     = "_minecraft._tcp.mc.cpluspatch.com"
+  type     = "SRV"
+  priority = 5
+  # Cloudflare derives the service and protocol from the name, and stores the target without
+  # a trailing dot. Writing them otherwise makes every plan try to change the record back
   data = {
-    service  = "_minecraft"
-    proto    = "_tcp"
-    name     = "mc.cpluspatch.com."
     priority = 5
     weight   = 0
     port     = 25565
-    target   = "${local.mail_host}."
+    target   = local.mail_host
   }
   ttl = 1
 }
@@ -68,51 +68,50 @@ resource "cloudflare_dns_record" "email_autodiscover" {
     imaps       = 993
   }
 
-  zone_id = var.cpluspatch-com-zone_id
-  comment = "Used for email client autodiscover"
-  name    = "_${each.key}._tcp.cpluspatch.com"
-  type    = "SRV"
+  zone_id  = var.cpluspatch-com-zone_id
+  comment  = "Used for email client autodiscover"
+  name     = "_${each.key}._tcp.cpluspatch.com"
+  type     = "SRV"
+  priority = 5
+  # Written as Cloudflare stores them, like the Minecraft record above
   data = {
-    service  = "_${each.key}"
-    proto    = "_tcp"
-    name     = "cpluspatch.com."
     priority = 5
     weight   = 0
     port     = each.value
-    target   = "${local.mail_host}."
+    target   = local.mail_host
   }
   ttl = 3600
 }
 
 # Additional records will be CNAMEs to main servers
 resource "cloudflare_dns_record" "infra_ipv4" {
-  for_each = { for name, server in hcloud_server.servers : name => server if local.servers[name].ipv4 }
+  for_each = { for name, server in local.servers : name => server if server.ipv4 }
 
   zone_id = var.cpluspatch-com-zone_id
   comment = "Main IPv4 record for the ${each.key} server"
   name    = "${each.key}.infra.cpluspatch.com"
   type    = "A"
-  content = each.value.ipv4_address
+  content = hcloud_server.servers[each.key].ipv4_address
   ttl     = 1
 }
 
 resource "cloudflare_dns_record" "infra_ipv6" {
-  for_each = hcloud_server.servers
+  for_each = local.servers
 
   zone_id = var.cpluspatch-com-zone_id
   comment = "Main IPv6 record for the ${each.key} server"
   name    = "${each.key}.infra.cpluspatch.com"
   type    = "AAAA"
-  content = each.value.ipv6_address
+  content = hcloud_server.servers[each.key].ipv6_address
   ttl     = 1
 }
 
 # Reverse DNS records
 resource "hcloud_rdns" "infra_ip_rdns" {
-  for_each = { for name, server in hcloud_server.servers : name => server if local.servers[name].ipv4 }
+  for_each = { for name, server in local.servers : name => server if server.ipv4 }
 
-  ip_address = each.value.ipv4_address
-  server_id  = each.value.id
+  ip_address = hcloud_server.servers[each.key].ipv4_address
+  server_id  = hcloud_server.servers[each.key].id
   dns_ptr    = "${each.key}.infra.cpluspatch.com"
 }
 
