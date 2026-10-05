@@ -135,10 +135,11 @@
       # the private network and Tailscale, and the rules above only accept those too
       listen_addresses = lib.mkForce "*";
 
-      # pgtune: 4 GB RAM, 2 CPUs, 100 connections, web workload, SSD
+      # pgtune: 4 GB RAM, 2 CPUs, 100 connections, web workload, SSD. The cache size is
+      # shared_buffers plus ZFS' cache, which is capped at 1 GiB on freeman
       max_connections = "100";
       shared_buffers = "1GB";
-      effective_cache_size = "3GB";
+      effective_cache_size = "2GB";
       maintenance_work_mem = "256MB";
       checkpoint_completion_target = "0.9";
       wal_buffers = "16MB";
