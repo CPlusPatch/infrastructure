@@ -23,6 +23,16 @@
     lib.concatMapStringsSep "\n" (line: "  ${line}") (
       lib.filter (lib.hasPrefix directive) (map lib.trim aclLines)
     );
+  # Domains served over HTTPS, and whether a certificate (exact or wildcard) covers them
+  httpsDomains = lib.mapAttrsToList (name: vhost: vhost.domain) cfg.vhosts ++ cfg.httpsDomains;
+  certNames = lib.concatMap (cert: [cert.domain] ++ cert.extraDomainNames) (lib.attrValues config.security.acme.certs);
+  covers = name: domain:
+    name
+    == domain
+    || (lib.hasPrefix "*." name
+      && lib.hasSuffix (lib.removePrefix "*" name) domain
+      && !(lib.hasInfix "." (lib.removeSuffix (lib.removePrefix "*" name) domain)));
+  uncoveredDomains = lib.filter (domain: !(lib.any (name: covers name domain) certNames)) httpsDomains;
   unsupportedAclLines = lib.filter (line: !(lib.any (d: lib.hasPrefix d (lib.trim line)) directives)) aclLines;
 in {
   options.modules.haproxy = {
@@ -39,6 +49,12 @@ in {
     acls = lib.mkOption {
       type = lib.types.attrsOf lib.types.str;
       default = {};
+    };
+
+    httpsDomains = lib.mkOption {
+      type = lib.types.listOf lib.types.str;
+      default = [];
+      description = "Domains served over HTTPS through raw acls, checked against the certificates like vhosts";
     };
 
     vhosts = lib.mkOption {
@@ -88,11 +104,12 @@ in {
         '')
         cfg.vhosts;
 
-      security.acme.certs = lib.mapAttrs' (name: vhost: lib.nameValuePair vhost.domain {}) cfg.vhosts;
+      modules.haproxy.httpsDomains = ["broken.cpluspatch.com" "text.cpluspatch.com"];
 
       modules.dns.domains =
         lib.mapAttrsToList (name: vhost: vhost.domain) cfg.vhosts
-        ++ ["mc.cpluspatch.com" "broken.cpluspatch.com" "text.cpluspatch.com"];
+        ++ cfg.httpsDomains
+        ++ ["mc.cpluspatch.com"];
     }
     {
       modules.haproxy.frontends.minecraft-eli-fe = ''
@@ -130,8 +147,6 @@ in {
         };
       };
 
-      security.acme.certs."mc.cpluspatch.com" = {};
-
       services.nginx = {
         # Change ports to 8080 and 8443, because 80/443 are already used by HAProxy
         defaultHTTPListenPort = 8080;
@@ -139,10 +154,19 @@ in {
       };
 
       environment.etc."tls.certlist" = {
-        text = "${lib.concatStringsSep "\n" (lib.mapAttrsToList (name: value: "${value.directory}/full.pem") config.security.acme.certs)}\n";
+        text = let
+          isWildcard = name: lib.hasPrefix "wildcard-" name;
+          names = lib.attrNames config.security.acme.certs;
+        in
+          lib.concatMapStrings (name: "${config.security.acme.certs.${name}.directory}/full.pem\n")
+          (lib.filter isWildcard names ++ lib.filter (name: !isWildcard name) names);
       };
 
       assertions = [
+        {
+          assertion = uncoveredDomains == [];
+          message = "No certificate covers these HTTPS domains: ${lib.concatStringsSep ", " uncoveredDomains}";
+        }
         {
           assertion = unsupportedAclLines == [];
           message = "modules.haproxy.acls only supports acl, http-request and use_backend lines, got: ${lib.concatStringsSep ", " unsupportedAclLines}";
@@ -229,16 +253,14 @@ in {
           frontend http
             mode http
             bind :::80 v4v6
-            # Don't redirect ACME requests
-            acl is_acme path -i -m beg /.well-known/acme-challenge
-            http-request redirect scheme https unless { ssl_fc } || is_acme
-
             http-request capture req.hdr(Host) len 20
             log-format "%ci:%cp [%tr] %ft %b/%s %ST %ac/%fc/%bc/%sc/%rc %[capture.req.hdr(0)] %HM %{+Q}HU"
 
+            # Certificates use DNS challenges, so everything is redirected
+            http-request redirect scheme https
+
             errorfiles errors
 
-            use_backend acme if is_acme
 
           frontend https
             mode http
@@ -317,10 +339,6 @@ in {
             mode http
             server broken 127.0.0.1:9999
 
-          # Redirect acme requests to the lego client
-          backend acme
-            server acme localhost${config.security.acme.defaults.listenHTTP}
-
           # Used for Anubis-style challenges
           # Based on David Leadbeater's work
           # See https://github.com/dgl/haphash
@@ -352,14 +370,17 @@ in {
       security.acme = {
         acceptTerms = true;
         defaults = {
-          listenHTTP = ":1360";
           group = config.services.haproxy.group;
           # HAProxy only reads certificates when it (re)starts
           reloadServices = ["haproxy.service"];
+          # DNS challenges through Cloudflare, which allow wildcard certificates
+          dnsProvider = "cloudflare";
+          environmentFile = config.sops.templates."acme-cloudflare.env".path;
+          # The local resolver can cache the challenge record as missing, and never see it appear
+          dnsResolver = "1.1.1.1:53";
         };
       };
 
-      # Wildcard certificates, issued with DNS challenges through Cloudflare
       sops.templates."acme-cloudflare.env" = {
         content = ''
           CLOUDFLARE_DNS_API_TOKEN=${config.sops.placeholder."acme/cloudflare_dns_token"}
@@ -367,29 +388,18 @@ in {
         owner = "acme";
       };
 
+      # Wildcards cover every HTTPS domain (see the assertion above)
       security.acme.certs.wildcard-cpluspatch-com = {
         domain = "*.cpluspatch.com";
         extraDomainNames = ["*.lgs.cpluspatch.com"];
-        dnsProvider = "cloudflare";
-        listenHTTP = null;
-        # The local resolver can cache the challenge record as missing, and never see it appear
-        dnsResolver = "1.1.1.1:53";
-        environmentFile = config.sops.templates."acme-cloudflare.env".path;
       };
       security.acme.certs.wildcard-cpluspatch-dev = {
         domain = "cpluspatch.dev";
         extraDomainNames = ["*.cpluspatch.dev"];
-        dnsProvider = "cloudflare";
-        listenHTTP = null;
-        # The local resolver can cache the challenge record as missing, and never see it appear
-        dnsResolver = "1.1.1.1:53";
-        environmentFile = config.sops.templates."acme-cloudflare.env".path;
       };
 
       # Also served by HAProxy; the mail server module sets its own reloadServices
       security.acme.certs."${config.networking.hostName}.infra.cpluspatch.com".reloadServices = ["haproxy.service"];
-      security.acme.certs."broken.cpluspatch.com" = {};
-      security.acme.certs."text.cpluspatch.com" = {};
     }
   ];
 }
