@@ -2,13 +2,7 @@
   config,
   infra,
   ...
-}: let
-  inherit (infra) ips;
-in {
-  imports = [
-    ../lib/secrets.nix
-  ];
-
+}: {
   services.keycloak = {
     enable = true;
 
@@ -18,7 +12,7 @@ in {
       passwordFile = config.sops.secrets."postgresql/keycloak".path;
       name = "keycloak";
       # Address of freeman through the VPN
-      host = ips.freeman;
+      host = infra.ips.freeman;
       useSSL = false;
       createLocally = false;
     };

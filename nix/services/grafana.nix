@@ -2,13 +2,7 @@
   config,
   infra,
   ...
-}: let
-  inherit (infra) ips;
-in {
-  imports = [
-    ../lib/secrets.nix
-  ];
-
+}: {
   sops = {
     secrets."grafana/secret_key".owner = "grafana";
     secrets."postgresql/grafana".owner = "grafana";
@@ -47,7 +41,7 @@ in {
             uid = "eegmzxgejop34d";
             type = "prometheus";
             access = "proxy";
-            url = "http://${ips.freeman}:9090";
+            url = "http://${infra.ips.freeman}:9090";
             isDefault = true;
             jsonData = {
               httpMethod = "POST";
@@ -75,7 +69,7 @@ in {
 
       database = {
         type = "postgres";
-        host = "${ips.freeman}:5432";
+        host = "${infra.ips.freeman}:5432";
         user = "grafana";
         password = "$__file{${config.sops.secrets."postgresql/grafana".path}}";
         name = "grafana";

@@ -3,13 +3,7 @@
   pkgs,
   infra,
   ...
-}: let
-  inherit (infra) ips;
-in {
-  imports = [
-    ../lib/secrets.nix
-  ];
-
+}: {
   sops = {
     templates."nextcloud-secrets.json" = {
       owner = "nextcloud";
@@ -62,7 +56,7 @@ in {
       adminuser = "admin";
       adminpassFile = builtins.toFile "admin-password" "admin";
 
-      dbhost = ips.freeman;
+      dbhost = infra.ips.freeman;
       dbname = "nextcloud";
       dbpassFile = config.sops.secrets."postgresql/nextcloud".path;
       dbtype = "pgsql";

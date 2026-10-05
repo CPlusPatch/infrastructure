@@ -3,13 +3,7 @@
   lib,
   infra,
   ...
-}: let
-  inherit (infra) ips;
-in {
-  imports = [
-    ../lib/secrets.nix
-  ];
-
+}: {
   # Make secrets accessible to Synapse
   sops = {
     secrets = {
@@ -62,13 +56,13 @@ in {
       database.args = {
         user = "synapse";
         database = "synapse";
-        host = ips.freeman;
+        host = infra.ips.freeman;
         passfile = config.sops.templates."synapse/pgpass".path;
       };
 
       redis = {
         enabled = true;
-        host = ips.freeman;
+        host = infra.ips.freeman;
         port = 6384;
         password_path = config.sops.secrets."redis/synapse".path;
       };
@@ -114,7 +108,7 @@ in {
         {
           bind_addresses = [
             "127.0.0.1"
-            "${ips.faithplate}"
+            "${infra.ips.faithplate}"
           ];
           resources = [
             {
@@ -194,7 +188,7 @@ in {
       };
       database = {
         type = "postgres";
-        uri = "postgres://mautrixsignal:$MAUTRIX_SIGNAL_BRIDGE_POSTGRES_PASSWORD@${ips.freeman}/mautrixsignal?sslmode=disable";
+        uri = "postgres://mautrixsignal:$MAUTRIX_SIGNAL_BRIDGE_POSTGRES_PASSWORD@${infra.ips.freeman}/mautrixsignal?sslmode=disable";
       };
       direct_media = {
         enabled = false;

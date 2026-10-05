@@ -2,13 +2,7 @@
   config,
   infra,
   ...
-}: let
-  inherit (infra) ips;
-in {
-  imports = [
-    ../lib/secrets.nix
-  ];
-
+}: {
   services.clickhouse = {
     enable = true;
   };
@@ -30,7 +24,7 @@ in {
           <plausible>
             <password>${config.sops.placeholder."clickhouse/plausible_password"}</password>
             <networks>
-              <ip>${ips.faithplate}</ip>
+              <ip>${infra.ips.faithplate}</ip>
             </networks>
             <profile>default</profile>
             <quota>default</quota>
@@ -44,7 +38,7 @@ in {
     "clickhouse-server/config.d/listen.xml" = {
       text = ''
         <clickhouse>
-          <listen_host>${ips.freeman}</listen_host>
+          <listen_host>${infra.ips.freeman}</listen_host>
         </clickhouse>
       '';
     };

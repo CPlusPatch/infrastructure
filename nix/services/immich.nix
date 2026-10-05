@@ -3,13 +3,7 @@
   lib,
   infra,
   ...
-}: let
-  inherit (infra) ips;
-in {
-  imports = [
-    ../lib/secrets.nix
-  ];
-
+}: {
   sops = {
     templates."immich-secrets.env" = {
       owner = "immich";
@@ -43,14 +37,14 @@ in {
       createDB = true;
       enable = true;
       # Use local database due to usage of pgvecto-rs extension
-      #host = ips.freeman;
+      #host = infra.ips.freeman;
       name = "immich";
       user = "immich";
     };
 
     redis = {
       enable = false;
-      host = ips.freeman;
+      host = infra.ips.freeman;
       port = 6381;
     };
   };

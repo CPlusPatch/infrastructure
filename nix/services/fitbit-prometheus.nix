@@ -4,13 +4,7 @@
   config,
   infra,
   ...
-}: let
-  inherit (infra) ips;
-in {
-  imports = [
-    ../lib/secrets.nix
-  ];
-
+}: {
   sops.templates.fitbit-fetch-data-env = {
     content = ''
       AUTO_DATE_RANGE=True
@@ -19,7 +13,7 @@ in {
       DEVICENAME=Pixel Watch 3
       FITBIT_LOG_FILE_PATH=/app/logs/fitbit.log
       INFLUXDB_DATABASE=FitbitHealthStats
-      INFLUXDB_HOST=${ips.freeman}
+      INFLUXDB_HOST=${infra.ips.freeman}
       INFLUXDB_PASSWORD=${config.sops.placeholder."fitbit/influxdb_password"}
       INFLUXDB_PORT=8086
       INFLUXDB_USERNAME=fitbit

@@ -1,8 +1,4 @@
 {config, ...}: {
-  imports = [
-    ../lib/secrets.nix
-  ];
-
   sops.templates."factorio.json" = {
     content = ''
       {

@@ -5,7 +5,6 @@
   infra,
   ...
 }: let
-  inherit (infra) ips;
   cfg = config.services.versia-server.config;
 
   # Versia hangs instead of exiting when its databases are unreachable at startup
@@ -21,10 +20,6 @@
     done
   '';
 in {
-  imports = [
-    ../lib/secrets.nix
-  ];
-
   sops = {
     secrets = {
       "postgresql/versia".owner = config.services.versia-server.user;
@@ -89,7 +84,7 @@ in {
 
     config = {
       postgres = {
-        host = ips.freeman;
+        host = infra.ips.freeman;
         port = 5432;
         username = "versia";
         password = "PATH:${config.sops.secrets."postgresql/versia".path}";
@@ -97,7 +92,7 @@ in {
       };
       redis = {
         queue = {
-          host = ips.freeman;
+          host = infra.ips.freeman;
           port = 6383;
           password = "PATH:${config.sops.secrets."redis/versia".path}";
           database = 0;

@@ -162,10 +162,6 @@
     }
   ];
 in {
-  imports = [
-    ../lib/secrets.nix
-  ];
-
   sops.templates."alertmanager.env".content = ''
     NTFY_TOPIC=${config.sops.placeholder."ntfy/topic"}
   '';

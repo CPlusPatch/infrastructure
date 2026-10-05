@@ -3,17 +3,11 @@
   lib,
   infra,
   ...
-}: let
-  inherit (infra) ips;
-in {
-  imports = [
-    ../lib/secrets.nix
-  ];
-
+}: {
   sops.templates."plausible.env" = {
     content = ''
-      DATABASE_URL=postgres://plausible:${config.sops.placeholder."postgresql/plausible"}@${ips.freeman}:5432/plausible
-      CLICKHOUSE_DATABASE_URL=http://plausible:${config.sops.placeholder."clickhouse/plausible_password"}@${ips.freeman}:8123/plausible_events_db
+      DATABASE_URL=postgres://plausible:${config.sops.placeholder."postgresql/plausible"}@${infra.ips.freeman}:5432/plausible
+      CLICKHOUSE_DATABASE_URL=http://plausible:${config.sops.placeholder."clickhouse/plausible_password"}@${infra.ips.freeman}:8123/plausible_events_db
     '';
   };
 
@@ -34,7 +28,7 @@ in {
 
       clickhouse = {
         # The real URL, with credentials, is set in plausible.env
-        url = "http://${ips.freeman}:8123/plausible_events_db";
+        url = "http://${infra.ips.freeman}:8123/plausible_events_db";
         setup = false;
       };
     };

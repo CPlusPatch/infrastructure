@@ -2,13 +2,7 @@
   config,
   infra,
   ...
-}: let
-  inherit (infra) ips;
-in {
-  imports = [
-    ../lib/secrets.nix
-  ];
-
+}: {
   sops = {
     templates."sharkey.env".content = ''
       MK_CONFIG_DB_PASS=${config.sops.placeholder."postgresql/sharkey"}
@@ -32,14 +26,14 @@ in {
       fulltextSearch.provider = "sqlLike";
 
       db = {
-        host = ips.freeman;
+        host = infra.ips.freeman;
         port = 5432;
         user = "misskey";
         db = "misskey";
       };
 
       redis = {
-        host = ips.freeman;
+        host = infra.ips.freeman;
         port = 6380;
       };
 

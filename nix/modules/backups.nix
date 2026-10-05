@@ -10,10 +10,6 @@ with lib; let
   zfsDataset = "zroot/root";
   zfs = "${config.boot.zfs.package}/bin/zfs";
 in {
-  imports = [
-    ../lib/secrets.nix
-  ];
-
   options.services.backups = {
     jobs = mkOption {
       type = types.attrsOf (types.submodule {

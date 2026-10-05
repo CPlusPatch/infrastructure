@@ -2,16 +2,10 @@
   config,
   infra,
   ...
-}: let
-  inherit (infra) ips;
-in {
-  imports = [
-    ../lib/secrets.nix
-  ];
-
+}: {
   sops.templates."vaultwarden.env" = {
     content = ''
-      DATABASE_URL=postgresql://vaultwarden:${config.sops.placeholder."postgresql/vaultwarden"}@${ips.freeman}/vaultwarden
+      DATABASE_URL=postgresql://vaultwarden:${config.sops.placeholder."postgresql/vaultwarden"}@${infra.ips.freeman}/vaultwarden
     '';
     owner = "vaultwarden";
   };

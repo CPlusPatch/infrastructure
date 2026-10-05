@@ -4,11 +4,7 @@
   lib,
   infra,
   ...
-}: let
-  inherit (infra) ips;
-in {
-  imports = [../lib/secrets.nix];
-
+}: {
   sops.templates."init-db.sql" = {
     content = ''
       CREATE USER admin WITH SUPERUSER PASSWORD '${config.sops.placeholder."postgresql/root"}';
@@ -135,7 +131,7 @@ in {
       archive_timeout = "300";
 
       # 100.111.130.114 is the tailscale IP
-      listen_addresses = lib.mkForce "localhost,${ips.freeman},100.111.130.114";
+      listen_addresses = lib.mkForce "localhost,${infra.ips.freeman},100.111.130.114";
 
       # pgtune: 4 GB RAM, 2 CPUs, 100 connections, web workload, SSD
       max_connections = "100";
