@@ -4,10 +4,26 @@
   lib,
   infra,
   ...
-}: {
+}: let
+  # Roles for the services on faithplate, each owning the database of the same name, with
+  # the sops secret holding its password
+  roles = {
+    grafana = "postgresql/grafana";
+    keycloak = "postgresql/keycloak";
+    mautrixsignal = "postgresql/mautrix-signal";
+    misskey = "postgresql/sharkey";
+    nextcloud = "postgresql/nextcloud";
+    plausible = "postgresql/plausible";
+    synapse = "postgresql/synapse";
+    vaultwarden = "postgresql/vaultwarden";
+    versia = "postgresql/versia";
+  };
+in {
   sops.templates."init-db.sql" = {
     content = ''
       CREATE USER admin WITH SUPERUSER PASSWORD '${config.sops.placeholder."postgresql/root"}';
+      -- Synapse refuses databases that aren't C collated, which ensureDatabases can't create
+      CREATE DATABASE synapse LC_COLLATE 'C' LC_CTYPE 'C' TEMPLATE template0;
     '';
     owner = "postgres";
   };
@@ -108,10 +124,43 @@
   systemd.services.postgresql.serviceConfig.EnvironmentFile =
     config.sops.templates."pgbackrest-s3-env".path;
 
+  # Sets each role's password from its secret, so the databases can be recreated from
+  # this file alone. Runs on every boot and deploy, which also undoes manual changes
+  systemd.services.postgresql-set-passwords = {
+    description = "Set PostgreSQL role passwords";
+    wantedBy = ["multi-user.target"];
+    requires = ["postgresql-setup.service"];
+    after = ["postgresql-setup.service"];
+    restartTriggers = [(builtins.toJSON roles)];
+    path = [config.services.postgresql.finalPackage];
+    environment.PGPORT = toString config.services.postgresql.settings.port;
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      User = "postgres";
+      Group = "postgres";
+      # Read as root, so the secrets can keep their default owner
+      LoadCredential = lib.mapAttrsToList (role: secret: "${role}:${config.sops.secrets.${secret}.path}") roles;
+    };
+    script = lib.concatMapStrings (role: ''
+      psql -d postgres -v ON_ERROR_STOP=1 -v password="$(< "$CREDENTIALS_DIRECTORY/${role}")" <<'EOF'
+        ALTER ROLE "${role}" WITH PASSWORD :'password';
+      EOF
+    '') (lib.attrNames roles);
+  };
+
   services.postgresql = {
     enable = true;
     package = pkgs.postgresql_17;
     initialScript = config.sops.templates."init-db.sql".path;
+
+    ensureDatabases = lib.attrNames roles;
+    ensureUsers =
+      map (role: {
+        name = role;
+        ensureDBOwnership = true;
+      })
+      (lib.attrNames roles);
 
     authentication = ''
       # Managed by a Nix module
