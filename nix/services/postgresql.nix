@@ -108,6 +108,15 @@
         else
           as_postgres "$new_bin/pg_upgrade" --link \
             -d "$old_data" -D "$new_data" -b "$old_bin" -B "$new_bin" -U ${cfg.superUser}
+
+          # pg_upgrade leaves its scripts in the data directory, where pgbackrest can't read
+          # delete_old_cluster.sh (mode 0700) and so fails every backup
+          scripts=/var/lib/postgresql/upgrade-${upgradeTo.psqlSchema}
+          mkdir -p "$scripts"
+          for file in delete_old_cluster.sh update_extensions.sql; do
+            if [ -e "$file" ]; then mv "$file" "$scripts/"; fi
+          done
+          echo "pg_upgrade's scripts are in $scripts"
         fi
       '';
     };

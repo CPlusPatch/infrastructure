@@ -332,7 +332,7 @@ Major versions of PostgreSQL on `freeman` change the on-disk format, so they go 
    ```
 
 5. Set `services.postgresql.package` to the new version and deploy `freeman`. PostgreSQL starts on the upgraded directory.
-6. Follow what `pg_upgrade` printed at the end (`vacuumdb --all --analyze-in-stages --missing-stats-only`), then move the backups to the new version, with the S3 credentials loaded as in [Restoring](#restoring):
+6. Follow what `pg_upgrade` printed at the end: `vacuumdb --all --analyze-in-stages --missing-stats-only`, and `update_extensions.sql` if it wrote one. The script moves that file and `delete_old_cluster.sh` to `/var/lib/postgresql/upgrade-<new>`, as pgbackrest fails on files it can't read in the data directory. Then move the backups to the new version, with the S3 credentials loaded as in [Restoring](#restoring):
 
    ```bash
    pgbackrest --stanza=main stanza-upgrade
@@ -341,7 +341,7 @@ Major versions of PostgreSQL on `freeman` change the on-disk format, so they go 
 
 7. Start the services on `faithplate` again.
 
-To roll back before step 6, stop PostgreSQL, clone the snapshot (`zfs clone zroot/root@pre-pg-upgrade zroot/pg-rollback`), copy the old data directory back from it, and deploy the previous package. Once everything works, delete the snapshot and the old data directory.
+To roll back before step 6, stop PostgreSQL, clone the snapshot (`zfs clone zroot/root@pre-pg-upgrade zroot/pg-rollback`), copy the old data directory back from it, and deploy the previous package. Once everything works and a full backup of the new version exists, run `delete_old_cluster.sh` as `postgres` (with `--link` it only removes the old directory's names for the files) and destroy the snapshot.
 
 ## Minecraft
 
