@@ -1,13 +1,8 @@
 {
   pkgs,
-  lib,
   config,
   ...
-}: let
-  zfsKernel = import ../../lib/zfs-kernel.nix {
-    inherit lib pkgs config;
-  };
-in {
+}: {
   imports = [
     ../../features/hetzner-network.nix
     ../../features/hetzner-vm.nix
@@ -51,9 +46,7 @@ in {
   };
 
   boot = {
-    # Latest kernel that ZFS supports
-    kernelPackages = zfsKernel.getLatestZfsKernelPackage zfsKernel.getZfsCompatibleKernelPackages;
-
+    # The default kernel is the latest LTS, which ZFS always supports
     loader = {
       # Don't enable EFI, Hetzner still uses legacy boot
       # I think I could get it to work but wehhh
