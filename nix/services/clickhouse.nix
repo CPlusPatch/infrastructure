@@ -11,9 +11,16 @@
     package = inputs.nixpkgs-clickhouse.legacyPackages.${pkgs.stdenv.hostPlatform.system}.clickhouse;
 
     serverConfig = {
-      listen_host = infra.ips.freeman;
+      # Localhost for clickhouse-client on freeman, which is all the default user can use
+      listen_host = ["::1" "127.0.0.1" infra.ips.freeman];
       # The default, set here so plausible.nix can read it
       http_port = 8123;
+
+      # Collected every second by default, a good part of ClickHouse's CPU use while idle.
+      # Prometheus scrapes them every 15 seconds anyway
+      asynchronous_metrics_update_period_s = 60;
+      # freeman's 4 GiB of RAM are shared with every other database
+      max_server_memory_usage = 1024 * 1024 * 1024;
 
       # Scraped by Prometheus
       prometheus = {
@@ -105,7 +112,7 @@
         <clickhouse>
             <!--
             https://clickhouse.com/docs/en/operations/server-configuration-parameters/settings#mark_cache_size -->
-            <mark_cache_size>524288000</mark_cache_size>
+            <mark_cache_size>268435456</mark_cache_size>
 
             <profiles>
                 <default>
