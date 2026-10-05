@@ -11,6 +11,7 @@ in {
   imports = [
     ../../features/hetzner-network.nix
     ../../features/home-manager
+    ../../features/monitoring-agent.nix
     ../../features/packages.nix
     ../../features/service-fail-notify.nix
     ../../features/ssh.nix
