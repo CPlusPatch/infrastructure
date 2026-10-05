@@ -1,6 +1,7 @@
 {
   config,
   lib,
+  pkgs,
   nodes,
   ...
 }: {
@@ -65,6 +66,11 @@
       zfsSnapshot = false;
     };
   };
+
+  # The media is on the storage box, which is mounted on first access. Fail to start (and
+  # retry) while it's unreachable, rather than running without the photos. Not
+  # RequiresMountsFor, which would stop Immich whenever the idle share gets unmounted
+  systemd.services.immich-server.serviceConfig.ExecStartPre = "${pkgs.coreutils}/bin/test -d ${config.services.immich.mediaLocation}/library";
 
   # Add CAP_FOWNER to immich to prevent permission errors
   # with a CIFS drive mounted by the user jessew
