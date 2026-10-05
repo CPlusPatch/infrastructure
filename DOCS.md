@@ -18,7 +18,7 @@
 
 ## Machines
 
-Three Hetzner Cloud servers in Falkenstein (`fsn1`), all running NixOS on a single ZFS pool.
+Three Hetzner Cloud servers in Falkenstein (`fsn1`), all running NixOS on a single ZFS pool. Data that needs other settings than the defaults has its own dataset, declared in the host's `default.nix`: PostgreSQL's (`zroot/postgresql`, 32K records) on `freeman`, and Synapse's media (`zroot/synapse`, 1M records) on `faithplate`. Disko only creates datasets at install time, so on a running host create them by hand before deploying, or the mount fails.
 
 | Host | Type | Private IP | Role |
 |------|------|------------|------|
@@ -327,7 +327,7 @@ Major versions of PostgreSQL on `freeman` change the on-disk format, so they go 
 
    ```bash
    systemctl stop postgresql
-   zfs snapshot zroot/root@pre-pg-upgrade      # the old data directory, for rolling back
+   zfs snapshot zroot/postgresql@pre-pg-upgrade   # the old data directory, for rolling back
    upgrade-postgresql                         # pg_upgrade --link into /var/lib/postgresql/<new>
    ```
 
@@ -341,7 +341,7 @@ Major versions of PostgreSQL on `freeman` change the on-disk format, so they go 
 
 7. Start the services on `faithplate` again.
 
-To roll back before step 6, stop PostgreSQL, clone the snapshot (`zfs clone zroot/root@pre-pg-upgrade zroot/pg-rollback`), copy the old data directory back from it, and deploy the previous package. Once everything works and a full backup of the new version exists, run `delete_old_cluster.sh` as `postgres` (with `--link` it only removes the old directory's names for the files) and destroy the snapshot.
+To roll back before step 6, stop PostgreSQL, clone the snapshot (`zfs clone zroot/postgresql@pre-pg-upgrade zroot/pg-rollback`), copy the old data directory back from it, and deploy the previous package. Once everything works and a full backup of the new version exists, run `delete_old_cluster.sh` as `postgres` (with `--link` it only removes the old directory's names for the files) and destroy the snapshot.
 
 ## Minecraft
 

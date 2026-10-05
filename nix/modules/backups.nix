@@ -8,8 +8,20 @@ with lib; let
   cfg = config.services.backups;
   s3Endpoint = "https://eu-central.object.fastlystorage.app";
   bucket = "backups";
-  zfsDataset = "zroot/root";
   zfs = "${config.boot.zfs.package}/bin/zfs";
+
+  # The filesystem holding a path: the one mounted closest to it
+  filesystems = attrValues config.fileSystems;
+  isUnder = mount: path: mount == "/" || path == mount || hasPrefix "${mount}/" path;
+  filesystemOf = path:
+    foldl' (best: fs:
+      if isUnder fs.mountPoint path && (best == null || stringLength fs.mountPoint > stringLength best.mountPoint)
+      then fs
+      else best)
+    null
+    filesystems;
+  # Filesystems mounted below a path, which a snapshot of the path's filesystem doesn't include
+  nestedMounts = path: filter (fs: fs.mountPoint != path && isUnder path fs.mountPoint) filesystems;
 in {
   options.services.backups = {
     jobs = mkOption {
@@ -23,9 +35,10 @@ in {
             type = types.bool;
             default = true;
             description = ''
-              Back up from an atomic ZFS snapshot of ${zfsDataset} instead of the live
-              directory, so databases and game saves are captured in a consistent state.
-              The source must live on ${zfsDataset} (mounted at /).
+              Back up from an atomic snapshot of the ZFS dataset holding the source instead of
+              the live directory, so databases and game saves are captured in a consistent state.
+              No other dataset may be mounted inside the source, as the snapshot wouldn't
+              include it.
             '';
           };
         };
@@ -35,6 +48,19 @@ in {
   };
 
   config = mkIf (cfg.jobs != {}) {
+    assertions = flatten (mapAttrsToList (name: job:
+      optionals job.zfsSnapshot [
+        {
+          assertion = (filesystemOf job.source).fsType == "zfs";
+          message = "services.backups.jobs.${name}: ${job.source} isn't on a ZFS filesystem, set zfsSnapshot = false";
+        }
+        {
+          assertion = nestedMounts job.source == [];
+          message = "services.backups.jobs.${name}: ${concatMapStringsSep ", " (fs: fs.mountPoint) (nestedMounts job.source)} would be missing from the snapshot of ${job.source}";
+        }
+      ])
+    cfg.jobs);
+
     # The SFTP target. Pinned, as root has no known_hosts otherwise
     programs.ssh.knownHosts.kleiner = {
       hostNames = [infra.kleiner.address];
@@ -54,13 +80,19 @@ in {
       # `name` is the full restic job name (s3-*, sftp-*), so each job gets its own
       # snapshot and the two targets can run concurrently
       commonSettings = name: job: let
-        snapshot = "${zfsDataset}@restic-${name}";
+        snapshotName = "restic-${name}";
+        fs = filesystemOf job.source;
+        mount =
+          if fs.mountPoint == "/"
+          then ""
+          else fs.mountPoint;
+        snapshot = "${fs.device}@${snapshotName}";
       in
         {
           paths = [
             (
               if job.zfsSnapshot
-              then "/.zfs/snapshot/restic-${name}${job.source}"
+              then "${mount}/.zfs/snapshot/${snapshotName}${removePrefix mount job.source}"
               else job.source
             )
           ];
