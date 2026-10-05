@@ -83,7 +83,7 @@ flake.nix              Inputs, the Colmena hive, checks, dev shell, formatter
 
 ## Deploying
 
-Everything below runs inside the dev shell (`nix develop`, or automatically with direnv), which has Colmena, sops, ssh-to-age and the formatter. OpenTofu isn't in it: `tofu` comes from the system.
+Everything below runs inside the dev shell (`nix develop`, or automatically with direnv), which has Colmena, OpenTofu, sops, ssh-to-age and the formatter.
 
 ```bash
 nix flake check                          # build all hosts, run every check

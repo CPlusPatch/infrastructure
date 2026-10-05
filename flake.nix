@@ -156,6 +156,7 @@
           colmena.packages.${system}.colmena
           pkgs.alejandra
           pkgs.nixd
+          pkgs.opentofu
           pkgs.sops
           pkgs.ssh-to-age
         ];
