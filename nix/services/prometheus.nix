@@ -13,6 +13,10 @@
   synapseMetricsPort = (lib.findFirst (listener: listener.type == "metrics") null faithplate.services.matrix-synapse.settings.listeners).port;
   mailHost = faithplate.mailserver.fqdn;
 
+  # Each probe opens a connection (most with a TLS handshake), so probe less often than the
+  # default 15s scrape interval
+  probeInterval = "20s";
+
   # Probes through the blackbox exporter, labelled by target
   blackboxRelabel = [
     {
@@ -297,6 +301,7 @@ in {
       }
       {
         job_name = "blackbox-https";
+        scrape_interval = probeInterval;
         metrics_path = "/probe";
         params.module = ["https"];
         static_configs = [{targets = map (domain: "https://${domain}") probedDomains;}];
@@ -304,6 +309,7 @@ in {
       }
       {
         job_name = "blackbox-tcp";
+        scrape_interval = probeInterval;
         metrics_path = "/probe";
         params.module = ["tcp"];
         static_configs = [{targets = ["mc.cpluspatch.com:${toString minecraftPort}"];}];
@@ -312,6 +318,7 @@ in {
       {
         # Submission and IMAP over TLS, which also checks the mail certificate
         job_name = "blackbox-tls";
+        scrape_interval = probeInterval;
         metrics_path = "/probe";
         params.module = ["tls"];
         static_configs = [{targets = ["${mailHost}:465" "${mailHost}:993"];}];
@@ -320,6 +327,7 @@ in {
       {
         # Incoming mail. Over the private network, as Hetzner can block outgoing port 25
         job_name = "blackbox-smtp";
+        scrape_interval = probeInterval;
         metrics_path = "/probe";
         params.module = ["smtp_starttls"];
         static_configs = [
