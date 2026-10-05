@@ -50,7 +50,7 @@ in {
             jsonData = {
               httpMethod = "POST";
               prometheusType = "Prometheus";
-              prometheusVersion = "2.50.1";
+              prometheusVersion = db.prometheus.package.version;
             };
           }
         ];
