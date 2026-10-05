@@ -38,30 +38,31 @@ The hosts talk to each other over Hetzner's private network (`10.0.0.0/8`, inter
 assets/                Modpacks (.mrpack) and server icons
 html/                  Error pages and the bot challenge page, built into the cpluspatch-pages package
 nix/    
-  features/            Building blocks every host gets: networking, SSH, Tailscale, the monitoring agent, home-manager
+  features/            Building blocks every host gets: VM hardware, networking, SSH, Tailscale, the shell, the monitoring agent
   hosts/    
     base/              Configuration shared by all hosts
-    <host>/            Host-specific config: services, disk,firewall ports, etc
-  lib/    
-    secrets.nix        Secrets declarations
-    zfs-kernel.nix     Picks the newest kernel ZFS supports
-  modules/             Small custom modules
+    <host>/            Host-specific config: the services it runs, its host ID, etc
+  modules/             Custom modules with options: backups, dns, haproxy, secrets
   packages/            The cpluspatch-pages package
   services/            One file per service, imported by the host that runs it
 scripts/    
   new-host-key.sh      Generates a new host's SSH key before it's installed
+  check-secrets.sh     Checks the sops files against the registry, run by nix flake check
 secrets/               Sops files, one per group of hosts
+  registry.nix         Which secrets each file holds, and which hosts can read it
 terraform/             Hetzner servers and Cloudflare DNS
 flake.nix              Inputs, the Colmena hive, checks, dev shell, formatter
 ```
 
 ## Elements
 
-- **The hive** : `flake.nix` defines one Colmena node per host. Every node gets the modules in `defaults` (disko, sops-nix, home-manager, ...) plus its own list. A host's `default.nix` mostly just lists the services it runs.
+- **The hive** : `flake.nix` defines one Colmena node per host. Every node gets the modules in `defaults` (disko, sops-nix, the base config, ...) plus its own list. A host's `default.nix` mostly just lists the services it runs.
 
 - **Host data from Terraform** : Terraform writes each server's addresses to `terraform/nixos-vars.json`. The flake reads that file and passes it to every module as the `infra` argument, so a service can say `infra.ips.freeman` instead of hardcoding `10.0.1.1`. The same data configures each host's static IPs in `nix/features/hetzner-network.nix`.
 
-- **HTTPS** : HAProxy on `faithplate` terminates TLS for everything and routes requests by host name. Most services declare a vhost:
+- **Other hosts' settings** : Colmena passes every host's configuration as `nodes`, so a service can read a value from the host that owns it instead of repeating it. Services on `faithplate` take their database ports from `nodes.freeman.config.services`, and Prometheus takes the list of vhosts to probe from `nodes.faithplate`.
+
+- **HTTPS** : HAProxy on `faithplate` terminates TLS for everything and routes requests by host name. The setup is a module, `nix/modules/haproxy.nix`, and the site-wide rules (redirects, certificates, the services on `kleiner`) are in `nix/services/haproxy.nix`. Most services declare a vhost:
 
     ```nix
     modules.haproxy.vhosts.vaultwarden = {
@@ -72,9 +73,13 @@ flake.nix              Inputs, the Colmena hive, checks, dev shell, formatter
 
     That one block creates the routing rule, the backend, and the DNS record. Certificates come from two Let's Encrypt wildcards, `*.cpluspatch.com` (plus `*.lgs.cpluspatch.com`) and `cpluspatch.dev` (plus `*.cpluspatch.dev`), issued with DNS challenges through a Cloudflare API token. The build fails if a domain isn't covered by a certificate, so a vhost like `a.b.cpluspatch.com` would need its own cert first. The mail server keeps its own certificate for `faithplate.infra.cpluspatch.com`.
 
+    A vhost with `protected = true` makes browsers solve a proof-of-work challenge before reaching it, like Anubis. It's for services that scrapers hammer, and doesn't affect API clients, which don't claim to be Mozilla. No vhost uses it at the moment.
+
 - **DNS** : Services add their domains to `modules.dns.domains`. The flake collects them into its `domains` output, `terraform/domains.json` is a copy of that, and Terraform turns each entry into a CNAME to `<host>.infra.cpluspatch.com`. `nix flake check` fails when the JSON is out of date. Mail records (MX, SPF, DKIM, DMARC, autodiscovery) and the Minecraft SRV record are written by hand in `terraform/dns.tf`.
 
-- **Build-time checks** : `nix flake check` builds every host, and the build itself validates the HAProxy config (warnings count as errors), the Prometheus config and alert rules, the Alertmanager config, and the domains file. If it passes, the config is at least well-formed.
+- **Databases** : PostgreSQL on `freeman` creates a role and a database for each service on `faithplate` (`roles` in `nix/services/postgresql.nix`), and `postgresql-set-passwords` sets each role's password from its secret on every boot and deploy. A rebuilt `freeman` only needs its data restored, or nothing at all for a fresh start.
+
+- **Build-time checks** : `nix flake check` builds every host, and the build itself validates the HAProxy config (warnings count as errors), the Prometheus config and alert rules, the Alertmanager config, the domains file, and the secrets (see [Secrets](#secrets)). If it passes, the config is at least well-formed.
 
 ## Deploying
 
@@ -132,7 +137,7 @@ nixpkgs tracks `nixos-unstable`. Read the NixOS evaluation warnings after an upd
    colmena apply --on faithplate
    ```
 
-Domains that HAProxy serves through hand-written rules instead of a vhost (Synapse does this) go in `modules.haproxy.httpsDomains`, so the certificate check still covers them. Domains that aren't HTTPS at all, like the Factorio server, go straight into `modules.dns.domains`.
+Domains that HAProxy serves through hand-written rules (`modules.haproxy.acls`) instead of a vhost, like Synapse's, go in `modules.haproxy.httpsDomains`, so the certificate check still covers them. HAProxy evaluates `http-request` rules before `use_backend` ones whatever their order, so the module groups the lines by directive and drops comments. Domains that aren't HTTPS at all, like the Factorio server, go straight into `modules.dns.domains`.
 
 ## Secrets
 
@@ -141,7 +146,7 @@ Secrets are [sops](https://github.com/getsops/sops) files in `secrets/`, encrypt
 | File | Readable by |
 |------|-------------|
 | `common.yaml` | all hosts (backup credentials) |
-| `faithplate-freeman.yaml` | `faithplate`, `freeman` (Redis and ClickHouse passwords both sides need) |
+| `faithplate-freeman.yaml` | `faithplate`, `freeman` (database passwords both sides need) |
 | `faithplate.yaml` | `faithplate` |
 | `freeman.yaml` | `freeman` |
 | `eli.yaml` | `eli` |
@@ -157,7 +162,11 @@ read -rs V && printf '%s' "$V" | jq -Rs . \
   | sops set --value-stdin secrets/faithplate.yaml '["service"]["password"]'; unset V
 ```
 
-A new secret also needs declaring in `nix/lib/secrets.nix`, under the file it lives in. sops-nix checks at build time that every declared secret exists, so a typo or a missing value fails the build rather than the deploy.
+A new secret also needs declaring in `secrets/registry.nix`, under the file it lives in. `nix flake check` compares the registry with the files, which works without decrypting anything since sops leaves key names in plaintext:
+
+- every registered secret exists in its file, and the file holds nothing else
+- `.sops.yaml` encrypts each file for exactly the hosts the registry lists (plus admins)
+- each file is actually encrypted for those recipients, i.e. `sops updatekeys` was run
 
 After changing recipients in `.sops.yaml`, re-encrypt the affected files with `sops updatekeys secrets/<file>.yaml`.
 
@@ -179,7 +188,8 @@ The servers have delete and rebuild protection on. Removing a server means turni
 
 - **Dashboard:** [stats.cpluspatch.com](https://stats.cpluspatch.com), "Infrastructure" folder. It's provisioned from `nix/services/grafana-dashboards/infrastructure.json` and read-only in the UI, so change the JSON in the repo instead. Dashboards made in the UI live in "General" and aren't touched by deploys.
 - **Prometheus:** port 9090 on `freeman`, reachable over the private network or Tailscale.
-- **Probes:** every HTTPS vhost, `matrix.cpluspatch.dev` and the Minecraft port are probed from `freeman` every 15 seconds. The list comes from HAProxy's vhosts, so new services are picked up automatically.
+- **Probes:** every HTTPS vhost, `matrix.cpluspatch.dev`, the Minecraft port, SMTP (STARTTLS on 25, over the private network) and submission and IMAP over TLS (465, 993) are probed from `freeman` every 15 seconds. The HTTPS list comes from HAProxy's vhosts, so new services are picked up automatically.
+- **Scraped:** node exporters, HAProxy, PostgreSQL, ClickHouse, every Redis server (through one `redis_exporter`), and Synapse.
 
 Alert rules are in `nix/services/prometheus.nix`:
 
@@ -194,8 +204,10 @@ Alert rules are in `nix/services/prometheus.nix`:
 | `HighCpu` | Over 90% for 30 minutes |
 | `ZfsPoolUnhealthy` | A pool isn't `ONLINE` |
 | `UnitFailed` | A systemd unit is in the failed state |
-| `BackupStale` | A backup timer hasn't run for 36 hours |
+| `BackupStale` | A daily backup timer hasn't run for 36 hours, or a weekly one for 8 days |
 | `PostgresDown` | The Postgres exporter can't reach the database |
+| `WalArchivingStalled` | PostgreSQL hasn't archived WAL for 30 minutes, usually because a pgBackRest repository is unreachable |
+| `RedisDown` | A Redis server can't be reached by the exporter |
 | `CertificateExpiringSoon` | A probed certificate expires in under 14 days (renewal normally happens at 30) |
 | `ScrapeTargetDown` | Any other metrics endpoint is down for 10 minutes |
 
@@ -233,7 +245,9 @@ Two jobs are special. `immich-media` backs up the photos on the Hetzner storage 
 > [!WARNING]
 > One trap: services with `DynamicUser` keep their data in `/var/lib/private/<name>`, and `/var/lib/<name>` is only a symlink. restic stores a symlink as a symlink, so the source must be the real directory. This went unnoticed for months on three services.
 
-**PostgreSQL on `freeman` (pgBackRest).** WAL is archived continuously to both repositories, so a restore can go to any point in time. Full backups run daily: repo 1 (Fastly S3, `/postgresql`) at midnight, repo 2 (`kleiner`) at 03:00. Each repository keeps 10 full backups.
+**PostgreSQL on `freeman` (pgBackRest).** WAL is archived continuously to both repositories, so a restore can go to any point in time. Full backups run on Sundays and incremental ones the other days: repo 1 (Fastly S3, `/postgresql`) at midnight, repo 2 (`kleiner`) at 03:00. Each repository keeps 4 full backups, so about a month of history.
+
+Archiving is asynchronous, so each repository receives WAL independently: when `kleiner` is off, Fastly stays current and PostgreSQL keeps the WAL `kleiner` hasn't received yet. Past 8 GiB (`archive-push-queue-max`) that WAL is dropped to protect the disk, and `kleiner` can't restore past that point until its next full backup. `WalArchivingStalled` fires after 30 minutes without archiving, and the backup jobs to Fastly still run while `kleiner` is unreachable.
 
 **Not backed up:**
 - Nextcloud's files, Versia's media and Sharkey's media. They live only in Fastly buckets.
@@ -247,7 +261,7 @@ journalctl -u restic-backups-s3-synapse -n 30
 restic-s3-synapse snapshots
 ```
 
-The Grafana dashboard's backup table shows how long ago each job last ran, and `BackupStale` fires after 36 hours.
+The Grafana dashboard's backup table shows how long ago each job last ran, and `BackupStale` fires after 36 hours (8 days for the weekly full PostgreSQL backups).
 
 ## Restoring
 
@@ -309,7 +323,7 @@ and `systemctl start postgresql` afterwards.
 
 ## Minecraft
 
-There are various servers running various modpacks, some of them are disabled.
+`eli` runs one server, `wiki`, with the Yuri-Aero modpack. Players connect to `mc.cpluspatch.com`, which is HAProxy on `faithplate` forwarding to `eli` over the private network, so `eli` doesn't expose the game port publicly. The other modpacks in `assets/` are from older servers.
 
 ```bash
 journalctl -u minecraft-server-<name> -f                   # console output
@@ -317,7 +331,7 @@ echo 'neoforge tps' > /run/minecraft/<name>.stdin          # run a console comma
 systemctl restart minecraft-server-<name>
 ```
 
-The RCON password is `minecraft/rcon_password` in `secrets/eli.yaml`, on various ports depending on server.
+The RCON password is `minecraft/rcon_password` in `secrets/eli.yaml`, on port 10003.
 
 The JVM settings and `server.properties` come from `nix/services/minecraft.nix`: a 5 GiB heap with G1 and Aikar's flags. Don't go above 5 GiB, since the host only has 8 GiB and ZFS' cache is capped at 1 GiB to leave room for it.
 
@@ -351,10 +365,10 @@ Updating the modpack means replacing the `.mrpack` in `assets/` and updating `pa
 > [!NOTE]
 > This hasn't been done end to end since the move to per-host secrets. Expect to adjust it.
 
-1. Add an `hcloud_server` and an entry in `locals.servers` in `terraform/servers.tf`, then `tofu apply`. This creates the server with Ubuntu and adds its addresses to `nixos-vars.json`.
+1. Add an entry to `local.servers` in `terraform/servers.tf`, then `tofu apply`. This creates the server with Ubuntu and adds its addresses to `nixos-vars.json`.
 2. Generate its SSH host key: `./scripts/new-host-key.sh <host>`. It prints an age key and a directory.
 3. Add the age key to `.sops.yaml`, plus a creation rule for `secrets/<host>.yaml` if it needs its own secrets. Then run `sops updatekeys secrets/common.yaml` (and any other file it should read).
-4. Create `nix/hosts/<host>/default.nix` with a new `networking.hostId` (`head -c4 /dev/urandom | od -A none -t x4`) and `disko.devices.disk.main.device`, plus a `hardware-configuration.nix` copied from an existing host. Add `<host>.imports` to the hive in `flake.nix`, and the host to `hosts` in `nix/lib/secrets.nix` for the files it reads.
+4. Create `nix/hosts/<host>/default.nix` with a new `networking.hostId` (`head -c4 /dev/urandom | od -A none -t x4`). The disk defaults to `/dev/sda` and the hardware config is shared, as every Hetzner VM is the same. Add `<host>.imports` to the hive in `flake.nix`, and the host to `hosts` in `secrets/registry.nix` for the files it reads.
 5. Install NixOS over the Ubuntu image:
 
    ```bash
