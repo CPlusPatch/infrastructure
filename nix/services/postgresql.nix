@@ -18,6 +18,33 @@
     vaultwarden = "postgresql/vaultwarden";
     versia = "postgresql/versia";
   };
+
+  # pgbackrest backs up to a single repo per run (repo1 unless --repo is given), so each
+  # repo needs its own jobs. Repos are numbered alphabetically: fastly=1, kleiner=2.
+  # Weekly full backups and daily incremental ones. kleiner's are offset from fastly's, as
+  # only one backup per stanza can run at a time
+  backupJobs = {
+    full = {
+      repo = 1;
+      schedule = "Sun 00:00";
+      type = "full";
+    };
+    incr = {
+      repo = 1;
+      schedule = "Mon..Sat 00:00";
+      type = "incr";
+    };
+    full-kleiner = {
+      repo = 2;
+      schedule = "Sun 03:00";
+      type = "full";
+    };
+    incr-kleiner = {
+      repo = 2;
+      schedule = "Mon..Sat 03:00";
+      type = "incr";
+    };
+  };
 in {
   sops.templates."init-db.sql" = {
     content = ''
@@ -61,7 +88,7 @@ in {
         s3-endpoint = "eu-central.object.fastlystorage.app";
         s3-uri-style = "path";
         # Retention is per repository, an unindexed retention-full only applies to repo1
-        retention-full = 10;
+        retention-full = 4;
       };
 
       # Secondary SFTP backup on kleiner
@@ -76,7 +103,7 @@ in {
         # SHA-256 of kleiner's ECDSA host key, in hex:
         # ssh-keyscan -t ecdsa kleiner 2>/dev/null | awk '{print $3}' | base64 -d | sha256sum
         sftp-host-fingerprint = "7750d245a9dbf20611239c9a97c7aeca229058eb44d77f869fa57a1a88361bc5";
-        retention-full = 10;
+        retention-full = 4;
       };
     };
 
@@ -86,18 +113,7 @@ in {
         user = "postgres";
       };
 
-      # pgbackrest backs up to a single repo per run (repo1 unless --repo is given),
-      # so each repo needs its own job. Repos are numbered alphabetically: fastly=1, kleiner=2
-      jobs.full = {
-        schedule = "daily";
-        type = "full";
-      };
-
-      # Offset from the fastly job, as only one backup per stanza can run at a time
-      jobs.full-kleiner = {
-        schedule = "*-*-* 03:00:00";
-        type = "full";
-      };
+      jobs = lib.mapAttrs (name: job: {inherit (job) schedule type;}) backupJobs;
 
       settings = {
         start-fast = true;
@@ -111,43 +127,45 @@ in {
     };
   };
 
-  # Inject S3 credentials into the scheduled backup services (run as pgbackrest user).
-  systemd.services.pgbackrest-main-full.serviceConfig.EnvironmentFile =
-    config.sops.templates."pgbackrest-s3-env".path;
+  systemd.services =
+    lib.mapAttrs' (name: job:
+      lib.nameValuePair "pgbackrest-main-${name}" {
+        serviceConfig = {
+          # S3 credentials, which the module doesn't allow in the Nix store
+          EnvironmentFile = config.sops.templates."pgbackrest-s3-env".path;
+          ExecStart = lib.mkForce "${lib.getExe pkgs.pgbackrest} --stanza=main --repo=${toString job.repo} backup --type=${job.type}";
+        };
+      })
+    backupJobs
+    // {
+      # S3 credentials for archive-push, through archive_command
+      postgresql.serviceConfig.EnvironmentFile = config.sops.templates."pgbackrest-s3-env".path;
 
-  systemd.services.pgbackrest-main-full-kleiner.serviceConfig = {
-    EnvironmentFile = config.sops.templates."pgbackrest-s3-env".path;
-    ExecStart = lib.mkForce "${lib.getExe pkgs.pgbackrest} --stanza=main --repo=2 backup --type=full";
-  };
-
-  # Inject S3 credentials into the postgresql service for archive-push via archive_command.
-  systemd.services.postgresql.serviceConfig.EnvironmentFile =
-    config.sops.templates."pgbackrest-s3-env".path;
-
-  # Sets each role's password from its secret, so the databases can be recreated from
-  # this file alone. Runs on every boot and deploy, which also undoes manual changes
-  systemd.services.postgresql-set-passwords = {
-    description = "Set PostgreSQL role passwords";
-    wantedBy = ["multi-user.target"];
-    requires = ["postgresql-setup.service"];
-    after = ["postgresql-setup.service"];
-    restartTriggers = [(builtins.toJSON roles)];
-    path = [config.services.postgresql.finalPackage];
-    environment.PGPORT = toString config.services.postgresql.settings.port;
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = true;
-      User = "postgres";
-      Group = "postgres";
-      # Read as root, so the secrets can keep their default owner
-      LoadCredential = lib.mapAttrsToList (role: secret: "${role}:${config.sops.secrets.${secret}.path}") roles;
+      # Sets each role's password from its secret, so the databases can be recreated from
+      # this file alone. Runs on every boot and deploy, which also undoes manual changes
+      postgresql-set-passwords = {
+        description = "Set PostgreSQL role passwords";
+        wantedBy = ["multi-user.target"];
+        requires = ["postgresql-setup.service"];
+        after = ["postgresql-setup.service"];
+        restartTriggers = [(builtins.toJSON roles)];
+        path = [config.services.postgresql.finalPackage];
+        environment.PGPORT = toString config.services.postgresql.settings.port;
+        serviceConfig = {
+          Type = "oneshot";
+          RemainAfterExit = true;
+          User = "postgres";
+          Group = "postgres";
+          # Read as root, so the secrets can keep their default owner
+          LoadCredential = lib.mapAttrsToList (role: secret: "${role}:${config.sops.secrets.${secret}.path}") roles;
+        };
+        script = lib.concatMapStrings (role: ''
+          psql -d postgres -v ON_ERROR_STOP=1 -v password="$(< "$CREDENTIALS_DIRECTORY/${role}")" <<'EOF'
+            ALTER ROLE "${role}" WITH PASSWORD :'password';
+          EOF
+        '') (lib.attrNames roles);
+      };
     };
-    script = lib.concatMapStrings (role: ''
-      psql -d postgres -v ON_ERROR_STOP=1 -v password="$(< "$CREDENTIALS_DIRECTORY/${role}")" <<'EOF'
-        ALTER ROLE "${role}" WITH PASSWORD :'password';
-      EOF
-    '') (lib.attrNames roles);
-  };
 
   services.postgresql = {
     enable = true;

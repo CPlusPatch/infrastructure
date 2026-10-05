@@ -128,8 +128,12 @@
         }
         {
           alert = "BackupStale";
-          # Timers that never ran report 0
-          expr = ''time() - node_systemd_timer_last_trigger_seconds{name=~"(restic-backups-|pgbackrest-|postgresqlBackup).*"} > 36 * 3600 and node_systemd_timer_last_trigger_seconds > 0'';
+          # Timers that never ran report 0. Full PostgreSQL backups are weekly, the rest daily
+          expr = ''
+            (time() - node_systemd_timer_last_trigger_seconds{name=~"(restic-backups-|pgbackrest-main-incr|postgresqlBackup).*"} > 36 * 3600
+              or time() - node_systemd_timer_last_trigger_seconds{name=~"pgbackrest-main-full.*"} > 8 * 86400)
+            and node_systemd_timer_last_trigger_seconds > 0
+          '';
           labels.severity = "warning";
           annotations.summary = "{{ $labels.name }} hasn't run for {{ $value | humanizeDuration }} on {{ $labels.instance }}";
         }
