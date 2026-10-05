@@ -212,28 +212,11 @@ in {
         language = "en";
         placeholder_style = "thumbs";
       };
-      queues = {
-        delivery = {
-          remove_after_complete_seconds = 31536000;
-          remove_after_failure_seconds = 31536000;
-        };
-        inbox = {
-          remove_after_complete_seconds = 31536000;
-          remove_after_failure_seconds = 31536000;
-        };
-        fetch = {
-          remove_after_complete_seconds = 31536000;
-          remove_after_failure_seconds = 31536000;
-        };
-        push = {
-          remove_after_complete_seconds = 31536000;
-          remove_after_failure_seconds = 31536000;
-        };
-        media = {
-          remove_after_complete_seconds = 31536000;
-          remove_after_failure_seconds = 31536000;
-        };
-      };
+      # Finished jobs stay in Redis until they expire: a day when completed, a week when failed
+      queues = lib.genAttrs ["delivery" "inbox" "fetch" "push" "media"] (queue: {
+        remove_after_complete_seconds = 86400;
+        remove_after_failure_seconds = 604800;
+      });
       federation = {
         blocked = [];
         followers_only = [];
