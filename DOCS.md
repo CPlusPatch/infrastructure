@@ -372,7 +372,7 @@ Updating the modpack means replacing the `.mrpack` in `assets/` and updating `pa
     journalctl -p err -b         # errors since boot
     ```
 
-- **Disk and logs** : The Nix store is garbage-collected weekly, removing generations older than 14 days. Journald keeps at most 500 MB or one month per host, and always leaves 2 GB free. Prometheus keeps 90 days or 5 GB, whichever comes first.
+- **Disk and logs** : The Nix store is garbage-collected weekly, removing generations older than 14 days. Journald keeps at most 500 MB or one month per host, and always leaves 2 GB free. Prometheus keeps 90 days or 5 GB, whichever comes first. Synapse drops media cached from other servers after 90 days, and `synapse-auto-compressor` on `freeman` compresses its state tables every night at 04:00.
 
 - **Certificates** : they renew on their own and reload HAProxy, Postfix and Dovecot as needed. To force a renewal:
 

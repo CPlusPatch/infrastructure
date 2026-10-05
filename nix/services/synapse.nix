@@ -73,6 +73,8 @@
       registration_requires_token = true;
       enable_registration_without_verification = true;
       max_upload_size = "100M";
+      # Media cached from other servers is fetched again if needed. Local media is kept
+      media_retention.remote_media_lifetime = "90d";
       # Disabled because it fucks up performance
       presence.enabled = false;
       public_baseurl = "https://matrix.cpluspatch.dev";

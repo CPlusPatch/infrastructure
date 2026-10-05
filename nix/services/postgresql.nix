@@ -310,6 +310,35 @@ in {
         '';
       };
 
+      # Compresses Synapse's state tables (state_groups_state), which otherwise only grow. Here
+      # rather than with Synapse, as the superuser connects through the socket without a password
+      # (the compressor only takes one on its command line). It works as the synapse role, so
+      # its own tables belong to Synapse
+      synapse-auto-compressor = {
+        description = "Compress Synapse's state tables";
+        requires = ["postgresql.target"];
+        after = ["postgresql.target"];
+        # After the night's backups
+        startAt = "04:00";
+        serviceConfig = {
+          Type = "oneshot";
+          User = "postgres";
+          Group = "postgres";
+          ExecStart = lib.escapeShellArgs [
+            "${pkgs.rust-synapse-compress-state}/bin/synapse_auto_compressor"
+            "-p"
+            "host=/run/postgresql port=${toString config.services.postgresql.settings.port} user=postgres dbname=synapse options=-crole=synapse"
+            # Defaults of the NixOS module: 100 chunks of 500 state groups per run
+            "-c"
+            "500"
+            "-n"
+            "100"
+            "-l"
+            "100,50,25"
+          ];
+        };
+      };
+
       # Sets each role's password from its secret, so the databases can be recreated from
       # this file alone. Runs on every boot and deploy, which also undoes manual changes
       postgresql-set-passwords = {
