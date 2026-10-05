@@ -2,6 +2,7 @@
   config,
   lib,
   pkgs,
+  infra,
   nodes,
   ...
 }: {
@@ -34,11 +35,11 @@
       BACKUPS_LOCATION = "${config.services.immich.mediaLocation}/backups";
     };
 
+    # On freeman with the other databases, which sets up its extensions (postgresql.nix)
     database = {
-      createDB = true;
-      enable = true;
-      # Use local database due to usage of pgvecto-rs extension
-      #host = infra.ips.freeman;
+      enable = false;
+      host = infra.ips.freeman;
+      inherit (nodes.freeman.config.services.postgresql.settings) port;
       name = "immich";
       user = "immich";
     };
@@ -50,16 +51,7 @@
     };
   };
 
-  # The local database isn't covered by pgbackrest (which only runs on freeman),
-  # so dump it daily and let restic pick up the dumps
-  services.postgresqlBackup = {
-    enable = true;
-    databases = [config.services.immich.database.name];
-    compression = "zstd";
-  };
-
   services.backups.jobs = {
-    immich-db.source = config.services.postgresqlBackup.location;
     # Photos are only stored on the storage box otherwise. It's a CIFS mount, not ZFS
     immich-media = {
       source = config.services.immich.mediaLocation;

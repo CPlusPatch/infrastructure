@@ -19,6 +19,7 @@
     secrets = [
       "clickhouse/plausible_password"
       "postgresql/grafana"
+      "postgresql/immich"
       "postgresql/keycloak"
       "postgresql/mautrix-signal"
       "postgresql/nextcloud"
@@ -50,7 +51,6 @@
       "keycloak/versia"
       "nextcloud/secret"
       "plausible/secret_key_base"
-      "postgresql/immich"
       "s3/nextcloud/secret_key"
       "s3/versia/access_key_id"
       "s3/versia/secret_key"

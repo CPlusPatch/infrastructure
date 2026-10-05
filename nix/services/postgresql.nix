@@ -9,6 +9,7 @@
   # the sops secret holding its password
   roles = {
     grafana = "postgresql/grafana";
+    immich = "postgresql/immich";
     keycloak = "postgresql/keycloak";
     mautrixsignal = "postgresql/mautrix-signal";
     misskey = "postgresql/sharkey";
@@ -226,6 +227,40 @@ in {
         };
         # Stop before Tailscale on shutdown, so the last WAL can still reach kleiner
         after = ["tailscaled.service"];
+      };
+
+      # What the NixOS Immich module does for a local database: Immich's extensions, which
+      # need a superuser, and reindexing its vector indexes when VectorChord changes version
+      # (https://docs.immich.app/administration/postgres-standalone/#updating-vectorchord)
+      immich-database-setup = let
+        extensions = ["unaccent" "uuid-ossp" "cube" "earthdistance" "pg_trgm" "vector" "vchord"];
+      in {
+        description = "Set up Immich's PostgreSQL extensions";
+        wantedBy = ["multi-user.target"];
+        requires = ["postgresql-setup.service"];
+        after = ["postgresql-setup.service"];
+        path = [config.services.postgresql.finalPackage];
+        environment.PGPORT = toString config.services.postgresql.settings.port;
+        serviceConfig = {
+          Type = "oneshot";
+          RemainAfterExit = true;
+          User = "postgres";
+          Group = "postgres";
+        };
+        script = ''
+          psql -d immich -v ON_ERROR_STOP=1 <<'EOF'
+            SELECT COALESCE(installed_version, ''') AS vchord_before FROM pg_available_extensions WHERE name = 'vchord' \gset
+            ${lib.concatMapStringsSep "\n" (ext: "CREATE EXTENSION IF NOT EXISTS \"${ext}\";") extensions}
+            ${lib.concatMapStringsSep "\n" (ext: "ALTER EXTENSION \"${ext}\" UPDATE;") extensions}
+            ALTER SCHEMA public OWNER TO immich;
+            SELECT COALESCE(installed_version, ''') AS vchord_after FROM pg_available_extensions WHERE name = 'vchord' \gset
+            SELECT (:'vchord_before' != ''' AND :'vchord_before' != :'vchord_after') AS vchord_updated \gset
+            \if :vchord_updated
+              REINDEX INDEX face_index;
+              REINDEX INDEX clip_index;
+            \endif
+          EOF
+        '';
       };
 
       # Sets each role's password from its secret, so the databases can be recreated from

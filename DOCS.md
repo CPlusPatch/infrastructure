@@ -98,6 +98,7 @@ nix fmt                                  # format with alejandra
 Some habits that have saved me trouble:
 
 - Run `dry-activate` before anything touching networking, databases or HAProxy. It lists exactly which services will stop, start or reload.
+- One thing it doesn't show: changing the database roles or setup on `freeman` (`postgresql.nix`) restarts PostgreSQL itself, for about 10 seconds, because the setup units are part of `postgresql.target`. It also interrupts a running pgBackRest backup, so don't deploy such changes during one.
 - Deploy one host at a time. When PostgreSQL or Redis on `freeman` restarts (or the host reboots), the services on `faithplate` log connection errors until they're back, then reconnect on their own.
 - For changes that are only safe at boot (networking, kernel), use `colmena apply --on <host> boot` and then reboot, with the Hetzner console open just in case.
 - When a deploy changes the Minecraft server's config, it stops the server and only starts its socket. Start it again with `systemctl start minecraft-server-wiki`.
@@ -241,7 +242,7 @@ Every backup goes to two places: S3 at Fastly (`eu-central.object.fastlystorage.
 
 Retention is 7 daily, 5 weekly and 12 monthly snapshots.
 
-Two jobs are special. `immich-media` backs up the photos on the Hetzner storage box (`/mnt/fs-01b/immich`), which is CIFS, so it skips the ZFS snapshot (`zfsSnapshot = false`). `immich-db` backs up `/var/backup/postgresql/immich.sql.zstd`, a dump that `postgresqlBackup` writes at 01:15, because Immich uses its own local PostgreSQL on `faithplate`.
+One job is special: `immich-media` backs up the photos on the Hetzner storage box (`/mnt/fs-01b/immich`), which is CIFS, so it skips the ZFS snapshot (`zfsSnapshot = false`). Immich's database is on `freeman` with the others, so pgBackRest covers it.
 
 > [!WARNING]
 > One trap: services with `DynamicUser` keep their data in `/var/lib/private/<name>`, and `/var/lib/<name>` is only a symlink. restic stores a symlink as a symlink, so the source must be the real directory. This went unnoticed for months on three services.
@@ -284,16 +285,6 @@ restic-s3-vaultwarden restore 'latest:/.zfs/snapshot/restic-s3-vaultwarden/var/l
 Then stop the service, move its directory aside, copy the restored one into place with the right owner, and start it again.
 
 `immich-media` has no snapshot prefix: `restic-s3-immich-media restore latest --target /tmp/restore` gives `/tmp/restore/mnt/fs-01b/immich`.
-
-**The Immich database.** Restore `immich-db` as above, then load the dump:
-
-```bash
-systemctl stop immich-server
-sudo -u postgres dropdb immich
-sudo -u postgres createdb -O immich immich
-zstdcat /tmp/restore/immich.sql.zstd | sudo -u postgres psql immich
-systemctl start immich-server
-```
 
 **PostgreSQL on `freeman`.** pgBackRest needs the S3 credentials from the environment file. Without them, even `info` fails. Open a shell as `postgres` with them loaded:
 
