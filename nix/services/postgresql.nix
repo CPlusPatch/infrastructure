@@ -164,6 +164,10 @@ in {
         s3-uri-style = "path";
         # Retention is per repository, an unindexed retention-full only applies to repo1
         retention-full = 4;
+        # Incremental backups store the changed blocks instead of whole changed files (1 GB
+        # segments). Block incremental requires bundling, which also packs small files together
+        bundle = true;
+        block = true;
       };
 
       # Secondary SFTP backup on kleiner
@@ -179,6 +183,8 @@ in {
         # ssh-keyscan -t ecdsa kleiner 2>/dev/null | awk '{print $3}' | base64 -d | sha256sum
         sftp-host-fingerprint = "7750d245a9dbf20611239c9a97c7aeca229058eb44d77f869fa57a1a88361bc5";
         retention-full = 4;
+        bundle = true;
+        block = true;
       };
     };
 
@@ -196,7 +202,10 @@ in {
     };
 
     settings = {
-      process-max = 4;
+      # freeman has 2 CPUs, shared with PostgreSQL itself
+      process-max = 2;
+      # Faster than the default gzip, and compresses better
+      compress-type = "zst";
 
       # archive-push fails whenever any repo fails, so that PostgreSQL keeps the WAL until
       # every repo has it. Synchronously, that also stops WAL from reaching the other repos:
