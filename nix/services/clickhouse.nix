@@ -1,10 +1,14 @@
 {
   config,
+  pkgs,
+  inputs,
   infra,
   ...
 }: {
   services.clickhouse = {
     enable = true;
+    # See the nixpkgs-clickhouse input in flake.nix
+    package = inputs.nixpkgs-clickhouse.legacyPackages.${pkgs.stdenv.hostPlatform.system}.clickhouse;
 
     serverConfig = {
       listen_host = infra.ips.freeman;

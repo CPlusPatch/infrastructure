@@ -1,6 +1,9 @@
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    # ClickHouse fails to link in nixpkgs since 2026-09-29 (hydra.nixos.org/build/347095307),
+    # so it comes from the last revision where it built. Remove once it's fixed
+    nixpkgs-clickhouse.url = "github:NixOS/nixpkgs/00455b0a3690d3f5dc61e9aef4277dc86235b73f";
     colmena.url = "github:zhaofengli/colmena";
     disko = {
       url = "github:nix-community/disko";
