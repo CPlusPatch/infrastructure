@@ -1,42 +1,24 @@
-{pkgs ? import <nixpkgs> {}}:
-pkgs.stdenv.mkDerivation {
+# Error pages for HAProxy and the bot challenge page, also served on static.cpluspatch.com/pages
+{
+  lib,
+  stdenv,
+  bun,
+}:
+stdenv.mkDerivation {
   pname = "cpluspatch-pages";
   version = "0.1.0";
 
   src = ../../../html;
 
-  nativeBuildInputs = [
-    pkgs.bun
-  ];
+  nativeBuildInputs = [bun];
 
   buildPhase = ''
     runHook preBuild
 
-    # Define files to build
-    files=(
-      "503.html"
-      "502.html"
-      "challenge.html"
-      "maintenance.html"
-    )
-
-    http_files=(
-      "dist/503.html"
-      "dist/502.html"
-    )
-
-    echo "Building HTML files..."
-
-    for file in "''${files[@]}"; do
-      if [[ ! -f $file ]]; then
-        echo "Error: File $file does not exist."
-        exit 1
-      fi
-
-      echo "Building $file..."
-
+    # Pages served normally, which load their assets from static.cpluspatch.com
+    for file in challenge.html maintenance.html; do
       bun build "$file" \
-        --outdir=./dist \
+        --outdir=dist \
         --minify \
         --target=browser \
         --public-path=https://static.cpluspatch.com/pages/ \
@@ -44,54 +26,32 @@ pkgs.stdenv.mkDerivation {
         --sourcemap=linked
     done
 
-    echo "HTML files built successfully."
-
-    echo "Creating .http files..."
-
-    for file in "''${http_files[@]}"; do
-      if [[ ! -f $file ]]; then
-        echo "Error: File $file does not exist."
-        exit 1
-      fi
-
-      echo "Creating .http file for $file..."
-
-      # Create the .http file
-      cp "$file" "''${file%.html}.http"
-
-      # Add the header to the .http file
-      if [[ $file == "dist/503.html" ]]; then
-        echo "HTTP/1.1 503 Service Unavailable" > "''${file%.html}.http"
-      elif [[ $file == "dist/502.html" ]]; then
-        echo "HTTP/1.1 502 Bad Gateway" > "''${file%.html}.http"
-      fi
-
-      echo "Cache-Control: no-cache" >> "''${file%.html}.http"
-      echo "Content-Type: text/html" >> "''${file%.html}.http"
-      # Add newline
-      echo "" >> "''${file%.html}.http"
-
-      # Append the content of the HTML file to the .http file
-      cat "$file" >> "''${file%.html}.http"
+    # HAProxy error files: a raw HTTP response with the stylesheet inlined, so they still
+    # render when the backend serving static.cpluspatch.com is the one that's down
+    for page in "502 Bad Gateway" "503 Service Unavailable"; do
+      code=''${page%% *}
+      {
+        printf 'HTTP/1.1 %s\r\nCache-Control: no-cache\r\nContent-Type: text/html\r\n\r\n' "$page"
+        awk '/rel="preload"/ { next }
+          /rel="stylesheet"/ {
+            print "<style>"; while ((getline line < "css/main.css") > 0) print line; print "</style>"; next
+          }
+          { print }' "$code.html"
+      } > "dist/$code.http"
     done
-
-    echo "HTTP files created successfully."
 
     runHook postBuild
   '';
 
   installPhase = ''
     runHook preInstall
-
-    mkdir -p $out
-    cp -r dist/* $out/
-
+    cp -r dist $out
     runHook postInstall
   '';
 
-  meta = with pkgs.lib; {
+  meta = {
     description = "Static HTML assets for CPlusPatch infra stuff";
-    license = licenses.mit;
-    platforms = platforms.all;
+    license = lib.licenses.mit;
+    platforms = lib.platforms.all;
   };
 }

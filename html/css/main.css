@@ -53,13 +53,6 @@ main h2 {
   margin: 0;
 }
 
-main video {
-  position: fixed;
-  bottom: 1rem;
-  right: 1rem;
-  border-radius: 0.25rem;
-}
-
 main p {
   color: oklch(0.707 0.022 261.325);
   font-size: 1.125rem;
@@ -69,9 +62,5 @@ main p {
 @media (max-width: 768px) {
   main h1 {
     font-size: 4rem;
-  }
-
-  main video {
-    display: none;
   }
 }
