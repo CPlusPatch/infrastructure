@@ -22,7 +22,7 @@ Three Hetzner Cloud servers in Falkenstein (`fsn1`), all running NixOS on a sing
 
 | Host | Type | Private IP | Role |
 |------|------|------------|------|
-| `freeman` | cx23 | 10.0.1.1 | PostgreSQL 17, Redis, ClickHouse, InfluxDB, Prometheus, Alertmanager |
+| `freeman` | cx23 | 10.0.1.1 | PostgreSQL 18, Redis, ClickHouse, InfluxDB, Prometheus, Alertmanager |
 | `eli` | cx33 | 10.0.1.2 | Minecraft |
 | `faithplate` | cx33 | 10.0.1.3 | HAProxy and every public service |
 

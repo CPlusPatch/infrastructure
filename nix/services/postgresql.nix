@@ -256,7 +256,9 @@ in {
 
   services.postgresql = {
     enable = true;
-    package = pkgs.postgresql_17;
+    package = pkgs.postgresql_18;
+    # Immich's vector search
+    extensions = upgradeExtensions;
     initialScript = config.sops.templates."init-db.sql".path;
 
     ensureDatabases = lib.attrNames roles;
@@ -279,6 +281,9 @@ in {
 
     settings = {
       port = 5432;
+
+      # VectorChord has to be loaded at startup
+      shared_preload_libraries = ["vchord"];
 
       # Override stanza name to main for legacy compat with old backup scripts
       archive_command = lib.mkForce ''${lib.getExe pkgs.pgbackrest} --stanza=main archive-push "%p"'';
