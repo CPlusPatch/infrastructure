@@ -466,5 +466,6 @@ in {
   # The exporter runs with a dynamic user, so it gets the file as a credential
   systemd.services.prometheus-redis-exporter.serviceConfig.LoadCredential = "passwords:${config.sops.templates."redis-exporter-passwords.json".path}";
 
-  services.backups.jobs.prometheus.source = "/var/lib/prometheus2";
+  # Prometheus' data isn't backed up: compaction rewrites its blocks every day, which would add
+  # ~300 MB per repository per day of metrics that are only useful while recent
 }

@@ -1,6 +1,7 @@
 {
   config,
   lib,
+  pkgs,
   infra,
   ...
 }:
@@ -9,6 +10,20 @@ with lib; let
   s3Endpoint = "https://eu-central.object.fastlystorage.app";
   bucket = "backups";
   zfs = "${config.boot.zfs.package}/bin/zfs";
+  restic = getExe pkgs.restic;
+
+  s3Repo = name: "s3:${s3Endpoint}/${bucket}/directories/${name}";
+  sftpRepo = name: "sftp:jessew@${infra.kleiner.address}:/mnt/HDD1/Backups/Infra/${name}";
+  sftpOption = "sftp.args=-i ${config.sops.secrets."sftp/backup_private_key".path}";
+  envFile = config.sops.templates."restic-env".path;
+  # Shared by every unit of a job. restic keeps each repository's cache in its own subdirectory
+  cacheDir = name: "restic-backups-s3-${name}";
+
+  pruneOpts = [
+    "--keep-daily 7"
+    "--keep-weekly 5"
+    "--keep-monthly 12"
+  ];
 
   # The filesystem holding a path: the one mounted closest to it
   filesystems = attrValues config.fileSystems;
@@ -45,6 +60,18 @@ in {
       });
       default = {};
     };
+
+    schedule = mkOption {
+      type = types.str;
+      default = "daily";
+      description = "When the backups start (systemd calendar event), each at a random delay after it";
+    };
+
+    randomizedDelay = mkOption {
+      type = types.str;
+      default = "3h";
+      description = "Maximum random delay after the schedule, spreading the jobs out";
+    };
   };
 
   config = mkIf (cfg.jobs != {}) {
@@ -72,23 +99,24 @@ in {
         AWS_ACCESS_KEY_ID=${config.sops.placeholder."s3/backups/access_key_id"}
         AWS_SECRET_ACCESS_KEY=${config.sops.placeholder."s3/backups/secret_key"}
         RESTIC_PASSWORD=${config.sops.placeholder."backups/passphrase"}
+        RESTIC_FROM_PASSWORD=${config.sops.placeholder."backups/passphrase"}
         AWS_DEFAULT_REGION=eu-central
       '';
     };
 
-    services.restic.backups = let
-      # `name` is the full restic job name (s3-*, sftp-*), so each job gets its own
-      # snapshot and the two targets can run concurrently
-      commonSettings = name: job: let
-        snapshotName = "restic-${name}";
-        fs = filesystemOf job.source;
-        mount =
-          if fs.mountPoint == "/"
-          then ""
-          else fs.mountPoint;
-        snapshot = "${fs.device}@${snapshotName}";
-      in
-        {
+    # Each job backs up to S3 (s3-<name>), then copies the new snapshots to kleiner, so the
+    # source is only read once and kleiner being off doesn't hold back the S3 backups
+    services.restic.backups = mapAttrs' (name: job: let
+      snapshotName = "restic-s3-${name}";
+      fs = filesystemOf job.source;
+      mount =
+        if fs.mountPoint == "/"
+        then ""
+        else fs.mountPoint;
+      snapshot = "${fs.device}@${snapshotName}";
+    in
+      nameValuePair "s3-${name}" ({
+          repository = s3Repo name;
           paths = [
             (
               if job.zfsSnapshot
@@ -97,21 +125,13 @@ in {
             )
           ];
           initialize = true;
-          environmentFile = config.sops.templates."restic-env".path;
+          environmentFile = envFile;
           timerConfig = {
-            OnCalendar = "daily";
-            RandomizedDelaySec = "3h";
+            OnCalendar = cfg.schedule;
+            RandomizedDelaySec = cfg.randomizedDelay;
             Persistent = true;
           };
-          pruneOpts = [
-            "--keep-daily 7"
-            "--keep-weekly 5"
-            "--keep-monthly 12"
-          ];
-          # Verify repository integrity, reading a random sample of pack data each run
-          checkOpts = [
-            "--read-data-subset=2%"
-          ];
+          # Pruning and checking are weekly, in restic-maintenance-<name>
           extraBackupArgs = [
             "--compression=auto"
             "--cleanup-cache"
@@ -125,29 +145,87 @@ in {
           backupCleanupCommand = ''
             ${zfs} destroy ${snapshot}
           '';
+        }))
+    cfg.jobs;
+
+    systemd.services = mkMerge (mapAttrsToList (name: job: let
+        common = {
+          wants = ["network-online.target"];
+          after = ["network-online.target"];
+          # The SFTP backend runs ssh
+          path = [config.programs.ssh.package];
+          environment.RESTIC_CACHE_DIR = "/var/cache/${cacheDir name}";
+          serviceConfig = {
+            Type = "oneshot";
+            EnvironmentFile = envFile;
+            CacheDirectory = cacheDir name;
+            CacheDirectoryMode = "0700";
+            PrivateTmp = true;
+          };
         };
-      s3Jobs =
-        mapAttrs' (
-          name: job:
-            nameValuePair "s3-${name}" (commonSettings "s3-${name}" job
-              // {
-                repository = "s3:${s3Endpoint}/${bucket}/directories/${name}";
-              })
-        )
-        cfg.jobs;
-      sftpJobs =
-        mapAttrs' (
-          name: job:
-            nameValuePair "sftp-${name}" (commonSettings "sftp-${name}" job
-              // {
-                repository = "sftp:jessew@${infra.kleiner.address}:/mnt/HDD1/Backups/Infra/${name}";
-                extraOptions = [
-                  "sftp.args='-i ${config.sops.secrets."sftp/backup_private_key".path}'"
-                ];
-              })
-        )
-        cfg.jobs;
-    in
-      s3Jobs // sftpJobs;
+      in {
+        "restic-backups-s3-${name}".unitConfig.OnSuccess = ["restic-copy-${name}.service"];
+
+        "restic-copy-${name}" = recursiveUpdate common {
+          description = "Copy the ${name} backups to kleiner";
+          environment = {
+            RESTIC_REPOSITORY = sftpRepo name;
+            RESTIC_FROM_REPOSITORY = s3Repo name;
+          };
+          script = ''
+            restic() { ${restic} --option ${escapeShellArg sftpOption} "$@"; }
+
+            # Created with the same chunker parameters as the S3 repository, so that both split
+            # files the same way
+            restic cat config --no-lock > /dev/null || {
+              status=$?
+              if [ "$status" -eq 10 ]; then
+                restic init --copy-chunker-params
+              else
+                exit "$status"
+              fi
+            }
+
+            # Every snapshot kleiner doesn't have yet, e.g. after it was off for a few days
+            restic copy
+          '';
+        };
+
+        # Pruning lists every pack in the repository, and checking downloads a sample of them,
+        # so they run weekly rather than after every backup
+        "restic-maintenance-${name}" = recursiveUpdate common {
+          description = "Prune and check the ${name} backups";
+          script = concatMapStrings (repo: ''
+            ${restic} --repo ${repo} --option ${escapeShellArg sftpOption} unlock
+            ${restic} --repo ${repo} --option ${escapeShellArg sftpOption} forget --prune ${concatStringsSep " " pruneOpts}
+            ${restic} --repo ${repo} --option ${escapeShellArg sftpOption} check --read-data-subset=10%
+          '') [(s3Repo name) (sftpRepo name)];
+        };
+      })
+      cfg.jobs);
+
+    systemd.timers = mapAttrs' (name: job:
+      nameValuePair "restic-maintenance-${name}" {
+        wantedBy = ["timers.target"];
+        timerConfig = {
+          # After the night's backups
+          OnCalendar = "Sun 05:00";
+          RandomizedDelaySec = "1h";
+          Persistent = true;
+        };
+      })
+    cfg.jobs;
+
+    # restic with kleiner's repository and the credentials loaded, like the restic module's
+    # restic-s3-<name> wrappers
+    environment.systemPackages = mapAttrsToList (name: job:
+      pkgs.writeShellScriptBin "restic-sftp-${name}" ''
+        set -a
+        source ${envFile}
+        set +a
+        export RESTIC_CACHE_DIR=/var/cache/${cacheDir name}
+        exec ${restic} --repo ${sftpRepo name} --option ${escapeShellArg sftpOption} "$@"
+      '')
+    cfg.jobs;
   };
 }

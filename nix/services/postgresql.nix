@@ -121,6 +121,13 @@
       '';
     };
 in {
+  # The restic backups (Redis, ClickHouse...) run between pgBackRest's, which start at 00:00 and
+  # 03:00 and take up to ~35 minutes, rather than competing with them for freeman's 2 CPUs
+  services.backups = {
+    schedule = "01:00";
+    randomizedDelay = "90min";
+  };
+
   sops.templates."init-db.sql" = {
     content = ''
       CREATE USER admin WITH SUPERUSER PASSWORD '${config.sops.placeholder."postgresql/root"}';

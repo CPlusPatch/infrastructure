@@ -238,9 +238,9 @@ curl -s -X POST localhost:9093/api/v2/alerts -H 'Content-Type: application/json'
 
 Every backup goes to two places: S3 at Fastly (`eu-central.object.fastlystorage.app`, bucket `backups`), and SFTP to `kleiner:/mnt/HDD1/Backups/Infra`.
 
-**Files (restic).** A service adds `services.backups.jobs.<name>.source = "/var/lib/<name>";`, and `nix/modules/backups.nix` turns that into two restic jobs, `s3-<name>` and `sftp-<name>`. They run daily at a random time between midnight and 3am. Before each run the job snapshots the ZFS dataset and backs up the snapshot, so databases and other files that change mid-run are captured consistently. Each run also prunes old snapshots and reads back a random 2% of the data to check the repository.
+**Files (restic).** A service adds `services.backups.jobs.<name>.source = "/var/lib/<name>";`, and `nix/modules/backups.nix` turns that into a restic job, `s3-<name>`, that runs daily at a random time between midnight and 3am (between 01:00 and 02:30 on `freeman`, around pgBackRest's backups). Before each run the job snapshots the ZFS dataset holding the source and backs up the snapshot, so databases and other files that change mid-run are captured consistently. After a successful run, `restic-copy-<name>` copies the new snapshots to `kleiner`. The source is only read once, and when `kleiner` is off, the next copy catches up on every snapshot it missed.
 
-Retention is 7 daily, 5 weekly and 12 monthly snapshots.
+Every Sunday from 05:00, `restic-maintenance-<name>` prunes both repositories down to 7 daily, 5 weekly and 12 monthly snapshots, and checks them by reading back a random 10% of the data.
 
 One job is special: `immich-media` backs up the photos on the Hetzner storage box (`/mnt/fs-01b/immich`), which is CIFS, so it skips the ZFS snapshot (`zfsSnapshot = false`). Immich's database is on `freeman` with the others, so pgBackRest covers it.
 
@@ -254,12 +254,13 @@ Archiving is asynchronous, so each repository receives WAL independently: when `
 **Not backed up:**
 - Nextcloud's files, Versia's media and Sharkey's media. They live only in Fastly buckets.
 - Nextcloud's `/var/lib/nextcloud`, which holds `config.php` and its instance secrets.
+- Prometheus' data. Compaction rewrites it every day, so each backup would add hundreds of megabytes of metrics that are only useful while recent.
 
 **Checking on them:**
 
 ```bash
-systemctl list-timers 'restic-*' 'pgbackrest-*' 'postgresqlBackup-*'
-journalctl -u restic-backups-s3-synapse -n 30
+systemctl list-timers 'restic-*' 'pgbackrest-*'
+journalctl -u restic-backups-s3-synapse -u restic-copy-synapse -n 30
 restic-s3-synapse snapshots
 ```
 
@@ -269,7 +270,7 @@ The Grafana dashboard's backup table shows how long ago each job last ran, and `
 
 Stop the service before restoring over its data, and restore into a temporary directory first when you can.
 
-**From restic.** Every job has a wrapper (`restic-s3-<name>`, `restic-sftp-<name>`) with the credentials already loaded. Snapshots taken from ZFS keep the snapshot path, `/.zfs/snapshot/restic-<job>/<source>`, so point the restore at that subfolder:
+**From restic.** Every job has a wrapper for each repository (`restic-s3-<name>`, `restic-sftp-<name>` for `kleiner`) with the credentials already loaded. Snapshots taken from ZFS keep the snapshot path, `<dataset mount point>/.zfs/snapshot/restic-s3-<name>/<rest of the source>`, so point the restore at that subfolder. It's the same on `kleiner`, whose snapshots are copies:
 
 ```bash
 restic-s3-vaultwarden snapshots
@@ -279,7 +280,8 @@ restic-s3-vaultwarden restore 'latest:/.zfs/snapshot/restic-s3-vaultwarden/var/l
 
 # Add --dry-run to see what would be restored without writing anything
 # Use a snapshot ID instead of "latest" for an older one
-# From kleiner instead: restic-sftp-vaultwarden ..., with restic-sftp-vaultwarden in the path too
+# From kleiner instead: restic-sftp-vaultwarden, same path. Its snapshots from before October
+# 2026 were made directly, with restic-sftp-vaultwarden in the path instead
 ```
 
 Then stop the service, move its directory aside, copy the restored one into place with the right owner, and start it again.
@@ -380,7 +382,7 @@ Updating the modpack means replacing the `.mrpack` in `assets/` and updating `pa
 
     The challenge uses Cloudflare's resolver (1.1.1.1) for its propagation check, because the local resolver caches the missing TXT record and the check never succeeds.
 
-- **Rebooting** : Check that no backup is running first (`systemctl list-units --state=activating,active 'restic-backups-*.service' 'pgbackrest-*.service'` should list nothing), especially around 03:00, when the pgBackRest backup to `kleiner` can take a while. Reboot `freeman` last if you're doing all three, since everything else depends on it. Services on `faithplate` reconnect by themselves once it's back. Versia waits for the databases before starting.
+- **Rebooting** : Check that no backup is running first (`systemctl list-units --state=activating,active 'restic-*.service' 'pgbackrest-*.service'` should list nothing), especially around 03:00, when the pgBackRest backup to `kleiner` can take a while. Reboot `freeman` last if you're doing all three, since everything else depends on it. Services on `faithplate` reconnect by themselves once it's back. Versia waits for the databases before starting.
 
 ## Setting up a new host
 
