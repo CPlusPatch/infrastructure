@@ -25,6 +25,8 @@ in {
 
     settings = {
       port = 3813;
+      # Only reached through HAProxy
+      address = "127.0.0.1";
       id = "aidx";
       url = "https://mk.cpluspatch.com/";
       fulltextSearch.provider = "sqlLike";
