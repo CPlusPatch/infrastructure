@@ -11,9 +11,11 @@
   cfg = config.modules.haproxy;
 
   # Service rules for the https frontend, as a list of lines. Comments are dropped, as the
-  # lines get regrouped below
+  # lines get regrouped below. trim loses the store paths' context (e.g. pattern files), so
+  # it's added back, or those files wouldn't be built and copied
+  aclText = lib.concatStrings (lib.attrValues cfg.acls);
   aclLines = lib.filter (line: line != "" && !(lib.hasPrefix "#" line)) (
-    map lib.trim (lib.concatMap (lib.splitString "\n") (lib.attrValues cfg.acls))
+    map (line: lib.addContextFrom aclText (lib.trim line)) (lib.concatMap (lib.splitString "\n") (lib.attrValues cfg.acls))
   );
 
   directives = ["acl " "http-request " "http-response " "use_backend "];
