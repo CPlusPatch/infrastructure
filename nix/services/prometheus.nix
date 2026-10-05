@@ -11,6 +11,29 @@
   faithplate = nodes.faithplate.config;
   minecraftPort = nodes.eli.config.services.minecraft-servers.servers.wiki.serverProperties.server-port;
   synapseMetricsPort = (lib.findFirst (listener: listener.type == "metrics") null faithplate.services.matrix-synapse.settings.listeners).port;
+  mailHost = faithplate.mailserver.fqdn;
+
+  # Probes through the blackbox exporter, labelled by target
+  blackboxRelabel = [
+    {
+      source_labels = ["__address__"];
+      target_label = "__param_target";
+    }
+    {
+      source_labels = ["__param_target"];
+      target_label = "instance";
+      regex = "(?:https://)?(.*)";
+    }
+    {
+      target_label = "__address__";
+      replacement = "127.0.0.1:${toString cfg.exporters.blackbox.port}";
+    }
+  ];
+
+  # Redis servers, scraped through the exporter's multi-target endpoint
+  redisTargets = lib.mapAttrsToList (name: server: "redis://${server.bind}:${toString server.port}") (
+    lib.filterAttrs (name: server: server.enable) config.services.redis.servers
+  );
 
   # HTTPS services on faithplate, from its HAProxy vhosts
   probedDomains = lib.sort lib.lessThan (
@@ -138,6 +161,13 @@
           annotations.summary = "{{ $labels.name }} hasn't run for {{ $value | humanizeDuration }} on {{ $labels.instance }}";
         }
         {
+          alert = "RedisDown";
+          expr = "redis_up == 0";
+          for = "2m";
+          labels.severity = "critical";
+          annotations.summary = "Redis {{ $labels.instance }} is down";
+        }
+        {
           # A segment is archived at least every 5 minutes (archive_timeout). Usually means a
           # pgbackrest repo is unreachable: PostgreSQL keeps the WAL meanwhile, and drops it
           # for that repo after archive-push-queue-max
@@ -238,10 +268,18 @@ in {
         ];
       }
       {
-        job_name = "blackbox-https";
-        metrics_path = "/probe";
-        params.module = ["https"];
-        static_configs = [{targets = map (domain: "https://${domain}") probedDomains;}];
+        job_name = "clickhouse";
+        static_configs = [
+          {
+            targets = ["${ips.freeman}:${toString config.services.clickhouse.serverConfig.prometheus.port}"];
+            labels.instance = "freeman";
+          }
+        ];
+      }
+      {
+        job_name = "redis";
+        metrics_path = "/scrape";
+        static_configs = [{targets = redisTargets;}];
         relabel_configs = [
           {
             source_labels = ["__address__"];
@@ -250,27 +288,50 @@ in {
           {
             source_labels = ["__param_target"];
             target_label = "instance";
-            regex = "https://(.*)";
           }
           {
             target_label = "__address__";
-            replacement = "127.0.0.1:${toString cfg.exporters.blackbox.port}";
+            replacement = "127.0.0.1:${toString cfg.exporters.redis.port}";
           }
         ];
+      }
+      {
+        job_name = "blackbox-https";
+        metrics_path = "/probe";
+        params.module = ["https"];
+        static_configs = [{targets = map (domain: "https://${domain}") probedDomains;}];
+        relabel_configs = blackboxRelabel;
       }
       {
         job_name = "blackbox-tcp";
         metrics_path = "/probe";
         params.module = ["tcp"];
         static_configs = [{targets = ["mc.cpluspatch.com:${toString minecraftPort}"];}];
+        relabel_configs = blackboxRelabel;
+      }
+      {
+        # Submission and IMAP over TLS, which also checks the mail certificate
+        job_name = "blackbox-tls";
+        metrics_path = "/probe";
+        params.module = ["tls"];
+        static_configs = [{targets = ["${mailHost}:465" "${mailHost}:993"];}];
+        relabel_configs = blackboxRelabel;
+      }
+      {
+        # Incoming mail. Over the private network, as Hetzner can block outgoing port 25
+        job_name = "blackbox-smtp";
+        metrics_path = "/probe";
+        params.module = ["smtp_starttls"];
+        static_configs = [
+          {
+            targets = ["${ips.faithplate}:25"];
+            labels.instance = "${mailHost}:25";
+          }
+        ];
         relabel_configs = [
           {
             source_labels = ["__address__"];
             target_label = "__param_target";
-          }
-          {
-            source_labels = ["__param_target"];
-            target_label = "instance";
           }
           {
             target_label = "__address__";
@@ -327,6 +388,13 @@ in {
     };
 
     exporters = {
+      redis = {
+        enable = true;
+        listenAddress = "127.0.0.1";
+        # Passwords by Redis URL, for the multi-target endpoint
+        extraFlags = ["--redis.password-file=%d/passwords"];
+      };
+
       postgres = {
         enable = true;
         runAsLocalSuperUser = true;
@@ -352,11 +420,45 @@ in {
               prober = "tcp";
               timeout = "10s";
             };
+            tls = {
+              prober = "tcp";
+              timeout = "10s";
+              tcp.tls = true;
+            };
+            smtp_starttls = {
+              prober = "tcp";
+              timeout = "10s";
+              tcp = {
+                tls_config.server_name = mailHost;
+                query_response = [
+                  {expect = "^220 ";}
+                  {send = "EHLO prober\r";}
+                  {expect = "^250[ -]STARTTLS";}
+                  {send = "STARTTLS\r";}
+                  {expect = "^220 ";}
+                  {starttls = true;}
+                  {send = "EHLO prober\r";}
+                  {expect = "^250 ";}
+                  {send = "QUIT\r";}
+                ];
+              };
+            };
           };
         });
       };
     };
   };
+
+  sops.templates."redis-exporter-passwords.json".content = builtins.toJSON (
+    lib.mapAttrs' (name: server: {
+      name = "redis://${server.bind}:${toString server.port}";
+      value = config.sops.placeholder."redis/${name}";
+    })
+    (lib.filterAttrs (name: server: server.enable) config.services.redis.servers)
+  );
+
+  # The exporter runs with a dynamic user, so it gets the file as a credential
+  systemd.services.prometheus-redis-exporter.serviceConfig.LoadCredential = "passwords:${config.sops.templates."redis-exporter-passwords.json".path}";
 
   services.backups.jobs.prometheus.source = "/var/lib/prometheus2";
 }

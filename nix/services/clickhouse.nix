@@ -10,6 +10,15 @@
       listen_host = infra.ips.freeman;
       # The default, set here so plausible.nix can read it
       http_port = 8123;
+
+      # Scraped by Prometheus
+      prometheus = {
+        endpoint = "/metrics";
+        port = 9363;
+        metrics = true;
+        events = true;
+        asynchronous_metrics = true;
+      };
     };
   };
 
