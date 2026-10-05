@@ -138,6 +138,16 @@
           annotations.summary = "{{ $labels.name }} hasn't run for {{ $value | humanizeDuration }} on {{ $labels.instance }}";
         }
         {
+          # A segment is archived at least every 5 minutes (archive_timeout). Usually means a
+          # pgbackrest repo is unreachable: PostgreSQL keeps the WAL meanwhile, and drops it
+          # for that repo after archive-push-queue-max
+          alert = "WalArchivingStalled";
+          expr = "pg_stat_archiver_last_archive_age > 1800";
+          labels.severity = "warning";
+          annotations.summary = "PostgreSQL hasn't archived WAL for {{ $value | humanizeDuration }} on {{ $labels.instance }}";
+          annotations.description = "journalctl -u postgresql | grep -A1 'archive-push command encountered'";
+        }
+        {
           alert = "PostgresDown";
           expr = "pg_up == 0";
           for = "2m";

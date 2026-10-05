@@ -122,6 +122,17 @@ in {
 
     settings = {
       process-max = 4;
+
+      # archive-push fails whenever any repo fails, so that PostgreSQL keeps the WAL until
+      # every repo has it. Synchronously, that also stops WAL from reaching the other repos:
+      # kleiner being off for two weeks once left Fastly without WAL for two weeks. Async
+      # pushes every pending segment to each repo independently, so only kleiner falls behind
+      archive-async = true;
+      spool-path = "/var/spool/pgbackrest";
+      # Meanwhile PostgreSQL keeps the WAL. Past this much, pgbackrest drops it so the disk
+      # doesn't fill up, and kleiner can't restore past that point until its next full backup.
+      # Idle segments compress ~10x on ZFS, but busy ones don't, so it has to fit uncompressed
+      archive-push-queue-max = "8GiB";
       log-level-console = "warn";
       log-level-file = "off"; # journald captures all output
     };
@@ -133,13 +144,24 @@ in {
         serviceConfig = {
           # S3 credentials, which the module doesn't allow in the Nix store
           EnvironmentFile = config.sops.templates."pgbackrest-s3-env".path;
+          # stanza-create checks every repo and can't be limited to one, so don't let an
+          # unreachable kleiner stop the backups to Fastly ("-" ignores failures)
+          ExecStartPre = lib.mkForce "-${lib.getExe pkgs.pgbackrest} --stanza=main stanza-create";
           ExecStart = lib.mkForce "${lib.getExe pkgs.pgbackrest} --stanza=main --repo=${toString job.repo} backup --type=${job.type}";
         };
       })
     backupJobs
     // {
       # S3 credentials for archive-push, through archive_command
-      postgresql.serviceConfig.EnvironmentFile = config.sops.templates."pgbackrest-s3-env".path;
+      postgresql = {
+        serviceConfig = {
+          EnvironmentFile = config.sops.templates."pgbackrest-s3-env".path;
+          # Async archive-push runs inside the service's sandbox
+          ReadWritePaths = ["/var/spool/pgbackrest"];
+        };
+        # Stop before Tailscale on shutdown, so the last WAL can still reach kleiner
+        after = ["tailscaled.service"];
+      };
 
       # Sets each role's password from its secret, so the databases can be recreated from
       # this file alone. Runs on every boot and deploy, which also undoes manual changes
@@ -221,9 +243,10 @@ in {
   };
 
   systemd.tmpfiles.rules = [
-    # Lock directory shared between the pgbackrest (backup) and postgres (archive-push) users.
-    # Mode 1777 (sticky + world-writable, like /tmp) lets both users create and flock files
-    # without one user's files blocking the other.
+    # Lock directory for the backup jobs. PostgreSQL has a private /tmp, so archive-push uses
+    # its own, which is fine as archiving and backups take different locks
     "d /tmp/pgbackrest 1777 root root -"
+    # Spool for async archive-push, which runs as postgres
+    "d /var/spool/pgbackrest 0750 postgres postgres -"
   ];
 }
