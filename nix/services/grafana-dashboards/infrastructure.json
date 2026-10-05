@@ -720,7 +720,7 @@
             "type": "prometheus",
             "uid": "eegmzxgejop34d"
           },
-          "expr": "max by (instance) (1 - node_memory_MemAvailable_bytes{instance=~\"$host\"} / node_memory_MemTotal_bytes{instance=~\"$host\"})",
+          "expr": "max by (instance) (1 - (node_memory_MemAvailable_bytes{instance=~\"$host\"} + clamp_min(node_zfs_arc_size{instance=~\"$host\"} - node_zfs_arc_c_min{instance=~\"$host\"}, 0)) / node_memory_MemTotal_bytes{instance=~\"$host\"})",
           "legendFormat": "",
           "refId": "D",
           "instant": true,
@@ -1153,7 +1153,7 @@
             "type": "prometheus",
             "uid": "eegmzxgejop34d"
           },
-          "expr": "1 - node_memory_MemAvailable_bytes{instance=~\"$host\"} / node_memory_MemTotal_bytes{instance=~\"$host\"}",
+          "expr": "1 - (node_memory_MemAvailable_bytes{instance=~\"$host\"} + clamp_min(node_zfs_arc_size{instance=~\"$host\"} - node_zfs_arc_c_min{instance=~\"$host\"}, 0)) / node_memory_MemTotal_bytes{instance=~\"$host\"}",
           "legendFormat": "{{instance}}",
           "refId": "A"
         }

@@ -29,6 +29,10 @@
   };
   ntfyQuery = lib.concatStringsSep "&" (lib.mapAttrsToList (k: v: "${k}=${lib.escapeURL v}") ntfyTemplates);
 
+  # Available memory including ZFS' cache above its minimum, which ZFS frees under pressure
+  # but the kernel doesn't count in MemAvailable
+  memAvailable = "(node_memory_MemAvailable_bytes + clamp_min(node_zfs_arc_size - node_zfs_arc_c_min, 0))";
+
   # Excludes pseudo and network filesystems that come and go
   realFs = ''fstype!~"tmpfs|ramfs|squashfs|overlay|autofs|cifs|fuse.*",mountpoint!~"/run.*|/var/lib/docker.*|/nix/store|/[.]zfs/.*"'';
 
@@ -86,7 +90,7 @@
         }
         {
           alert = "MemoryAlmostExhausted";
-          expr = "node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes < 0.02";
+          expr = "${memAvailable} / node_memory_MemTotal_bytes < 0.02";
           for = "5m";
           labels.severity = "critical";
           annotations.summary = "{{ $labels.instance }} is about to run out of memory";
