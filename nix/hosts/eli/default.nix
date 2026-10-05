@@ -1,11 +1,7 @@
 {
   imports = [
-    ./hardware-configuration.nix
-
     ../../services/minecraft.nix
   ];
-
-  disko.devices.disk.main.device = "/dev/sda";
 
   # ZFS' cache can grow to most of the RAM by default, leaving the 5 GiB Minecraft heap
   # little room. 1 GiB is plenty for a single game world

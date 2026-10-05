@@ -1,9 +1,6 @@
-# Remember to set the device path to the correct disk
-#
-# disko.devices.disk.main.device = "/dev/sdX";
-#
-# when applying this configuration
-{...}: {
+# Hetzner Cloud VMs have a single disk at /dev/sda. Override disko.devices.disk.main.device
+# for a host where that isn't the case
+{lib, ...}: {
   services.zfs.autoScrub.enable = true;
   services.zfs.trim.enable = true;
   boot.zfs.forceImportRoot = false;
@@ -12,6 +9,7 @@
     disk = {
       main = {
         type = "disk";
+        device = lib.mkDefault "/dev/sda";
         content = {
           type = "gpt";
 

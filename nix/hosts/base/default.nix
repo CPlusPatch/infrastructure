@@ -10,6 +10,7 @@
 in {
   imports = [
     ../../features/hetzner-network.nix
+    ../../features/hetzner-vm.nix
     ../../features/home-manager
     ../../features/monitoring-agent.nix
     ../../features/packages.nix

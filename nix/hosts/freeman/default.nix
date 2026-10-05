@@ -1,15 +1,11 @@
 {
   imports = [
-    ./hardware-configuration.nix
-
     ../../services/clickhouse.nix
     ../../services/postgresql.nix
     ../../services/prometheus.nix
     ../../services/redis.nix
     ../../services/influxdb.nix
   ];
-
-  disko.devices.disk.main.device = "/dev/sda";
 
   networking = {
     # Generate with:

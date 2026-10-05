@@ -1,7 +1,5 @@
 {
   imports = [
-    ./hardware-configuration.nix
-
     ../../features/fs-01b.nix
 
     ../../services/haproxy.nix
@@ -20,8 +18,6 @@
     ../../services/fitbit-prometheus.nix
     ../../services/factorio.nix
   ];
-
-  disko.devices.disk.main.device = "/dev/sda";
 
   modules.dns.domains = [
     # Factorio server
