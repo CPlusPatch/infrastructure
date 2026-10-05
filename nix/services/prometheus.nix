@@ -398,6 +398,12 @@ in {
       postgres = {
         enable = true;
         runAsLocalSuperUser = true;
+        # The 50 most expensive queries, from pg_stat_statements (see postgresql.nix)
+        extraFlags = [
+          "--collector.stat_statements"
+          "--collector.stat_statements.include_query"
+          "--collector.stat_statements.limit=50"
+        ];
       };
 
       blackbox = {

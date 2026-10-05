@@ -191,7 +191,7 @@ The servers have delete and rebuild protection on. Removing a server means turni
 - **Dashboard:** [stats.cpluspatch.com](https://stats.cpluspatch.com), "Infrastructure" folder. It's provisioned from `nix/services/grafana-dashboards/infrastructure.json` and read-only in the UI, so change the JSON in the repo instead. Dashboards made in the UI live in "General" and aren't touched by deploys.
 - **Prometheus:** port 9090 on `freeman`, reachable over the private network or Tailscale.
 - **Probes:** every HTTPS vhost, `matrix.cpluspatch.dev`, the Minecraft port, SMTP (STARTTLS on 25, over the private network) and submission and IMAP over TLS (465, 993) are probed from `freeman` every 15 seconds. The HTTPS list comes from HAProxy's vhosts, so new services are picked up automatically.
-- **Scraped:** node exporters, HAProxy, PostgreSQL, ClickHouse, every Redis server (through one `redis_exporter`), and Synapse.
+- **Scraped:** node exporters, HAProxy, PostgreSQL, ClickHouse, every Redis server (through one `redis_exporter`), and Synapse. The PostgreSQL exporter includes the 50 most expensive queries, from `pg_stat_statements`.
 
 Alert rules are in `nix/services/prometheus.nix`:
 

@@ -272,6 +272,28 @@ in {
         '';
       };
 
+      # pg_stat_statements' view, read by the Prometheus exporter from the postgres database
+      postgresql-stat-statements = {
+        description = "Set up pg_stat_statements";
+        wantedBy = ["multi-user.target"];
+        requires = ["postgresql-setup.service"];
+        after = ["postgresql-setup.service"];
+        path = [config.services.postgresql.finalPackage];
+        environment.PGPORT = toString config.services.postgresql.settings.port;
+        serviceConfig = {
+          Type = "oneshot";
+          RemainAfterExit = true;
+          User = "postgres";
+          Group = "postgres";
+        };
+        script = ''
+          psql -d postgres -v ON_ERROR_STOP=1 <<'EOF'
+            CREATE EXTENSION IF NOT EXISTS pg_stat_statements;
+            ALTER EXTENSION pg_stat_statements UPDATE;
+          EOF
+        '';
+      };
+
       # Sets each role's password from its secret, so the databases can be recreated from
       # this file alone. Runs on every boot and deploy, which also undoes manual changes
       postgresql-set-passwords = {
@@ -326,8 +348,10 @@ in {
     settings = {
       port = 5432;
 
-      # VectorChord has to be loaded at startup
-      shared_preload_libraries = ["vchord"];
+      # VectorChord has to be loaded at startup. pg_stat_statements tracks query statistics,
+      # exported to Prometheus
+      shared_preload_libraries = ["vchord" "pg_stat_statements"];
+      track_io_timing = true;
 
       # ZFS never writes part of a record, so pages can't be torn and full-page images in the
       # WAL (~98% of it) are useless. Requires a recordsize of at least 8K (zroot/postgresql's is
