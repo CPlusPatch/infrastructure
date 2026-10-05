@@ -43,10 +43,6 @@ in {
       http-response set-header Permissions-Policy "interest-cohort=()"
       http-response set-header X-Clacks-Overhead "GNU memdmp"
 
-      # Ban Applebot because it makes sharkey crash
-      acl applebot hdr_sub(User-Agent) Applebot
-      http-request return status 401 if applebot
-
       # Redirect cpluspatch.dev to cpluspatch.com
       acl is_old_site hdr(host) -i cpluspatch.dev
       http-request redirect code 301 location https://cpluspatch.com%[capture.req.uri] if is_old_site !{ path_beg /.well-known/matrix }

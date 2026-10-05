@@ -18,6 +18,7 @@
     ../../services/fitbit-prometheus.nix
     ../../services/factorio.nix
     ../../services/minecraft-proxy.nix
+    ../../services/banlist.nix
   ];
 
   # ZFS' cache can grow to most of the RAM by default. Walking a large directory, like Synapse's
