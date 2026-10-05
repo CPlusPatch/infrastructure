@@ -89,6 +89,10 @@ in {
         cfg.vhosts;
 
       security.acme.certs = lib.mapAttrs' (name: vhost: lib.nameValuePair vhost.domain {}) cfg.vhosts;
+
+      modules.dns.domains =
+        lib.mapAttrsToList (name: vhost: vhost.domain) cfg.vhosts
+        ++ ["mc.cpluspatch.com" "broken.cpluspatch.com" "text.cpluspatch.com"];
     }
     {
       modules.haproxy.frontends.minecraft-eli-fe = ''

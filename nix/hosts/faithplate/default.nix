@@ -23,8 +23,7 @@
 
   disko.devices.disk.main.device = "/dev/sda";
 
-  # Records without a certificate on this host
-  modules.dns.extraDomains = [
+  modules.dns.domains = [
     # Factorio server
     "mindtorio.factorio.cpluspatch.com"
   ];

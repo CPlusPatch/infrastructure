@@ -109,7 +109,7 @@
     # Domains pointing to each host, read by Terraform from terraform/domains.json.
     # Regenerate with: nix eval --json .#domains | jq -S . > terraform/domains.json
     domains = nixpkgs.lib.filterAttrs (host: domains: domains != []) (
-      builtins.mapAttrs (host: node: node.config.modules.dns.domains) self.colmenaHive.nodes
+      builtins.mapAttrs (host: node: nixpkgs.lib.sort nixpkgs.lib.lessThan (nixpkgs.lib.unique node.config.modules.dns.domains)) self.colmenaHive.nodes
     );
 
     checks.x86_64-linux =

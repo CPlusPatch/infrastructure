@@ -269,5 +269,7 @@ in {
     "cpluspatch.dev" = {};
   };
 
+  modules.dns.domains = ["matrix.cpluspatch.dev" "cpluspatch.dev"];
+
   services.backups.jobs.synapse.source = "/var/lib/matrix-synapse";
 }
