@@ -29,6 +29,14 @@ in {
     firewall.trustedInterfaces = ["enp7s0"];
   };
 
+  # BBR keeps throughput up on long or lossy paths (backups to Fastly and kleiner, federation)
+  # where cubic backs off at every lost packet. fq is the queueing it's designed for
+  boot.kernelModules = ["tcp_bbr"];
+  boot.kernel.sysctl = {
+    "net.ipv4.tcp_congestion_control" = "bbr";
+    "net.core.default_qdisc" = "fq";
+  };
+
   systemd.network = {
     enable = true;
 
