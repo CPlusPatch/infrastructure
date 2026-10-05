@@ -32,6 +32,7 @@
     faithplate = {
       hosts = ["faithplate"];
       secrets = [
+        "acme/cloudflare_dns_token"
         "disks/fs-01b"
         "factorio/password"
         "fitbit/client_id"

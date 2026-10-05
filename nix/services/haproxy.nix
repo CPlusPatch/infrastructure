@@ -354,10 +354,40 @@ in {
         defaults = {
           listenHTTP = ":1360";
           group = config.services.haproxy.group;
+          # HAProxy only reads certificates when it (re)starts
+          reloadServices = ["haproxy.service"];
         };
       };
 
-      security.acme.certs."${config.networking.hostName}.infra.cpluspatch.com" = {};
+      # Wildcard certificates, issued with DNS challenges through Cloudflare
+      sops.templates."acme-cloudflare.env" = {
+        content = ''
+          CLOUDFLARE_DNS_API_TOKEN=${config.sops.placeholder."acme/cloudflare_dns_token"}
+        '';
+        owner = "acme";
+      };
+
+      security.acme.certs.wildcard-cpluspatch-com = {
+        domain = "*.cpluspatch.com";
+        extraDomainNames = ["*.lgs.cpluspatch.com"];
+        dnsProvider = "cloudflare";
+        listenHTTP = null;
+        # The local resolver can cache the challenge record as missing, and never see it appear
+        dnsResolver = "1.1.1.1:53";
+        environmentFile = config.sops.templates."acme-cloudflare.env".path;
+      };
+      security.acme.certs.wildcard-cpluspatch-dev = {
+        domain = "cpluspatch.dev";
+        extraDomainNames = ["*.cpluspatch.dev"];
+        dnsProvider = "cloudflare";
+        listenHTTP = null;
+        # The local resolver can cache the challenge record as missing, and never see it appear
+        dnsResolver = "1.1.1.1:53";
+        environmentFile = config.sops.templates."acme-cloudflare.env".path;
+      };
+
+      # Also served by HAProxy; the mail server module sets its own reloadServices
+      security.acme.certs."${config.networking.hostName}.infra.cpluspatch.com".reloadServices = ["haproxy.service"];
       security.acme.certs."broken.cpluspatch.com" = {};
       security.acme.certs."text.cpluspatch.com" = {};
     }
