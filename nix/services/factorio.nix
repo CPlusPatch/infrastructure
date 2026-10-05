@@ -1,4 +1,8 @@
-{config, ...}: {
+{
+  config,
+  lib,
+  ...
+}: {
   sops.templates."factorio.json" = {
     content = ''
       {
@@ -21,6 +25,10 @@
     ];
     extraSettingsFile = config.sops.templates."factorio.json".path;
   };
+
+  # Nobody plays at the moment, so don't start it at boot. Start it by hand with
+  # `systemctl start factorio`
+  systemd.services.factorio.wantedBy = lib.mkForce [];
 
   modules.dns.domains = ["mindtorio.factorio.cpluspatch.com"];
 

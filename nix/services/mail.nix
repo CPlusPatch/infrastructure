@@ -22,7 +22,8 @@
       };
     };
 
-    virusScanning = true;
+    # ClamAV holds ~1 GB of signatures in memory, and rspamd already filters spam
+    virusScanning = false;
 
     fullTextSearch = {
       enable = false;

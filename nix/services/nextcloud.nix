@@ -33,6 +33,17 @@
     https = true;
     maxUploadSize = "10G";
 
+    # The default allows 120 PHP workers (~70 MB each), enough to run faithplate out of memory
+    poolSettings = {
+      "pm" = "dynamic";
+      "pm.max_children" = "16";
+      "pm.start_servers" = "4";
+      "pm.min_spare_servers" = "2";
+      "pm.max_spare_servers" = "6";
+      "pm.max_requests" = "500";
+      "pm.status_path" = "/status";
+    };
+
     phpOptions = {
       "opcache.interned_strings_buffer" = "20";
     };
