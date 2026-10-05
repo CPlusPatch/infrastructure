@@ -48,6 +48,8 @@ in {
         s3-region = "eu-central";
         s3-endpoint = "eu-central.object.fastlystorage.app";
         s3-uri-style = "path";
+        # Retention is per repository, an unindexed retention-full only applies to repo1
+        retention-full = 10;
       };
 
       # Secondary SFTP backup on kleiner
@@ -61,6 +63,7 @@ in {
         # ssh-keyscan -t ed25519 kleiner 2>/dev/null | ssh-keygen -lf - -E sha256
         # Use only the base64 part after "SHA256:"
         sftp-host-fingerprint = "7750d245a9dbf20611239c9a97c7aeca229058eb44d77f869fa57a1a88361bc5";
+        retention-full = 10;
       };
     };
 
@@ -84,7 +87,6 @@ in {
       };
 
       settings = {
-        retention-full = 10;
         start-fast = true;
       };
     };
