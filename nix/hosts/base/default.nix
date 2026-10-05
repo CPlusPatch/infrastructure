@@ -13,6 +13,7 @@
     ../../features/tailscale.nix
     ../../modules/backups.nix
     ../../modules/dns.nix
+    ../../modules/haproxy.nix
     ../../modules/secrets.nix
   ];
 

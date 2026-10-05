@@ -1,0 +1,347 @@
+# HAProxy as the HTTPS entry point: TLS termination with ACME certificates, routing by host
+# name, error pages and an optional bot challenge. Services add vhosts, rules and backends;
+# nix/services/haproxy.nix holds the site-wide policy
+# WARNING: This is easily the most complex module in this repo. It is a good idea to read the HAProxy documentation and understand how it works before trying to modify it. The module is designed to be flexible, but that flexibility comes at the cost of complexity.
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}: let
+  cfg = config.modules.haproxy;
+
+  # Service rules for the https frontend, as a list of lines. Comments are dropped, as the
+  # lines get regrouped below
+  aclLines = lib.filter (line: line != "" && !(lib.hasPrefix "#" line)) (
+    map lib.trim (lib.concatMap (lib.splitString "\n") (lib.attrValues cfg.acls))
+  );
+
+  directives = ["acl " "http-request " "http-response " "use_backend "];
+
+  # HAProxy evaluates all http-request rules before any use_backend rule whatever their
+  # order, so grouping lines by directive keeps behaviour and avoids ordering warnings
+  aclLinesOf = directive:
+    lib.concatMapStringsSep "\n" (line: "  ${line}") (lib.filter (lib.hasPrefix directive) aclLines);
+
+  unsupportedAclLines = lib.filter (line: !(lib.any (d: lib.hasPrefix d line) directives)) aclLines;
+
+  # Domains served over HTTPS, and whether a certificate (exact or wildcard) covers them
+  httpsDomains = lib.mapAttrsToList (name: vhost: vhost.domain) cfg.vhosts ++ cfg.httpsDomains;
+
+  certNames = lib.concatMap (cert: [cert.domain] ++ cert.extraDomainNames) (lib.attrValues config.security.acme.certs);
+
+  covers = name: domain:
+    name
+    == domain
+    || (lib.hasPrefix "*." name
+      && lib.hasSuffix (lib.removePrefix "*" name) domain
+      && !(lib.hasInfix "." (lib.removeSuffix (lib.removePrefix "*" name) domain)));
+
+  uncoveredDomains = lib.filter (domain: !(lib.any (name: covers name domain) certNames)) httpsDomains;
+
+  protectedDomains = lib.mapAttrsToList (name: vhost: vhost.domain) (lib.filterAttrs (name: vhost: vhost.protected) cfg.vhosts);
+  challenge = protectedDomains != [];
+
+  logFormat = ''
+    http-request capture req.hdr(Host) len 20
+    log-format "%ci:%cp [%tr] %ft %b/%s %ST %ac/%fc/%bc/%sc/%rc %[capture.req.hdr(0)] %HM %{+Q}HU"
+  '';
+
+  indent = lib.replaceStrings ["\n"] ["\n  "];
+in {
+  options.modules.haproxy = {
+    enable = lib.mkEnableOption "HAProxy as the HTTPS entry point";
+
+    vhosts = lib.mkOption {
+      description = "HTTPS services by domain. Each one gets a routing rule, a backend and a DNS record";
+      default = {};
+      type = lib.types.attrsOf (lib.types.submodule {
+        options = {
+          domain = lib.mkOption {
+            type = lib.types.str;
+          };
+
+          server = lib.mkOption {
+            type = lib.types.str;
+            description = "Address of the backend server, e.g. 127.0.0.1:8080";
+          };
+
+          extraRules = lib.mkOption {
+            type = lib.types.lines;
+            default = "";
+            description = "Extra acl and http-request lines. The is_<name> ACL matches the domain";
+          };
+
+          protected = lib.mkOption {
+            type = lib.types.bool;
+            default = false;
+            description = ''
+              Make browsers solve a proof-of-work challenge before reaching the service, like
+              Anubis. Keeps out scrapers that pretend to be browsers, not API clients
+            '';
+          };
+        };
+      });
+    };
+
+    acls = lib.mkOption {
+      type = lib.types.attrsOf lib.types.lines;
+      default = {};
+      description = "Raw rules for the https frontend: acl, http-request, http-response and use_backend lines";
+    };
+
+    httpsDomains = lib.mkOption {
+      type = lib.types.listOf lib.types.str;
+      default = [];
+      description = "Domains served over HTTPS through raw acls, checked against the certificates like vhosts";
+    };
+
+    backends = lib.mkOption {
+      type = lib.types.attrsOf lib.types.str;
+      default = {};
+      description = "Raw backend sections";
+    };
+
+    frontends = lib.mkOption {
+      type = lib.types.attrsOf lib.types.str;
+      default = {};
+      description = "Raw frontend sections, e.g. TCP forwards";
+    };
+
+    extraConfig = lib.mkOption {
+      type = lib.types.lines;
+      default = "";
+      description = "Raw sections added after the defaults, e.g. userlists";
+    };
+
+    metrics = {
+      port = lib.mkOption {
+        type = lib.types.port;
+        default = 8899;
+        description = "Port of the Prometheus endpoint (/metrics) and the stats page (/)";
+      };
+
+      userlist = lib.mkOption {
+        type = lib.types.nullOr lib.types.str;
+        default = null;
+        description = "Userlist whose users can open the stats page. Prometheus metrics don't need auth";
+      };
+    };
+
+    enableConfigCheck = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+      description = "Check the HAProxy configuration at build time, failing on errors and warnings";
+    };
+  };
+
+  config = lib.mkIf cfg.enable {
+    modules.haproxy.acls =
+      lib.mapAttrs (name: vhost: ''
+        acl is_${name} hdr(host) -i ${vhost.domain}
+        ${vhost.extraRules}
+        use_backend ${name} if is_${name}
+      '')
+      cfg.vhosts;
+
+    modules.haproxy.backends =
+      lib.mapAttrs (name: vhost: ''
+        backend ${name}
+          server ${name} ${vhost.server}
+      '')
+      cfg.vhosts;
+
+    modules.dns.domains = httpsDomains;
+
+    networking.firewall = {
+      allowedTCPPorts = [80 443];
+      allowedUDPPorts = [443]; # HTTP/3
+    };
+
+    # HAProxy owns 80 and 443, so nginx (Nextcloud, static files) listens behind it
+    services.nginx = {
+      defaultHTTPListenPort = 8080;
+      defaultSSLListenPort = 8443;
+    };
+
+    environment.etc."tls.certlist" = {
+      text = let
+        isWildcard = name: lib.hasPrefix "wildcard-" name;
+        names = lib.attrNames config.security.acme.certs;
+      in
+        lib.concatMapStrings (name: "${config.security.acme.certs.${name}.directory}/full.pem\n")
+        (lib.filter isWildcard names ++ lib.filter (name: !isWildcard name) names);
+    };
+
+    security.acme.defaults = {
+      group = config.services.haproxy.group;
+      # HAProxy only reads certificates when it (re)starts
+      reloadServices = ["haproxy.service"];
+    };
+
+    assertions = [
+      {
+        assertion = uncoveredDomains == [];
+        message = "No certificate covers these HTTPS domains: ${lib.concatStringsSep ", " uncoveredDomains}";
+      }
+      {
+        assertion = unsupportedAclLines == [];
+        message = "modules.haproxy.acls only supports ${lib.concatStringsSep ", " (map lib.trim directives)} lines, got: ${lib.concatStringsSep ", " unsupportedAclLines}";
+      }
+    ];
+
+    system.checks = lib.mkIf cfg.enableConfigCheck [
+      (pkgs.runCommand "check-haproxy-config" {
+          nativeBuildInputs = [config.services.haproxy.package pkgs.openssl];
+        } ''
+          # The real certificates only exist at runtime, so check against a self-signed one
+          openssl req -x509 -newkey ec -pkeyopt ec_paramgen_curve:prime256v1 -nodes \
+            -subj /CN=check -days 1 -keyout key.pem -out cert.pem 2>/dev/null
+          cat cert.pem key.pem > full.pem
+          echo "$PWD/full.pem" > certlist
+          sed "s|/etc/tls.certlist|$PWD/certlist|g" ${config.environment.etc."haproxy.cfg".source} > haproxy.cfg
+
+          # -dW makes warnings fatal
+          haproxy -dW -c -f haproxy.cfg > $out 2>&1 || { cat $out; exit 1; }
+        '')
+    ];
+
+    # The module doesn't reload HAProxy when its configuration or certificate list change
+    systemd.services.haproxy.reloadTriggers = [
+      config.environment.etc."haproxy.cfg".source
+      config.environment.etc."tls.certlist".source
+    ];
+
+    services.haproxy = {
+      enable = true;
+      config = ''
+        global
+          log /dev/log local0 notice
+          stats timeout 30s
+          daemon
+          limited-quic
+          maxconn 50000
+
+          # Don't use SSLv3 or TLSv1.0/1.1
+          ssl-default-bind-ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384
+          ssl-default-bind-ciphersuites TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256
+          ssl-default-bind-options no-sslv3 no-tlsv10 no-tlsv11
+
+          # Enable SSL session caching
+          tune.ssl.cachesize 50000
+          tune.ssl.lifetime 300
+
+          # Prevent hangs during uploads
+          tune.bufsize        131072   # 128KB — covers most upload chunks
+          tune.maxrewrite     8192
+          tune.recv_enough    131072
+
+        http-errors errors
+          errorfile 503 ${pkgs.cpluspatch-pages}/503.http
+          errorfile 502 ${pkgs.cpluspatch-pages}/502.http
+
+        defaults
+          log     global
+          mode    http
+          option  dontlognull
+          timeout connect 5s
+          timeout client  50s
+          timeout server  5m
+          timeout tunnel  1h   # for tunneled (WebSockets) connections
+
+          # Compression config
+          compression algo gzip
+          compression type text/html text/plain text/css application/javascript application/json
+
+        ${cfg.extraConfig}
+
+        frontend metrics
+          bind :::${toString cfg.metrics.port} v4v6
+          mode http
+          http-request use-service prometheus-exporter if { path /metrics }
+          no log
+          stats enable
+          stats uri /
+          stats refresh 10s
+          ${lib.optionalString (cfg.metrics.userlist != null) "stats http-request auth unless { http_auth(${cfg.metrics.userlist}) }"}
+
+        frontend http
+          mode http
+          bind :::80 v4v6
+          ${indent logFormat}
+          # Certificates use DNS challenges, so everything is redirected
+          http-request redirect scheme https
+
+          errorfiles errors
+
+        frontend https
+          mode http
+          bind :::443 v4v6 ssl prefer-client-ciphers crt-list /etc/tls.certlist alpn h2,http/1.1
+          bind quic4@:443 ssl prefer-client-ciphers crt-list /etc/tls.certlist alpn h3
+          bind quic6@:443 ssl prefer-client-ciphers crt-list /etc/tls.certlist alpn h3
+          option forwardfor
+          http-request set-header X-Forwarded-Proto https
+
+          # Advertise QUIC
+          http-after-response add-header alt-svc 'h3=":443"; ma=60'
+
+          default_backend default
+          ${indent logFormat}
+          errorfiles errors
+          ${indent (lib.optionalString challenge ''
+          # Proof-of-work challenge for protected vhosts. Browsers that solve it are remembered
+          # in the stick table for 2 days. Matches Anubis' default of challenging "Mozilla"
+          stick-table type ipv6 size 1m expire 2d store gpt(2)
+          http-request track-sc0 src
+          acl protected_backend hdr(host) -i ${lib.concatStringsSep " " protectedDomains}
+          acl is_challenge_req path_beg /_challenge
+          acl protected_ua hdr(User-Agent) -m beg Mozilla/
+          acl protected acl(protected_backend,protected_ua,!is_challenge_req)
+          acl accepted sc_get_gpt(1,0) gt 0
+          http-request return status 200 content-type "text/html; charset=UTF-8" hdr "Cache-control" "max-age=0, no-cache" lf-file ${pkgs.cpluspatch-pages}/challenge.html if protected !accepted
+        '')}
+          # Service rules
+        ${aclLinesOf "acl "}
+
+        ${aclLinesOf "http-request "}
+
+        ${aclLinesOf "http-response "}
+
+          ${lib.optionalString challenge "use_backend challenge if is_challenge_req protected_backend"}
+        ${aclLinesOf "use_backend "}
+
+        ${lib.concatStringsSep "\n\n" (lib.attrValues cfg.frontends)}
+
+        backend default
+          mode http
+          http-request deny
+
+        ${lib.optionalString challenge ''
+          # Checks challenge answers. Based on David Leadbeater's work,
+          # see https://github.com/dgl/haphash
+          backend challenge
+            mode http
+            option http-buffer-request
+
+            # Must match the stick table used in the frontend.
+            http-request track-sc0 src table https
+            acl challenge_req method POST
+
+            # Calculate the challenge
+            http-request set-var(txn.tries) req.body_param(tries)
+            http-request set-var(txn.timestamp) req.body_param(timestamp)
+            http-request set-var(txn.host) hdr(Host),host_only
+            http-request set-var(txn.hash) src,concat(;,txn.host,),concat(;,txn.timestamp,),concat(;,txn.tries),digest(SHA-256),hex
+            acl timestamp_recent date,neg,add(txn.timestamp) ge -60
+
+            # 4 is the difficulty, should match "diff" in challenge.html.
+            acl hash_good var(txn.hash) -m reg 0{4}.*
+            http-request sc-set-gpt(1,0) 1 if challenge_req timestamp_recent hash_good
+            http-request return status 200 if challenge_req hash_good
+            http-request return status 400 content-type "text/html; charset=UTF-8" hdr "Cache-control" "max-age=0" string "Bad request" if !challenge_req OR !hash_good
+        ''}
+        ${lib.concatStringsSep "\n\n" (lib.attrValues cfg.backends)}
+      '';
+    };
+  };
+}

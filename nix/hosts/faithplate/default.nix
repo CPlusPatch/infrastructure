@@ -17,6 +17,7 @@
     ../../services/static.nix
     ../../services/fitbit-prometheus.nix
     ../../services/factorio.nix
+    ../../services/minecraft-proxy.nix
   ];
 
   modules.dns.domains = [
@@ -31,15 +32,10 @@
 
     firewall = {
       allowedTCPPorts = [
-        80 # HTTP
-        443 # HTTPS
         25 # SMTP
         465 # SMTP over SSL
         587 # SMTP submission
         993 # IMAP over SSL
-      ];
-      allowedUDPPorts = [
-        443 # HTTP/3
       ];
     };
   };
