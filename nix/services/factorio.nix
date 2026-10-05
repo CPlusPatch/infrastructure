@@ -22,6 +22,8 @@
     extraSettingsFile = config.sops.templates."factorio.json".path;
   };
 
+  modules.dns.domains = ["mindtorio.factorio.cpluspatch.com"];
+
   # /var/lib/factorio is a symlink (DynamicUser), which restic would store as-is
   services.backups.jobs.factorio.source = "/var/lib/private/factorio";
 }
