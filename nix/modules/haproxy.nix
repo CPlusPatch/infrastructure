@@ -42,9 +42,13 @@
   protectedDomains = lib.mapAttrsToList (name: vhost: vhost.domain) (lib.filterAttrs (name: vhost: vhost.protected) cfg.vhosts);
   challenge = protectedDomains != [];
 
+  # Only errors and slow responses are logged: 5xx, connection errors (no response) and
+  # responses whose headers took over 2 seconds, except Matrix' long-polling /sync
   logFormat = ''
     http-request capture req.hdr(Host) len 20
-    log-format "%ci:%cp [%tr] %ft %b/%s %ST %ac/%fc/%bc/%sc/%rc %[capture.req.hdr(0)] %HM %{+Q}HU"
+    log-format "%ci:%cp [%tr] %ft %b/%s %ST %TR/%Tw/%Tc/%Tr/%Ta %ac/%fc/%bc/%sc/%rc %[capture.req.hdr(0)] %HM %{+Q}HU"
+    http-request set-var(txn.long_poll) bool(1) if { path_beg /_matrix/ } { path_end /sync }
+    http-after-response set-log-level silent if { status lt 500 } { res.timer.hdr lt 2000 } || { status lt 500 } { var(txn.long_poll) -m bool }
   '';
 
   indent = lib.replaceStrings ["\n"] ["\n  "];
@@ -216,11 +220,13 @@ in {
       enable = true;
       config = ''
         global
-          log /dev/log local0 notice
+          # Requests are logged at info, see logFormat
+          log /dev/log local0 info
           stats timeout 30s
           daemon
           limited-quic
-          maxconn 50000
+          # Each connection can take two 128 KB buffers, so this caps them at ~1 GB
+          maxconn 4096
 
           # Don't use SSLv3 or TLSv1.0/1.1
           ssl-default-bind-ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384
@@ -246,6 +252,9 @@ in {
           option  dontlognull
           timeout connect 5s
           timeout client  50s
+          # Time allowed to send a request's headers, against clients that send them slowly to
+          # hold connections open
+          timeout http-request 10s
           timeout server  5m
           timeout tunnel  1h   # for tunneled (WebSockets) connections
 
@@ -283,7 +292,7 @@ in {
           http-request set-header X-Forwarded-Proto https
 
           # Advertise QUIC
-          http-after-response add-header alt-svc 'h3=":443"; ma=60'
+          http-after-response add-header alt-svc 'h3=":443"; ma=86400'
 
           default_backend default
           ${indent logFormat}

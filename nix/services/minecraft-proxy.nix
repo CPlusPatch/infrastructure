@@ -10,6 +10,8 @@ in {
     frontend minecraft-eli-fe
       mode tcp
       bind :::${toString port} v4v6
+      # Only connection errors, not every player login and server list ping
+      option dontlog-normal
       default_backend minecraft-eli
   '';
 

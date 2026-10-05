@@ -192,6 +192,7 @@ The servers have delete and rebuild protection on. Removing a server means turni
 - **Prometheus:** port 9090 on `freeman`, reachable over the private network or Tailscale.
 - **Probes:** every HTTPS vhost, `matrix.cpluspatch.dev`, the Minecraft port, SMTP (STARTTLS on 25, over the private network) and submission and IMAP over TLS (465, 993) are probed from `freeman` every 20 seconds. The HTTPS list comes from HAProxy's vhosts, so new services are picked up automatically.
 - **Scraped:** node exporters, HAProxy, PostgreSQL, ClickHouse, every Redis server (through one `redis_exporter`), and Synapse. The PostgreSQL exporter includes the 50 most expensive queries, from `pg_stat_statements`.
+- **HAProxy's log** (`journalctl -u haproxy` on `faithplate`) only has errors: 5xx responses, failed connections, and responses that took over 2 seconds to start. Logging every request would mostly be noise.
 
 Alert rules are in `nix/services/prometheus.nix`:
 
