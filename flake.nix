@@ -61,6 +61,9 @@
             nix-minecraft.overlay
             versia-server.overlays.default
             versia-fe.overlays.default
+            (final: prev: {
+              cpluspatch-pages = final.callPackage ./nix/packages/pages/package.nix {};
+            })
           ];
         };
 

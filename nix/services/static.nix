@@ -3,10 +3,6 @@
   pkgs,
   ...
 }: {
-  imports = [
-    ../packages/pages/import.mod.nix
-  ];
-
   services.nginx.virtualHosts."static.cpluspatch.com" = {
     # Serve all of pkgs.cpluspatch-pages/
     locations."/pages/" = {
