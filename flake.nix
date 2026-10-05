@@ -120,6 +120,18 @@
             fi
             touch $out
           '';
+
+        secrets = let
+          pkgs = nixpkgs.legacyPackages.x86_64-linux;
+          src = nixpkgs.lib.fileset.toSource {
+            root = ./.;
+            fileset = nixpkgs.lib.fileset.unions [./.sops.yaml ./secrets];
+          };
+        in
+          pkgs.runCommand "check-secrets" {nativeBuildInputs = [pkgs.bash pkgs.jq pkgs.yq-go];} ''
+            bash ${./scripts/check-secrets.sh} ${pkgs.writeText "registry.json" (builtins.toJSON (import ./secrets/registry.nix))} ${src}
+            touch $out
+          '';
       };
 
     devShells = forAllSystems (system: pkgs: {
