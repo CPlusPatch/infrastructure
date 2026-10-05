@@ -46,6 +46,11 @@
       inherit hosts;
       # Private network addresses, used for inter-host traffic
       ips = builtins.mapAttrs (name: host: host.network_ipv4) hosts;
+      # My PC at home, reached over Tailscale. Hosts media services and the second backup target
+      kleiner = {
+        address = "100.113.206.105";
+        hostKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJsdsQF4B2yGNVIPGxAKuSpFOwvrwXHsP4ajNcqRNr5r";
+      };
     };
 
     forAllSystems = f:

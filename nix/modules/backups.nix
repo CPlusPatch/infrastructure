@@ -1,6 +1,7 @@
 {
   config,
   lib,
+  infra,
   ...
 }:
 with lib; let
@@ -33,7 +34,13 @@ in {
     };
   };
 
-  config = mkIf (builtins.length (builtins.attrNames cfg.jobs) != 0) {
+  config = mkIf (cfg.jobs != {}) {
+    # The SFTP target. Pinned, as root has no known_hosts otherwise
+    programs.ssh.knownHosts.kleiner = {
+      hostNames = [infra.kleiner.address];
+      publicKey = infra.kleiner.hostKey;
+    };
+
     sops.templates."restic-env" = {
       content = ''
         AWS_ACCESS_KEY_ID=${config.sops.placeholder."s3/backups/access_key_id"}
@@ -101,7 +108,7 @@ in {
           name: job:
             nameValuePair "sftp-${name}" (commonSettings "sftp-${name}" job
               // {
-                repository = "sftp:jessew@kleiner:/mnt/HDD1/Backups/Infra/${name}";
+                repository = "sftp:jessew@${infra.kleiner.address}:/mnt/HDD1/Backups/Infra/${name}";
                 extraOptions = [
                   "sftp.args='-i ${config.sops.secrets."sftp/backup_private_key".path}'"
                 ];

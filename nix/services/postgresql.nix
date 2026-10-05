@@ -51,13 +51,14 @@
       # Secondary SFTP backup on kleiner
       kleiner = {
         type = "sftp";
+        sftp-host = infra.kleiner.address;
         sftp-host-user = "jessew";
         path = "/mnt/HDD1/Backups/Infra/postgresql";
         sftp-private-key-file = config.sops.secrets."sftp/backup_private_key".path;
         sftp-host-key-check-type = "fingerprint";
         sftp-host-key-hash-type = "sha256";
-        # ssh-keyscan -t ed25519 kleiner 2>/dev/null | ssh-keygen -lf - -E sha256
-        # Use only the base64 part after "SHA256:"
+        # SHA-256 of kleiner's ECDSA host key, in hex:
+        # ssh-keyscan -t ecdsa kleiner 2>/dev/null | awk '{print $3}' | base64 -d | sha256sum
         sftp-host-fingerprint = "7750d245a9dbf20611239c9a97c7aeca229058eb44d77f869fa57a1a88361bc5";
         retention-full = 10;
       };

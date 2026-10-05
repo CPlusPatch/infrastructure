@@ -9,8 +9,7 @@
   inherit (infra) ips;
   cfg = config.modules.haproxy;
 
-  # PC at home, reached over Tailscale
-  kleiner = "100.113.206.105";
+  kleiner = infra.kleiner.address;
 
   # Service rules for the https frontend, as a list of lines
   aclLines = lib.filter (line: lib.trim line != "") (
