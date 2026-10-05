@@ -1,259 +1,368 @@
 <!-- omit in toc -->
 # Documentation
 
-- [Overview](#overview)
-- [Tools](#tools)
-- [Structure](#structure)
-  - [📂 `assets/`](#-assets)
-  - [📂 `html/`](#-html)
-  - [📂 `nix/`](#-nix)
-  - [📂 `secrets/`](#-secrets)
-  - [📂 `terraform/`](#-terraform)
-- [Deployment](#deployment)
+- [Machines](#machines)
+- [Repository layout](#repository-layout)
+- [Elements](#elements)
+- [Deploying](#deploying)
+- [Adding a service or domain](#adding-a-service-or-domain)
+- [Secrets](#secrets)
+- [Terraform](#terraform)
+- [Monitoring and alerts](#monitoring-and-alerts)
 - [Backups](#backups)
-  - [General services (restic)](#general-services-restic)
-  - [PostgreSQL (pgbackrest)](#postgresql-pgbackrest)
-  - [Restoring from a restic backup](#restoring-from-a-restic-backup)
-  - [Restoring from a pgbackrest backup](#restoring-from-a-pgbackrest-backup)
+- [Restoring](#restoring)
+- [Minecraft](#minecraft)
+- [Routine maintenance](#routine-maintenance)
+- [Setting up a new host](#setting-up-a-new-host)
 
-## Overview
+## Machines
 
-Three [Hetzner Cloud](https://www.hetzner.com/cloud) servers managed as a NixOS fleet:
+Three Hetzner Cloud servers in Falkenstein (`fsn1`), all running NixOS on a single ZFS pool.
 
-| Host | Type | Role |
-|------|------|------|
-| **Faithplate** | cx33 | Primary services host (web, applications, proxying) |
-| **Freeman** | cx23 | Backend services (databases, monitoring) |
-| **Eli** | cx33 | Minecraft server host |
+| Host | Type | Private IP | Role |
+|------|------|------------|------|
+| `freeman` | cx23 | 10.0.1.1 | PostgreSQL 17, Redis, ClickHouse, InfluxDB, Prometheus, Alertmanager |
+| `eli` | cx33 | 10.0.1.2 | Minecraft |
+| `faithplate` | cx33 | 10.0.1.3 | HAProxy and every public service |
 
-## Tools
+`freeman` has no public IPv4 address, only IPv6. The others are dual stack.
 
-This project is largely centered around [**Nix**](https://nixos.org/), [**Terraform**](https://www.terraform.io/), and [**Colmena**](https://colmena.cli.rs/).
+The hosts talk to each other over Hetzner's private network (`10.0.0.0/8`, interface `enp7s0`), which the firewall trusts. Tailscale is also trusted, and is how HAProxy reaches the media services (Jellyfin, Seer, Radarr, Sonarr) running on `kleiner`, my machine at home. `kleiner` is also the second backup target.
 
-Nix is used for:
-- Partitioning hosts' disks
-- Managing packages, services and configuration on hosts
-- Operating system configuration and upgrades
+> [!WARNING]
+> The servers are on grandfathered prices. Never change `server_type` in `terraform/servers.tf`: resizing moves the server to current pricing for good.
 
-Terraform is used for:
-- Provisioning cloud infrastructure (primarily from [**Hetzner Cloud**](https://www.hetzner.com/cloud))
-- Bootstrapping NixOS on newly created hosts
-- Managing DNS records (via [**Cloudflare**](https://www.cloudflare.com/))
-- Generating `nixos-vars.json` with host IP/network data consumed by Nix
-
-Colmena is used for:
-- Deploying NixOS configuration changes to running hosts
-
-> [!NOTE]
-> This project is fully IPv4/IPv6 dual stack. All DNS records, server configurations, and services are set up to support both protocols when interfacing with the public internet.
->
-> IPv6 is typically used in internal communication between services.
-
-## Structure
-
-The repository is structured as follows:
+## Repository layout
 
 ```
-├── 📂 assets/
-├── 📂 html/
-├── 📂 nix/
-│   ├── 📂 features/
-│   ├── 📂 hosts/
-│   ├── 📂 lib/
-│   ├── 📂 modules/
-│   ├── 📂 packages/
-│   ├── 📂 secrets/
-│   └── 📂 services/
-├── 📂 secrets/
-├── 📂 terraform/
-│   ├── 📄 dns.tf
-│   ├── 📄 nixos-vars.json
-│   ├── 📄 servers.tf
-├── 📄 flake.nix
+assets/                Modpacks (.mrpack) and server icons
+html/                  Error pages and the bot challenge page, built into the cpluspatch-pages package
+nix/    
+  features/            Building blocks every host gets: networking, SSH, Tailscale, the monitoring agent, home-manager
+  hosts/    
+    base/              Configuration shared by all hosts
+    <host>/            Host-specific config: services, disk,firewall ports, etc
+  lib/    
+    secrets.nix        Secrets declarations
+    zfs-kernel.nix     Picks the newest kernel ZFS supports
+  modules/             Small custom modules
+  packages/            The cpluspatch-pages package
+  services/            One file per service, imported by the host that runs it
+scripts/    
+  new-host-key.sh      Generates a new host's SSH key before it's installed
+secrets/               Sops files, one per group of hosts
+terraform/             Hetzner servers and Cloudflare DNS
+flake.nix              Inputs, the Colmena hive, checks, dev shell, formatter
 ```
 
-### 📂 `assets/`
+## Elements
 
-Contains assets used for various purposes, such as website images.
+- **The hive** : `flake.nix` defines one Colmena node per host. Every node gets the modules in `defaults` (disko, sops-nix, home-manager, ...) plus its own list. A host's `default.nix` mostly just lists the services it runs.
 
-### 📂 `html/`
+- **Host data from Terraform** : Terraform writes each server's addresses to `terraform/nixos-vars.json`. The flake reads that file and passes it to every module as the `infra` argument, so a service can say `infra.ips.freeman` instead of hardcoding `10.0.1.1`. The same data configures each host's static IPs in `nix/features/hetzner-network.nix`.
 
-Has static HTML hosted by the web server, mostly for custom 5xx error pages.
+- **HTTPS** : HAProxy on `faithplate` terminates TLS for everything and routes requests by host name. Most services declare a vhost:
 
-### 📂 `nix/`
+    ```nix
+    modules.haproxy.vhosts.vaultwarden = {
+        domain = "vault.cpluspatch.com";
+        server = "127.0.0.1:8222";
+    };
+    ```
 
-Houses all NixOS-related code, including host configurations, Nix packages, services, and modules.
+    That one block creates the routing rule, the backend, and the DNS record. Certificates come from two Let's Encrypt wildcards, `*.cpluspatch.com` (plus `*.lgs.cpluspatch.com`) and `cpluspatch.dev` (plus `*.cpluspatch.dev`), issued with DNS challenges through a Cloudflare API token. The build fails if a domain isn't covered by a certificate, so a vhost like `a.b.cpluspatch.com` would need its own cert first. The mail server keeps its own certificate for `faithplate.infra.cpluspatch.com`.
 
-<!-- omit in toc -->
-#### 📂 `nix/hosts/`
+- **DNS** : Services add their domains to `modules.dns.domains`. The flake collects them into its `domains` output, `terraform/domains.json` is a copy of that, and Terraform turns each entry into a CNAME to `<host>.infra.cpluspatch.com`. `nix flake check` fails when the JSON is out of date. Mail records (MX, SPF, DKIM, DMARC, autodiscovery) and the Minecraft SRV record are written by hand in `terraform/dns.tf`.
 
-Contains host-specific configurations and definitions. All hosts have their own folder named after their hostname, and inherit from common configurations in the `base` host folder.
+- **Build-time checks** : `nix flake check` builds every host, and the build itself validates the HAProxy config (warnings count as errors), the Prometheus config and alert rules, the Alertmanager config, and the domains file. If it passes, the config is at least well-formed.
 
-Host configurations import from the other folders in `nix/` to compose their full configuration.
+## Deploying
 
-<!-- omit in toc -->
-#### 📂 `nix/modules/`
-
-Contains various custom NixOS modules.
-
-<!-- omit in toc -->
-#### 📂 `nix/services/`
-
-Configuration and definition for individual services, such as web servers, databases, etc. Each file typically defines a single service.
-
-Hosts then import the service definitions they need.
-
-### 📂 `secrets/`
-
-This project uses [`sops-nix`](https://github.com/Mic92/sops-nix) to manage secrets. The `secrets/` folder contains [`age`](https://age-encryption.org/)-encrypted secret files that are used by the NixOS configurations.
-
-### 📂 `terraform/`
-
-Contains all Terraform code for provisioning infrastructure and bootstrapping NixOS on hosts.
-
-<!-- omit in toc -->
-#### 📄 `terraform/servers.tf`
-
-Defines [**Hetzner Cloud**](https://www.hetzner.com/cloud) server instances for each host, including their resources (CPU, RAM, disk) and networking (public IPv4/IPv6, private networking). NixOS is bootstrapped on each newly created host using [`nixos-anywhere`'s Terraform module](https://github.com/numtide/nixos-anywhere/terraform/all-in-one).
-
-Additionally, a list of domains is defined for each host, which is then used in `terraform/dns.tf` to create the appropriate DNS records. The list looks like this:
-
-```hcl
-domains = {
-    "id.cpluspatch.com"           = hcloud_server.faithplate # faithplate is the hostname
-    "prowlarr.lgs.cpluspatch.com" = hcloud_server.faithplate
-    "radarr.lgs.cpluspatch.com"   = hcloud_server.faithplate
-    "sonarr.lgs.cpluspatch.com"   = hcloud_server.faithplate
-    "dl.lgs.cpluspatch.com"       = hcloud_server.faithplate
-    # ...
-}
-```
-
-<!-- omit in toc -->
-#### 📄 `terraform/dns.tf`
-
-Defines DNS records for each host using the Cloudflare provider, with the naming scheme `hostname.infra.cpluspatch.com`. These are automatically calculated from the host definitions in `terraform/servers.tf`.
-
-`CNAME` records are then created for every domain defined in `terraform/servers.tf` that points to the corresponding `hostname.infra.cpluspatch.com` record.
-
-Also defines custom non-A/AAAA/CNAME DNS records, such as email or SRV records.
-
-<!-- omit in toc -->
-#### 📄 `terraform/nixos-vars.json`
-
-This file is used to pass variables from Terraform to NixOS during the bootstrapping process, such as IP addresses for network configuration and hostnames. It is generated automatically by Terraform and should not be modified manually.
-
-## Deployment
-
-### Provisioning new hosts
-
-New hosts are provisioned with Terraform/OpenTofu, which also bootstraps NixOS via `nixos-anywhere`:
+Everything below runs inside the dev shell (`nix develop`, or automatically with direnv), which has Colmena, sops, ssh-to-age and the formatter. OpenTofu isn't in it: `tofu` comes from the system.
 
 ```bash
-tofu -chdir=terraform apply
+nix flake check                          # build all hosts, run every check
+colmena build                            # build without the checks
+colmena apply --on freeman dry-activate  # show which units would restart, change nothing
+colmena apply --on freeman               # build, copy and switch
+colmena apply                            # all hosts at once
+nix fmt                                  # format with alejandra
 ```
 
-### Deploying configuration changes
+Some habits that have saved me trouble:
 
-NixOS configuration changes are deployed to running hosts using [**Colmena**](https://colmena.cli.rs/):
+- Run `dry-activate` before anything touching networking, databases or HAProxy. It lists exactly which services will stop, start or reload.
+- Deploy one host at a time. When PostgreSQL or Redis on `freeman` restarts (or the host reboots), the services on `faithplate` log connection errors until they're back, then reconnect on their own.
+- For changes that are only safe at boot (networking, kernel), use `colmena apply --on <host> boot` and then reboot, with the Hetzner console open just in case.
+- When a deploy changes the Minecraft server's config, it stops the server and only starts its socket. Start it again with `systemctl start minecraft-server-wiki`.
+
+To roll a host back to its previous generation:
 
 ```bash
-# Deploy to all hosts
-colmena apply
-
-# Deploy to a specific host
-colmena apply --on faithplate
-
-# Deploy to hosts with a specific tag
-colmena apply --on @infra
+ssh root@<host>.infra.cpluspatch.com nixos-rebuild switch --rollback
 ```
 
-Colmena reads the `colmenaHive` output from `flake.nix`, which defines each host's deployment target (`targetHost`) and tags.
+Older generations also show up in the GRUB menu, which you can reach from the Hetzner console.
+
+**Updating inputs:**
+
+```bash
+nix flake update
+nix flake check
+colmena apply --on eli    # least important host first
+```
+
+nixpkgs tracks `nixos-unstable`. Read the NixOS evaluation warnings after an update.
+
+## Adding a service or domain
+
+1. Write `nix/services/<name>.nix`. For anything behind HTTPS, add a `modules.haproxy.vhosts.<name>` block like the one above, and a `services.backups.jobs.<name>.source` line if it keeps state.
+2. Import it in `nix/hosts/<host>/default.nix`.
+3. Regenerate the DNS file and check everything:
+
+   ```bash
+   nix eval --json .#domains | jq -S . > terraform/domains.json
+   nix flake check
+   ```
+
+4. Create the DNS record, then deploy:
+
+   ```bash
+   cd terraform && tofu apply
+   colmena apply --on faithplate
+   ```
+
+Domains that HAProxy serves through hand-written rules instead of a vhost (Synapse does this) go in `modules.haproxy.httpsDomains`, so the certificate check still covers them. Domains that aren't HTTPS at all, like the Factorio server, go straight into `modules.dns.domains`.
+
+## Secrets
+
+Secrets are [sops](https://github.com/getsops/sops) files in `secrets/`, encrypted with age. Each host decrypts with its own SSH host key, converted to an age key, and only receives the files it needs:
+
+| File | Readable by |
+|------|-------------|
+| `common.yaml` | all hosts (backup credentials) |
+| `faithplate-freeman.yaml` | `faithplate`, `freeman` (Redis and ClickHouse passwords both sides need) |
+| `faithplate.yaml` | `faithplate` |
+| `freeman.yaml` | `freeman` |
+| `eli.yaml` | `eli` |
+
+My personal age key (`~/.config/sops/age/keys.txt`) can read all of them. Recipients are set in `.sops.yaml`.
+
+```bash
+sops secrets/faithplate.yaml                    # open in $EDITOR
+sops decrypt --extract '["ntfy"]["topic"]' secrets/freeman.yaml
+
+# Add a value without it ending up in shell history
+read -rs V && printf '%s' "$V" | jq -Rs . \
+  | sops set --value-stdin secrets/faithplate.yaml '["service"]["password"]'; unset V
+```
+
+A new secret also needs declaring in `nix/lib/secrets.nix`, under the file it lives in. sops-nix checks at build time that every declared secret exists, so a typo or a missing value fails the build rather than the deploy.
+
+After changing recipients in `.sops.yaml`, re-encrypt the affected files with `sops updatekeys secrets/<file>.yaml`.
+
+## Terraform
+
+The state is local: `terraform/terraform.tfstate`, alongside `terraform.tfvars` with the Hetzner and Cloudflare tokens. Both are gitignored and should stay `chmod 600`.
+
+```bash
+cd terraform
+tofu plan
+tofu apply
+```
+
+The servers have delete and rebuild protection on. Removing a server means turning protection off in `servers.tf` and applying that first.
+
+## Monitoring and alerts
+
+`freeman` runs Prometheus, Alertmanager and the blackbox exporter. Every host runs `node_exporter` on its private address.
+
+- **Dashboard:** [stats.cpluspatch.com](https://stats.cpluspatch.com), "Infrastructure" folder. It's provisioned from `nix/services/grafana-dashboards/infrastructure.json` and read-only in the UI, so change the JSON in the repo instead. Dashboards made in the UI live in "General" and aren't touched by deploys.
+- **Prometheus:** port 9090 on `freeman`, reachable over the private network or Tailscale.
+- **Probes:** every HTTPS vhost, `matrix.cpluspatch.dev` and the Minecraft port are probed from `freeman` every 15 seconds. The list comes from HAProxy's vhosts, so new services are picked up automatically.
+
+Alert rules are in `nix/services/prometheus.nix`:
+
+| Alert | Fires when |
+|-------|------------|
+| `HostDown` | A node exporter can't be scraped for 3 minutes |
+| `EndpointDown` | A probe has failed for 5 minutes |
+| `DiskSpaceLow` / `DiskSpaceCritical` | Under 15% / 5% free |
+| `DiskFillsWithin24h` | The last 6 hours' trend reaches zero within a day |
+| `MemoryPressure` | Processes spend over 10% of their time waiting for memory, for 15 minutes |
+| `MemoryAlmostExhausted` | Under 2% available, counting ZFS' reclaimable cache as available |
+| `HighCpu` | Over 90% for 30 minutes |
+| `ZfsPoolUnhealthy` | A pool isn't `ONLINE` |
+| `UnitFailed` | A systemd unit is in the failed state |
+| `BackupStale` | A backup timer hasn't run for 36 hours |
+| `PostgresDown` | The Postgres exporter can't reach the database |
+| `CertificateExpiringSoon` | A probed certificate expires in under 14 days (renewal normally happens at 30) |
+| `ScrapeTargetDown` | Any other metrics endpoint is down for 10 minutes |
+
+Alerts go to a private [ntfy](https://ntfy.sh) topic on ntfy.sh. Get its name with `sops decrypt --extract '["ntfy"]["topic"]' secrets/freeman.yaml` and subscribe to it in the app. Critical alerts arrive at urgent priority, warnings at default, and resolved messages at low.
+
+Alertmanager has no web UI exposed and `amtool` isn't installed, so use its API on `freeman`:
+
+```bash
+# What's firing
+curl -s localhost:9093/api/v2/alerts | jq '.[].labels'
+
+# Silence an alert for two hours, e.g. during maintenance
+curl -s -X POST localhost:9093/api/v2/silences -H 'Content-Type: application/json' -d "{
+  \"matchers\": [{\"name\": \"alertname\", \"value\": \"HostDown\", \"isRegex\": false}],
+  \"startsAt\": \"$(date -u +%FT%TZ)\", \"endsAt\": \"$(date -u -d '+2 hours' +%FT%TZ)\",
+  \"createdBy\": \"jesse\", \"comment\": \"maintenance\"}"
+
+# Send a test notification that resolves itself after two minutes
+curl -s -X POST localhost:9093/api/v2/alerts -H 'Content-Type: application/json' -d "[{
+  \"labels\": {\"alertname\": \"TestNotification\", \"severity\": \"warning\"},
+  \"annotations\": {\"summary\": \"Test alert\"},
+  \"endsAt\": \"$(date -u -d '+2 min' +%FT%TZ)\"}]"
+```
 
 ## Backups
 
-All backup configuration lives in `nix/modules/backups.nix` (general services) and `nix/modules/postgresql.nix` (PostgreSQL). Every backup is written to two independent targets:
+Every backup goes to two places: S3 at Fastly (`eu-central.object.fastlystorage.app`, bucket `backups`), and SFTP to `kleiner:/mnt/HDD1/Backups/Infra`.
 
-| Target | Technology | Location |
-|--------|-----------|----------|
-| **Primary** | S3 (Fastly) | `eu-central.object.fastlystorage.app` / bucket `backups` |
-| **Secondary** | SFTP | `kleiner:/mnt/HDD1/Backups/Infra` |
+**Files (restic).** A service adds `services.backups.jobs.<name>.source = "/var/lib/<name>";`, and `nix/modules/backups.nix` turns that into two restic jobs, `s3-<name>` and `sftp-<name>`. They run daily at a random time between midnight and 3am. Before each run the job snapshots the ZFS dataset and backs up the snapshot, so databases and other files that change mid-run are captured consistently. Each run also prunes old snapshots and reads back a random 2% of the data to check the repository.
 
-### General services (restic)
+Retention is 7 daily, 5 weekly and 12 monthly snapshots.
 
-Most services declare a backup job via `services.backups.jobs.<name>.source = "<path>"` in their service file (e.g. `nix/services/vaultwarden.nix`). The `backups` module translates each job into two `services.restic.backups` entries — `s3-<name>` and `sftp-<name>` — running daily with a randomised up-to-3-hour delay.
+Two jobs are special. `immich-media` backs up the photos on the Hetzner storage box (`/mnt/fs-01b/immich`), which is CIFS, so it skips the ZFS snapshot (`zfsSnapshot = false`). `immich-db` backs up `/var/backup/postgresql/immich.sql.zstd`, a dump that `postgresqlBackup` writes at 01:15, because Immich uses its own local PostgreSQL on `faithplate`.
 
-**Retention policy:** 7 daily · 5 weekly · 12 monthly
+> [!WARNING]
+> One trap: services with `DynamicUser` keep their data in `/var/lib/private/<name>`, and `/var/lib/<name>` is only a symlink. restic stores a symlink as a symlink, so the source must be the real directory. This went unnoticed for months on three services.
 
-The wrapper scripts created by the NixOS module allow manual operations:
+**PostgreSQL on `freeman` (pgBackRest).** WAL is archived continuously to both repositories, so a restore can go to any point in time. Full backups run daily: repo 1 (Fastly S3, `/postgresql`) at midnight, repo 2 (`kleiner`) at 03:00. Each repository keeps 10 full backups.
+
+**Not backed up:**
+- Nextcloud's files, Versia's media and Sharkey's media. They live only in Fastly buckets.
+- Nextcloud's `/var/lib/nextcloud`, which holds `config.php` and its instance secrets.
+
+**Checking on them:**
 
 ```bash
-# List snapshots for a job
+systemctl list-timers 'restic-*' 'pgbackrest-*' 'postgresqlBackup-*'
+journalctl -u restic-backups-s3-synapse -n 30
+restic-s3-synapse snapshots
+```
+
+The Grafana dashboard's backup table shows how long ago each job last ran, and `BackupStale` fires after 36 hours.
+
+## Restoring
+
+Stop the service before restoring over its data, and restore into a temporary directory first when you can.
+
+**From restic.** Every job has a wrapper (`restic-s3-<name>`, `restic-sftp-<name>`) with the credentials already loaded. Snapshots taken from ZFS keep the snapshot path, `/.zfs/snapshot/restic-<job>/<source>`, so point the restore at that subfolder:
+
+```bash
 restic-s3-vaultwarden snapshots
-restic-sftp-vaultwarden snapshots
 
-# Check repository integrity
-restic-s3-mail check
+# Restore the latest snapshot's contents into /tmp/restore
+restic-s3-vaultwarden restore 'latest:/.zfs/snapshot/restic-s3-vaultwarden/var/lib/vaultwarden' --target /tmp/restore
+
+# Add --dry-run to see what would be restored without writing anything
+# Use a snapshot ID instead of "latest" for an older one
+# From kleiner instead: restic-sftp-vaultwarden ..., with restic-sftp-vaultwarden in the path too
 ```
 
-### PostgreSQL (pgbackrest)
+Then stop the service, move its directory aside, copy the restored one into place with the right owner, and start it again.
 
-PostgreSQL uses [pgbackrest](https://pgbackrest.org/) rather than restic, as pgbackrest performs continuous WAL archiving in addition to scheduled full backups.
+`immich-media` has no snapshot prefix: `restic-s3-immich-media restore latest --target /tmp/restore` gives `/tmp/restore/mnt/fs-01b/immich`.
 
-**Repositories:**
-
-| Index | Type | Location |
-|-------|------|----------|
-| 1 | S3 | `eu-central.object.fastlystorage.app/backups/postgresql` |
-| 2 | SFTP | `kleiner:/mnt/HDD1/Backups/Infra/postgresql` |
-
-**Schedule:** full backup daily, WAL continuously archived to both repos.
-
-**Retention:** 10 full backups kept.
-
-### Restoring from a restic backup
-
-The NixOS restic module generates a wrapper script per backup job that pre-loads all required environment variables.
+**The Immich database.** Restore `immich-db` as above, then load the dump:
 
 ```bash
-# 1. List available snapshots
-restic-s3-<name> snapshots         # from S3
-restic-sftp-<name> snapshots       # from SFTP fallback
-
-# 2. Restore the latest snapshot to a target directory
-restic-s3-<name> restore latest --target /tmp/restore-<name>
-
-# 3. Restore a specific snapshot
-restic-s3-<name> restore <snapshot-id> --target /tmp/restore-<name>
-
-# 4. Restore only specific paths within a snapshot
-restic-s3-<name> restore latest --target / --include /var/lib/<service>
+systemctl stop immich-server
+sudo -u postgres dropdb immich
+sudo -u postgres createdb -O immich immich
+zstdcat /tmp/restore/immich.sql.zstd | sudo -u postgres psql immich
+systemctl start immich-server
 ```
 
-Replace `<name>` with the job name (e.g. `vaultwarden`, `synapse`, `mail`, `clickhouse`).
-
-### Restoring from a pgbackrest backup
-
-pgbackrest restores require PostgreSQL to be stopped first.
+**PostgreSQL on `freeman`.** pgBackRest needs the S3 credentials from the environment file. Without them, even `info` fails. Open a shell as `postgres` with them loaded:
 
 ```bash
-# 1. Stop PostgreSQL
-systemctl stop postgresql
+sudo -u postgres bash
+set -a; . /run/secrets/rendered/pgbackrest-s3-env; set +a
 
-# 2. Check available backups
-sudo -u postgres pgbackrest --stanza=main info
-
-# 3a. Restore the latest backup (from the fastest available repo)
-sudo -u postgres pgbackrest --stanza=main restore
-
-# 3b. Restore from a specific repo (1 = S3, 2 = SFTP)
-sudo -u postgres pgbackrest --stanza=main restore --repo=1
-
-# 3c. Point-in-time recovery to a specific timestamp
-sudo -u postgres pgbackrest --stanza=main restore \
-  --target="2026-01-15 10:30:00" \
-  --target-action=promote
-
-# 4. Start PostgreSQL
-systemctl start postgresql
+pgbackrest --stanza=main info    # backups in both repos
 ```
+
+Then, with PostgreSQL stopped (`systemctl stop postgresql`, from a root shell):
+
+```bash
+# Latest backup plus all archived WAL. Uses repo 1, falling back to repo 2
+pgbackrest --stanza=main restore --delta
+
+# Restore from kleiner instead
+pgbackrest --stanza=main restore --delta --repo=2
+
+# Point in time
+pgbackrest --stanza=main restore --delta --type=time \
+  --target='2026-10-05 14:30:00+02' --target-action=promote
+```
+
+and `systemctl start postgresql` afterwards.
+
+`--delta` reuses files that haven't changed instead of needing an empty data directory. Restoring rolls back every database on `freeman` at once. To recover a single database, restore to a scratch data directory with `--pg1-path`, start a temporary instance on another port, and `pg_dump` what you need from it.
+
+## Minecraft
+
+There are various servers running various modpacks, some of them are disabled.
+
+```bash
+journalctl -u minecraft-server-<name> -f                   # console output
+echo 'neoforge tps' > /run/minecraft/<name>.stdin          # run a console command
+systemctl restart minecraft-server-<name>
+```
+
+The RCON password is `minecraft/rcon_password` in `secrets/eli.yaml`, on various ports depending on server.
+
+The JVM settings and `server.properties` come from `nix/services/minecraft.nix`: a 5 GiB heap with G1 and Aikar's flags. Don't go above 5 GiB, since the host only has 8 GiB and ZFS' cache is capped at 1 GiB to leave room for it.
+
+Updating the modpack means replacing the `.mrpack` in `assets/` and updating `packHash` in `minecraft.nix`. The build prints the right hash if it's wrong. Mods that crash on startup can go in `excludedMods`.
+
+## Routine maintenance
+
+- **Health** :
+
+    ```bash
+    systemctl --failed
+    zpool status                 # scrubs run automatically
+    journalctl -p err -b         # errors since boot
+    ```
+
+- **Disk and logs** : The Nix store is garbage-collected weekly, removing generations older than 14 days. Journald keeps at most 500 MB or one month per host, and always leaves 2 GB free. Prometheus keeps 90 days or 5 GB, whichever comes first.
+
+- **Certificates** : they renew on their own and reload HAProxy, Postfix and Dovecot as needed. To force a renewal:
+
+    ```bash
+    systemctl start acme-order-renew-wildcard-cpluspatch-com
+    journalctl -u acme-order-renew-wildcard-cpluspatch-com -f
+    ```
+
+    The challenge uses Cloudflare's resolver (1.1.1.1) for its propagation check, because the local resolver caches the missing TXT record and the check never succeeds.
+
+- **Rebooting** : Check that no backup is running first (`systemctl list-units --state=activating,active 'restic-backups-*.service' 'pgbackrest-*.service'` should list nothing), especially around 03:00, when the pgBackRest backup to `kleiner` can take a while. Reboot `freeman` last if you're doing all three, since everything else depends on it. Services on `faithplate` reconnect by themselves once it's back. Versia waits for the databases before starting.
+
+## Setting up a new host
+
+> [!NOTE]
+> This hasn't been done end to end since the move to per-host secrets. Expect to adjust it.
+
+1. Add an `hcloud_server` and an entry in `locals.servers` in `terraform/servers.tf`, then `tofu apply`. This creates the server with Ubuntu and adds its addresses to `nixos-vars.json`.
+2. Generate its SSH host key: `./scripts/new-host-key.sh <host>`. It prints an age key and a directory.
+3. Add the age key to `.sops.yaml`, plus a creation rule for `secrets/<host>.yaml` if it needs its own secrets. Then run `sops updatekeys secrets/common.yaml` (and any other file it should read).
+4. Create `nix/hosts/<host>/default.nix` with a new `networking.hostId` (`head -c4 /dev/urandom | od -A none -t x4`) and `disko.devices.disk.main.device`, plus a `hardware-configuration.nix` copied from an existing host. Add `<host>.imports` to the hive in `flake.nix`, and the host to `hosts` in `nix/lib/secrets.nix` for the files it reads.
+5. Install NixOS over the Ubuntu image:
+
+   ```bash
+   nix build .#colmenaHive.nodes.<host>.config.system.build.diskoScript -o disko
+   nix build .#colmenaHive.toplevel.<host> -o system
+   nix run github:nix-community/nixos-anywhere -- \
+     --store-paths ./disko ./system \
+     --extra-files <directory from step 2> root@<public ip>
+   ```
+
+6. Delete the key directory from step 2. From then on, deploy with `colmena apply --on <host>`.

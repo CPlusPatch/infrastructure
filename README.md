@@ -11,11 +11,21 @@
   <strong><code>infra</code></strong>
 </h2>
 
-My infra's [`OpenTofu`](https://opentofu.org), [`NixOS`](https://nixos.org), and [`Colmena`](https://colmena.cli.rs/) configuration files.
+Configuration for my servers on Hetzner Cloud, deployed with [Colmena](https://colmena.cli.rs/), with servers and DNS managed by [OpenTofu](https://opentofu.org).
 
-## Documentation
+| Host | Data |
+|------|--------------|
+| `faithplate` | Everything public: HAProxy, Email, Matrix, Nextcloud, Immich, Keycloak, Vaultwarden, Grafana... |
+| `freeman` | Databases (PostgreSQL, Redis, ClickHouse, InfluxDB) and monitoring |
+| `eli` | Minecraft server(s) |
 
-Documentation is available in the [DOCS.md](./DOCS.md) file.
+```bash
+nix develop                         # or let direnv do it
+nix flake check                     # build every host and run the config checks
+colmena apply --on faithplate       # deploy one host
+```
+
+The setup, deployment, and backups are documented in [DOCS.md](./DOCS.md).
 
 ## License
 
