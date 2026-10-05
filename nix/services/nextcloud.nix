@@ -54,6 +54,7 @@
 
     config = {
       adminuser = "admin";
+      # Initial setup password (changed during install)
       adminpassFile = builtins.toFile "admin-password" "admin";
 
       dbhost = infra.ips.freeman;
