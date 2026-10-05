@@ -1,81 +1,11 @@
-resource "hcloud_server" "faithplate" {
-  name                     = "faithplate"
-  image                    = "ubuntu-24.04"
-  server_type              = "cx33"
-  location                 = "fsn1"
-  ssh_keys                 = [hcloud_ssh_key.jesse.id]
-  delete_protection        = true
-  rebuild_protection       = true
-  shutdown_before_deletion = true
-
-  public_net {
-    ipv4_enabled = true
-    ipv6_enabled = true
-  }
-
-  lifecycle {
-    ignore_changes = [ssh_keys]
-  }
-}
-
-resource "hcloud_server" "freeman" {
-  name                     = "freeman"
-  image                    = "ubuntu-24.04"
-  server_type              = "cx23"
-  location                 = "fsn1"
-  ssh_keys                 = [hcloud_ssh_key.jesse.id]
-  delete_protection        = true
-  rebuild_protection       = true
-  shutdown_before_deletion = true
-
-  public_net {
-    ipv4_enabled = false
-    ipv6_enabled = true
-  }
-
-  lifecycle {
-    ignore_changes = [ssh_keys]
-  }
-}
-
-resource "hcloud_server" "eli" {
-  name                     = "eli"
-  image                    = "ubuntu-24.04"
-  server_type              = "cx33"
-  location                 = "fsn1"
-  ssh_keys                 = [hcloud_ssh_key.jesse.id]
-  delete_protection        = true
-  rebuild_protection       = true
-  shutdown_before_deletion = true
-
-  public_net {
-    ipv4_enabled = true
-    ipv6_enabled = true
-  }
-
-  lifecycle {
-    ignore_changes = [ssh_keys]
-  }
-}
-
 locals {
-  servers = [
-    {
-      server = hcloud_server.faithplate
-      ipv4   = true
-      ipv6   = true
-    },
-    {
-      server = hcloud_server.eli
-      ipv4   = true
-      ipv6   = true
-    },
-    {
-      server = hcloud_server.freeman
-      ipv4   = false
-      ipv6   = true
-    }
-  ]
+  # Never change server_type: the servers are on grandfathered prices, and resizing moves
+  # them to current pricing for good. Servers without IPv4 are IPv6-only
+  servers = {
+    faithplate = { server_type = "cx33", ipv4 = true }
+    freeman    = { server_type = "cx23", ipv4 = false }
+    eli        = { server_type = "cx33", ipv4 = true }
+  }
 
   # Domain => server name, generated from the NixOS configuration (see flake.nix)
   domains = merge([
@@ -90,8 +20,30 @@ locals {
   final_domains = {
     for d, host in local.domains : d => {
       name = host
-      zone = [for z, id in local.domain_zone_mappings : id if endswith(d, z)][0]
+      zone = one([for z, id in local.domain_zone_mappings : id if d == z || endswith(d, ".${z}")])
     }
+  }
+}
+
+resource "hcloud_server" "servers" {
+  for_each = local.servers
+
+  name                     = each.key
+  image                    = "ubuntu-24.04"
+  server_type              = each.value.server_type
+  location                 = "fsn1"
+  ssh_keys                 = [hcloud_ssh_key.jesse.id]
+  delete_protection        = true
+  rebuild_protection       = true
+  shutdown_before_deletion = true
+
+  public_net {
+    ipv4_enabled = each.value.ipv4
+    ipv6_enabled = true
+  }
+
+  lifecycle {
+    ignore_changes = [ssh_keys]
   }
 }
 
@@ -109,7 +61,7 @@ resource "hcloud_network_subnet" "main_network_subnet" {
 }
 
 resource "hcloud_server_network" "main_network_server" {
-  for_each  = { for s in local.servers : s.server.id => s.server }
+  for_each  = hcloud_server.servers
   server_id = each.value.id
   subnet_id = hcloud_network_subnet.main_network_subnet.id
 }
@@ -117,13 +69,13 @@ resource "hcloud_server_network" "main_network_server" {
 # Save JSON file to be imported in the NixOS installation
 resource "local_file" "nixos_vars" {
   content = jsonencode({
-    for s in local.servers : s.server.name => {
-      ipv4         = s.server.ipv4_address
-      ipv6         = s.server.ipv6_address
-      hostname     = s.server.name
-      network_ipv4 = hcloud_server_network.main_network_server[s.server.id].ip
+    for name, server in hcloud_server.servers : name => {
+      ipv4         = server.ipv4_address
+      ipv6         = server.ipv6_address
+      hostname     = name
+      network_ipv4 = hcloud_server_network.main_network_server[name].ip
     }
-  }) # Converts variables to JSON
+  })
   filename        = var.nixos_vars_file
   file_permission = "600"
 
