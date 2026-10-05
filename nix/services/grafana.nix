@@ -22,6 +22,23 @@ in {
     # still find it
     provision = {
       enable = true;
+
+      # Read-only in the UI: edit the JSON in the repository instead
+      dashboards.settings = {
+        apiVersion = 1;
+        providers = [
+          {
+            name = "infra";
+            type = "file";
+            # Kept apart from the dashboards made in the UI
+            folder = "Infrastructure";
+            disableDeletion = true;
+            allowUiUpdates = false;
+            options.path = ./grafana-dashboards;
+          }
+        ];
+      };
+
       datasources.settings = {
         apiVersion = 1;
         datasources = [
