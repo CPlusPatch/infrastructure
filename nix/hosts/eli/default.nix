@@ -12,14 +12,9 @@
     # head -c4 /dev/urandom | od -A none -t x4
     hostId = "3e9e1221";
 
-    firewall = {
-      allowedTCPPorts = [
-        25565 # Minecraft
-        25566 # Minecraft 2
-      ];
-      allowedUDPPorts = [
-        24454 # Minecraft Simple Voice Chat
-      ];
-    };
+    # Players connect through HAProxy on faithplate, over the private network
+    firewall.allowedUDPPorts = [
+      24454 # Minecraft Simple Voice Chat
+    ];
   };
 }
