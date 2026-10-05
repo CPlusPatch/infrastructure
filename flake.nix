@@ -6,10 +6,6 @@
       url = "github:nix-community/disko";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    home-manager = {
-      url = "github:nix-community/home-manager";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
     sops-nix = {
       url = "github:Mic92/sops-nix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -39,7 +35,6 @@
     sops-nix,
     simple-nixos-mailserver,
     versia-server,
-    home-manager,
     nix-minecraft,
     versia-fe,
     colmena,
@@ -83,7 +78,6 @@
         imports = [
           disko.nixosModules.disko
           sops-nix.nixosModules.sops
-          home-manager.nixosModules.home-manager
           ./nix/hosts/base
           ./nix/features/partitions/single-zfs.nix
         ];

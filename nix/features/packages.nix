@@ -23,6 +23,7 @@
     curl
     socat
     eza
+    gh
     which
   ];
 

@@ -6,9 +6,9 @@
   imports = [
     ../../features/hetzner-network.nix
     ../../features/hetzner-vm.nix
-    ../../features/home-manager
     ../../features/monitoring-agent.nix
     ../../features/packages.nix
+    ../../features/shell.nix
     ../../features/ssh.nix
     ../../features/tailscale.nix
     ../../modules/backups.nix
@@ -100,8 +100,6 @@
       freeMemThreshold = 5; # 5% free memory
     };
   };
-
-  programs.fish.enable = true;
 
   users.users = {
     root = {
