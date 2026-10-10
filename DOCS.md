@@ -216,6 +216,8 @@ Alert rules are in `nix/services/prometheus.nix`:
 | `CertificateExpiringSoon` | A probed certificate expires in under 14 days (renewal normally happens at 30) |
 | `ScrapeTargetDown` | Any other metrics endpoint is down for 10 minutes |
 
+**Public status feed.** The status board on cpluspatch.com reads [static.cpluspatch.com/status.json](https://static.cpluspatch.com/status.json), which `status-feed` (`nix/services/status-feed.nix`) rewrites every 20 seconds on `faithplate`. It holds whether each host's node exporter is up, the number of firing alerts (not their names or descriptions), and for each public service its last 30 results (10 minutes) plus its latest response time for probed ones. The services are an allowlist of public names in that file, and the queries are fixed at build time: each series is renamed to its public name and aggregated by it, so no other label reaches the feed. Prometheus and Grafana stay private, as Prometheus' API would run any query, including expensive ones, and its labels hold private addresses, Redis URLs, unit names and mountpoints. When a query fails, the previous file stays in place and `generatedAt` stops moving.
+
 Alerts go to a private [ntfy](https://ntfy.sh) topic on ntfy.sh. Get its name with `sops decrypt --extract '["ntfy"]["topic"]' secrets/freeman.yaml` and subscribe to it in the app. Critical alerts arrive at urgent priority, warnings at default, and resolved messages at low.
 
 Alertmanager has no web UI exposed and `amtool` isn't installed, so use its API on `freeman`:
