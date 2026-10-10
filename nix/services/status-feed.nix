@@ -165,8 +165,9 @@ in {
   services.nginx.virtualHosts."static.cpluspatch.com".locations."= /status.json" = {
     root = "/var/lib/status-feed";
 
+    # The feed is public anyway, so any site can read it
     extraConfig = ''
-      add_header Access-Control-Allow-Origin "https://cpluspatch.com" always;
+      add_header Access-Control-Allow-Origin * always;
       add_header Cache-Control "public, max-age=15" always;
     '';
   };
