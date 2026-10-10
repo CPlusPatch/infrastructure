@@ -482,9 +482,20 @@
             "type": "prometheus",
             "uid": "eegmzxgejop34d"
           },
-          "expr": "max(time() - node_systemd_timer_last_trigger_seconds{name=~\"(restic-backups-|pgbackrest-|postgresqlBackup).*\"} and node_systemd_timer_last_trigger_seconds > 0)",
-          "legendFormat": "",
+          "expr": "max(time() - node_systemd_timer_last_trigger_seconds{name=~\"(restic-backups-|pgbackrest-main-incr|postgresqlBackup).*\"} and node_systemd_timer_last_trigger_seconds > 0)",
+          "legendFormat": "Daily",
           "refId": "A",
+          "instant": true,
+          "range": false
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "eegmzxgejop34d"
+          },
+          "expr": "max(time() - node_systemd_timer_last_trigger_seconds{name=~\"pgbackrest-main-full.*\"} and node_systemd_timer_last_trigger_seconds > 0)",
+          "legendFormat": "Weekly",
+          "refId": "B",
           "instant": true,
           "range": false
         }
@@ -526,12 +537,41 @@
             }
           ]
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "B"
+            },
+            "properties": [
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "orange",
+                      "value": 626400
+                    },
+                    {
+                      "color": "red",
+                      "value": 691200
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
       },
       "options": {
         "colorMode": "background",
         "graphMode": "none",
-        "textMode": "value",
+        "textMode": "value_and_name",
         "justifyMode": "center",
         "reduceOptions": {
           "calcs": [
@@ -541,7 +581,7 @@
           "values": false
         }
       },
-      "description": "Time since the least recently run backup job started. Backups run daily"
+      "description": "Time since the least recently run backup job started, for the daily jobs and the weekly full PostgreSQL backups"
     },
     {
       "id": 8,
@@ -1633,7 +1673,7 @@
         "x": 0,
         "y": 46,
         "w": 9,
-        "h": 9
+        "h": 13
       },
       "targets": [
         {
@@ -1689,7 +1729,7 @@
     {
       "id": 21,
       "type": "table",
-      "title": "Backups: time since last run",
+      "title": "Daily backups: time since last run",
       "datasource": {
         "type": "prometheus",
         "uid": "eegmzxgejop34d"
@@ -1706,7 +1746,7 @@
             "type": "prometheus",
             "uid": "eegmzxgejop34d"
           },
-          "expr": "time() - node_systemd_timer_last_trigger_seconds{name=~\"(restic-backups-|pgbackrest-|postgresqlBackup).*\",instance=~\"$host\"} and node_systemd_timer_last_trigger_seconds > 0",
+          "expr": "time() - node_systemd_timer_last_trigger_seconds{name=~\"(restic-backups-|pgbackrest-main-incr|postgresqlBackup).*\",instance=~\"$host\"} and node_systemd_timer_last_trigger_seconds > 0",
           "legendFormat": "",
           "refId": "A",
           "instant": true,
@@ -1789,7 +1829,145 @@
         "showHeader": true,
         "cellHeight": "sm"
       },
-      "description": "Each job runs daily. A job that keeps failing also shows up under failed units",
+      "description": "restic and incremental pgBackRest jobs, which run daily. A job that keeps failing also shows up under failed units",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "job": true
+            },
+            "renameByName": {
+              "instance": "Host",
+              "name": "Job",
+              "Value": "Last run"
+            },
+            "indexByName": {
+              "instance": 0,
+              "name": 1,
+              "Value": 2
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "field": "Last run",
+                "desc": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": 31,
+      "type": "table",
+      "title": "Weekly backups: time since last run",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "eegmzxgejop34d"
+      },
+      "gridPos": {
+        "x": 9,
+        "y": 55,
+        "w": 15,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "eegmzxgejop34d"
+          },
+          "expr": "time() - node_systemd_timer_last_trigger_seconds{name=~\"pgbackrest-main-full.*\",instance=~\"$host\"} and node_systemd_timer_last_trigger_seconds > 0",
+          "legendFormat": "",
+          "refId": "A",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "No full backup has run yet",
+          "custom": {
+            "align": "left"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Last run"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dtdurations"
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "orange",
+                      "value": 626400
+                    },
+                    {
+                      "color": "red",
+                      "value": 691200
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background",
+                  "mode": "gradient"
+                }
+              },
+              {
+                "id": "custom.width",
+                "value": 160
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Host"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 120
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "description": "Full pgBackRest backups, which run on Sundays. Starting the service by hand doesn't count as a run",
       "transformations": [
         {
           "id": "organize",
@@ -1831,7 +2009,7 @@
       "collapsed": false,
       "gridPos": {
         "x": 0,
-        "y": 55,
+        "y": 59,
         "w": 24,
         "h": 1
       },
@@ -1847,7 +2025,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 56,
+        "y": 60,
         "w": 24,
         "h": 11
       },
@@ -1923,7 +2101,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 67,
+        "y": 71,
         "w": 12,
         "h": 10
       },
@@ -2000,7 +2178,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 67,
+        "y": 71,
         "w": 12,
         "h": 10
       },
@@ -2059,7 +2237,7 @@
       "collapsed": false,
       "gridPos": {
         "x": 0,
-        "y": 77,
+        "y": 81,
         "w": 24,
         "h": 1
       },
@@ -2075,7 +2253,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 78,
+        "y": 82,
         "w": 12,
         "h": 8
       },
@@ -2137,7 +2315,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 78,
+        "y": 82,
         "w": 12,
         "h": 8
       },
@@ -2200,7 +2378,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 86,
+        "y": 90,
         "w": 12,
         "h": 8
       },
@@ -2262,7 +2440,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 86,
+        "y": 90,
         "w": 12,
         "h": 8
       },
