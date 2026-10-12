@@ -78,9 +78,12 @@
         enable = true;
         bucket = "cloud";
         verify_bucket_exists = true;
-        hostname = "eu-central.object.fastlystorage.app";
+        # Garage on eli, over the private network
+        hostname = infra.ips.eli;
+        port = 3900;
+        useSsl = false;
         region = "eu-central";
-        key = "bpV8YxQW2BnSUeGFJncw93";
+        key = "GKbeae19624d31fa4a2f29319c";
         secretFile = config.sops.secrets."s3/nextcloud/secret_key".path;
         usePathStyle = true;
       };
