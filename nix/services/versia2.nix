@@ -143,7 +143,7 @@ in {
         };
       };
       s3 = {
-        endpoint = "https://eu-central.object.fastlystorage.app";
+        endpoint = "http://${infra.ips.eli}:3900";
         access_key = "PATH:${config.sops.secrets."s3/versia/access_key_id".path}";
         secret_access_key = "PATH:${config.sops.secrets."s3/versia/secret_key".path}";
         region = "eu-central";
