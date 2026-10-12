@@ -240,6 +240,15 @@ in {
           ips;
       }
       {
+        job_name = "garage";
+        static_configs = [
+          {
+            targets = [nodes.eli.config.services.garage.settings.admin.api_bind_addr];
+            labels.instance = "eli";
+          }
+        ];
+      }
+      {
         job_name = "haproxy";
         static_configs = [
           {
