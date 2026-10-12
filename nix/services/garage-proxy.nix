@@ -12,7 +12,7 @@
   enableVersiaCdn = true;
   # mk-cdn: Sharkey's media, an R2 custom domain that isn't in the Terraform config. Also
   # needs `garage bucket alias misskey mk-cdn.cpluspatch.com` and detaching it from R2 first
-  enableMkCdn = false;
+  enableMkCdn = true;
 
   web = "${infra.ips.eli}:3902";
 
