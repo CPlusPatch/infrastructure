@@ -9,7 +9,7 @@
   # and serves the same content, so old links don't break.
   #
   # cdn: Versia's media, was Fastly's. The bucket is versia-cpp
-  enableVersiaCdn = false;
+  enableVersiaCdn = true;
   # mk-cdn: Sharkey's media, an R2 custom domain that isn't in the Terraform config. Also
   # needs `garage bucket alias misskey mk-cdn.cpluspatch.com` and detaching it from R2 first
   enableMkCdn = false;
