@@ -81,6 +81,10 @@
 
   eli = {
     hosts = ["eli"];
-    secrets = ["minecraft/rcon_password"];
+    secrets = [
+      "garage/admin_token"
+      "garage/rpc_secret"
+      "minecraft/rcon_password"
+    ];
   };
 }
