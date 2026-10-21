@@ -4,6 +4,9 @@
     # ClickHouse fails to link in nixpkgs since 2026-09-29 (hydra.nixos.org/build/347095307),
     # so it comes from the last revision where it built. Remove once it's fixed
     nixpkgs-clickhouse.url = "github:NixOS/nixpkgs/00455b0a3690d3f5dc61e9aef4277dc86235b73f";
+    # libflux (InfluxDB 1.x) fails to compile with the current Rust toolchain in nixpkgs,
+    # so InfluxDB comes from the last revision where it built. Remove once it's fixed
+    nixpkgs-influxdb.url = "github:NixOS/nixpkgs/a7868a727837f3c09cee2ce0ca671c76b1589fed";
     colmena = {
       url = "github:zhaofengli/colmena";
       # Its own nixpkgs are only needed for its integration tests
