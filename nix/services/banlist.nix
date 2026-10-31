@@ -98,21 +98,20 @@ in {
   # there was nothing there, and crawlers a closed connection, like a network error. The drops
   # aren't logged, they would fill the log. Each list is a file, as HAProxy's configuration
   # lines have a length limit
-  modules.haproxy.acls.banlist =
-    ''
-      acl banned_path path -m reg -f ${patterns "paths" (map globToRegex banlist.paths)}
-      acl banned_agent hdr(User-Agent) -m reg -i -f ${patterns "user-agents" [(caseInsensitive banlist.userAgents)]}
-      ${lib.concatMapStringsSep "\n" (headerAcl "banned_header") banlist.headers.include}
-      ${lib.concatMapStringsSep "\n" (headerAcl "allowed_header") banlist.headers.exclude}
-      # Google's own crawlers, from Google's addresses
-      acl googlebot_agent hdr(User-Agent) -m reg -i -f ${patterns "googlebot-agents" [(caseInsensitive banlist.googlebot.userAgents)]}
-      acl googlebot_ip src -f ${patterns "googlebot-ips" banlist.googlebot.ips}
+  modules.haproxy.acls.banlist = ''
+    acl banned_path path -m reg -f ${patterns "paths" (map globToRegex banlist.paths)}
+    acl banned_agent hdr(User-Agent) -m reg -i -f ${patterns "user-agents" [(caseInsensitive banlist.userAgents)]}
+    ${lib.concatMapStringsSep "\n" (headerAcl "banned_header") banlist.headers.include}
+    ${lib.concatMapStringsSep "\n" (headerAcl "allowed_header") banlist.headers.exclude}
+    # Google's own crawlers, from Google's addresses
+    acl googlebot_agent hdr(User-Agent) -m reg -i -f ${patterns "googlebot-agents" [(caseInsensitive banlist.googlebot.userAgents)]}
+    acl googlebot_ip src -f ${patterns "googlebot-ips" banlist.googlebot.ips}
 
-      acl robots_txt path /robots.txt
+    acl robots_txt path /robots.txt
 
-      http-request return status 200 content-type text/plain file ${robotsTxt} if robots_txt banned_agent || robots_txt googlebot_agent googlebot_ip
-      http-request return status 404 if banned_path
-      http-request set-log-level silent if ${dropped}
-      http-request silent-drop if ${dropped}
-    '';
+    http-request return status 200 content-type text/plain file ${robotsTxt} if robots_txt banned_agent || robots_txt googlebot_agent googlebot_ip
+    http-request return status 404 if banned_path
+    http-request set-log-level silent if ${dropped}
+    http-request silent-drop if ${dropped}
+  '';
 }
