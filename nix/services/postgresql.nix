@@ -18,6 +18,7 @@
     synapse = "postgresql/synapse";
     vaultwarden = "postgresql/vaultwarden";
     versia = "postgresql/versia";
+    verso = "postgresql/verso";
   };
 
   # pgbackrest backs up to a single repo per run (repo1 unless --repo is given), so each

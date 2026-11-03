@@ -8,7 +8,8 @@
   # but the old domains are still in use. This code rewrites requests to the new domain
   # and serves the same content, so old links don't break.
   #
-  # cdn: Versia's media, was Fastly's. The bucket is versia-cpp
+  # cdn: Versia's media, was Fastly's. The bucket is versia-cpp. Verso's media is in the verso
+  # bucket, at the same domain
   enableVersiaCdn = true;
   # mk-cdn: Sharkey's media, an R2 custom domain that isn't in the Terraform config. Also
   # needs `garage bucket alias misskey mk-cdn.cpluspatch.com` and detaching it from R2 first
@@ -40,12 +41,14 @@ in {
       '';
 
       backends.cdn = ''
-        # Versia's path-style URLs, cdn.cpluspatch.com/versia-cpp/<key>, become the versia-cpp
-        # bucket's website, versia-cpp.web.internal/<key>
+        # Path-style URLs, cdn.cpluspatch.com/<bucket>/<key>, become the bucket's website,
+        # <bucket>.web.internal/<key>. Only these buckets are public
         backend cdn
-          http-request deny deny_status 404 unless { path_reg ^/versia-cpp/. }
-          http-request set-header Host versia-cpp.web.internal
-          http-request set-path %[path,regsub(^/versia-cpp,)]
+          http-request deny deny_status 404 unless { path_reg ^/(versia-cpp|verso)/. }
+          http-request set-header Host versia-cpp.web.internal if { path_beg /versia-cpp/ }
+          http-request set-path %[path,regsub(^/versia-cpp,)] if { path_beg /versia-cpp/ }
+          http-request set-header Host verso.web.internal if { path_beg /verso/ }
+          http-request set-path %[path,regsub(^/verso,)] if { path_beg /verso/ }
           ${cache}
           server cdn ${web}
       '';

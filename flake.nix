@@ -34,6 +34,8 @@
       url = "github:versia-pub/frontend";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    # Doesn't follow nixpkgs: its package is built against the revision it was tested with
+    verso.url = "github:versia-pub/verso";
   };
 
   outputs = {
@@ -45,6 +47,7 @@
     versia-server,
     nix-minecraft,
     versia-fe,
+    verso,
     colmena,
     ...
   } @ inputs: let
@@ -76,6 +79,22 @@
             versia-fe.overlays.default
             (final: prev: {
               cpluspatch-pages = final.callPackage ./nix/packages/pages/package.nix {};
+              # stupid fucking piece of shit software
+              versia-server = prev.versia-server.overrideAttrs (old: {
+                node_modules = old.node_modules.overrideAttrs {
+                  outputHash = "sha256-OKmFZWt0aVUOwZ7XEBYPgNweHEPJC19Hdgus3lFE+gk=";
+                };
+              });
+              versia-server-worker = prev.versia-server-worker.overrideAttrs (old: {
+                node_modules = old.node_modules.overrideAttrs {
+                  outputHash = "sha256-OKmFZWt0aVUOwZ7XEBYPgNweHEPJC19Hdgus3lFE+gk=";
+                };
+              });
+              versia-fe = prev.versia-fe.overrideAttrs (old: {
+                pnpmDeps = old.pnpmDeps.overrideAttrs {
+                  outputHash = "sha256-rMUtlWMxvc+Qn58L440Lln+jKprS7W4N6D9zG+LVgpk=";
+                };
+              });
             })
           ];
         };
@@ -103,6 +122,7 @@
         simple-nixos-mailserver.nixosModules.default
         nix-minecraft.nixosModules.minecraft-servers
         versia-server.nixosModules.versia-server
+        verso.nixosModules.default
         ./nix/hosts/faithplate
       ];
 

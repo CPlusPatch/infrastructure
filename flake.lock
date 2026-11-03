@@ -229,6 +229,22 @@
         "type": "github"
       }
     },
+    "nixpkgs_2": {
+      "locked": {
+        "lastModified": 1793225069,
+        "narHash": "sha256-sx1f99WGrDfJ83KKuQrqGPmot0rnDgmpLJDzpU2oHQQ=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "e62746b0b472753ef019baceab6f1e2e52014980",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixpkgs-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
         "colmena": "colmena",
@@ -239,7 +255,8 @@
         "simple-nixos-mailserver": "simple-nixos-mailserver",
         "sops-nix": "sops-nix",
         "versia-fe": "versia-fe",
-        "versia-server": "versia-server"
+        "versia-server": "versia-server",
+        "verso": "verso"
       }
     },
     "simple-nixos-mailserver": {
@@ -384,6 +401,24 @@
       "original": {
         "owner": "versia-pub",
         "repo": "server",
+        "type": "github"
+      }
+    },
+    "verso": {
+      "inputs": {
+        "nixpkgs": "nixpkgs_2"
+      },
+      "locked": {
+        "lastModified": 1793745381,
+        "narHash": "sha256-n5UlQHeNnCQ3/LVnsXQQAGyCCZ9tWJiKAjoxOOk8Ru8=",
+        "owner": "versia-pub",
+        "repo": "verso",
+        "rev": "de7212a6cfd094073e0fda9b089931bf84345d5e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "versia-pub",
+        "repo": "verso",
         "type": "github"
       }
     }

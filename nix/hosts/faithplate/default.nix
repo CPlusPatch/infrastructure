@@ -14,6 +14,7 @@
     ../../services/sharkey.nix
     ../../services/immich.nix
     ../../services/versia2.nix
+    ../../services/verso.nix
     ../../services/static.nix
     ../../services/status-feed.nix
     ../../services/fitbit-prometheus.nix

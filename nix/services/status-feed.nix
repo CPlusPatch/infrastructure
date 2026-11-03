@@ -23,6 +23,7 @@
     Vaultwarden = vhosts.vaultwarden.domain;
     Sharkey = vhosts.sharkey.domain;
     Versia = vhosts.versia2.domain;
+    Verso = vhosts.verso.domain;
     Minecraft = "mc.cpluspatch.com:${toString minecraftPort}";
   };
 
