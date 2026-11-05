@@ -17,7 +17,6 @@
     ../../services/verso.nix
     ../../services/static.nix
     ../../services/status-feed.nix
-    ../../services/fitbit-prometheus.nix
     ../../services/factorio.nix
     ../../services/garage-proxy.nix
     ../../services/minecraft-proxy.nix
