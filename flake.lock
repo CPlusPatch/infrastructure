@@ -409,11 +409,11 @@
         "nixpkgs": "nixpkgs_2"
       },
       "locked": {
-        "lastModified": 1793745381,
-        "narHash": "sha256-n5UlQHeNnCQ3/LVnsXQQAGyCCZ9tWJiKAjoxOOk8Ru8=",
+        "lastModified": 1793888087,
+        "narHash": "sha256-mvbE8KKkCozkg55mXpgNnTQmS8QrX63wp6aDRkHLi20=",
         "owner": "versia-pub",
         "repo": "verso",
-        "rev": "de7212a6cfd094073e0fda9b089931bf84345d5e",
+        "rev": "c452fd7ea44e88b857077efa10bd66d060feac8e",
         "type": "github"
       },
       "original": {
